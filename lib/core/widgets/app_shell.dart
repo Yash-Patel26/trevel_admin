@@ -58,6 +58,73 @@ class AppShell extends ConsumerWidget {
                 icon: const Icon(Icons.person_add),
                 label: const Text('Onboard Driver'),
               ),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.account_circle),
+              tooltip: 'Account',
+              onSelected: (value) async {
+                if (value == 'logout') {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Logout'),
+                      content: const Text('Are you sure you want to logout?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    // Perform logout
+                    await ref.read(authControllerProvider.notifier).logout();
+                    if (context.mounted) {
+                      await Future.delayed(const Duration(milliseconds: 50));
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    }
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  enabled: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.fullName ?? user?.email ?? 'User',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      Text(
+                        user?.role ?? '',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, size: 20),
+                      SizedBox(width: 8),
+                      Text('Logout'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
         body: child,
