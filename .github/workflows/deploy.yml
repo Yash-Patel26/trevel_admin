@@ -43,7 +43,7 @@ jobs:
           # Tests require RDS database connection which isn't accessible from GitHub Actions
           # Run tests manually on EC2 after deployment if needed
       
-      - name: Deploy to EC2
+      - name: Pre-deployment checks
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
@@ -55,6 +55,50 @@ jobs:
           chmod 600 ~/.ssh/deploy_key.pem
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
           
+          echo "🔍 Running pre-deployment checks..."
+          
+          # Check EC2 connectivity and prerequisites
+          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH'
+            echo "✅ SSH connection successful"
+            
+            # Check Docker
+            if ! command -v docker &> /dev/null; then
+              echo "❌ Docker is not installed"
+              exit 1
+            fi
+            echo "✅ Docker is installed: $(docker --version)"
+            
+            # Check if Docker daemon is running
+            if ! docker ps &> /dev/null; then
+              echo "❌ Docker daemon is not running"
+              exit 1
+            fi
+            echo "✅ Docker daemon is running"
+            
+            # Check .env file exists
+            if [ ! -f ~/backend/.env ]; then
+              echo "⚠️  Warning: .env file not found at ~/backend/.env"
+              echo "   Deployment will proceed but may fail if environment variables are required"
+            else
+              echo "✅ .env file exists"
+            fi
+            
+            # Check disk space
+            DISK_USAGE=$(df -h ~ | awk 'NR==2 {print $5}' | sed 's/%//')
+            echo "📊 Disk usage: ${DISK_USAGE}%"
+            if [ "$DISK_USAGE" -gt 90 ]; then
+              echo "⚠️  Warning: Disk usage is high (${DISK_USAGE}%)"
+            fi
+          ENDSSH
+      
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          echo "📦 Creating deployment package..."
+          
           # Create deployment package
           cd backend
           tar -czf ../deploy.tar.gz \
@@ -64,28 +108,43 @@ jobs:
             --exclude='*.log' \
             .
           
-          # Upload to EC2
+          echo "📤 Uploading to EC2..."
           scp -i ~/.ssh/deploy_key.pem ../deploy.tar.gz $EC2_USER@$EC2_HOST:/tmp/
           
-          # Execute deployment script on EC2
-          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH'
+          echo "🚀 Starting deployment on EC2..."
+          
+          # Execute deployment script on EC2 with verbose output
+          ssh -v -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH' || {
+            echo "❌ Deployment script failed!"
+            echo "📋 Fetching error logs from EC2..."
+            ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'if [ -d ~/backend_new ]; then echo "=== New container logs ==="; docker logs trevel_admin_backend_new --tail 100 2>&1 || echo "No new container logs"; fi; if [ -d ~/backend ]; then echo "=== Current container logs ==="; docker logs trevel_admin_backend --tail 50 2>&1 || echo "No current container logs"; fi'
+            exit 1
+          }
             set -e
+            set -x  # Enable verbose output
             
+            echo "📦 Extracting deployment package..."
             # Extract new code
             mkdir -p ~/backend_new
             tar -xzf /tmp/deploy.tar.gz -C ~/backend_new
             rm /tmp/deploy.tar.gz
             
+            echo "📋 Copying environment file..."
             # Copy environment file
             if [ -f ~/backend/.env ]; then
               cp ~/backend/.env ~/backend_new/.env
+              echo "✅ .env file copied"
+            else
+              echo "⚠️  No .env file found, deployment may fail"
             fi
             
+            echo "🚀 Running deployment script..."
             # Run deployment script
             cd ~/backend_new
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
             
+            echo "🧹 Cleaning up old versions..."
             # Cleanup
             if [ -d ~/backend_old ]; then
               rm -rf ~/backend_old

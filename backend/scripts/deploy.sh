@@ -18,11 +18,8 @@ HEALTH_CHECK_RETRIES=30
 HEALTH_CHECK_INTERVAL=2
 
 # Get current commit hash for versioning
-if [ -d .git ]; then
-  VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "latest")
-else
-  VERSION=$(date +%Y%m%d_%H%M%S)
-fi
+# Note: .git directory is excluded from deployment tarball, so use timestamp
+VERSION=$(date +%Y%m%d_%H%M%S)
 
 echo -e "${YELLOW}📦 Version: ${VERSION}${NC}"
 
@@ -117,13 +114,12 @@ if [ -n "$OLD_CONTAINER_EXISTS" ]; then
   docker rm ${CONTAINER_NAME} 2>/dev/null || true
 fi
 
-# Rename new container to production name
-docker rename ${NEW_CONTAINER_NAME} ${CONTAINER_NAME}
+# Stop the new container (currently on port 4001)
+echo -e "${YELLOW}🔄 Reconfiguring container for production port...${NC}"
+docker stop ${NEW_CONTAINER_NAME}
+docker rm ${NEW_CONTAINER_NAME}
 
-# Update port mapping to 4000
-docker stop ${CONTAINER_NAME}
-docker rm ${CONTAINER_NAME}
-
+# Start container on production port 4000
 docker run -d \
   --name ${CONTAINER_NAME} \
   --env-file .env \
@@ -135,14 +131,26 @@ docker run -d \
   ${IMAGE_NAME}:${VERSION}
 
 # Wait for container to be ready
+echo -e "${YELLOW}⏳ Waiting for container to start...${NC}"
 sleep 5
 
 # Final health check
 echo -e "${YELLOW}🏥 Final health check...${NC}"
-if curl -f -s http://localhost:4000/healthz > /dev/null 2>&1; then
-  echo -e "${GREEN}✅ Deployment successful!${NC}"
-else
-  echo -e "${RED}❌ Final health check failed!${NC}"
+HEALTHY=false
+for i in $(seq 1 10); do
+  if curl -f -s http://localhost:4000/healthz > /dev/null 2>&1; then
+    HEALTHY=true
+    echo -e "${GREEN}✅ Deployment successful!${NC}"
+    break
+  fi
+  echo -n "."
+  sleep 2
+done
+
+if [ "$HEALTHY" = false ]; then
+  echo -e "\n${RED}❌ Final health check failed!${NC}"
+  echo -e "${YELLOW}📋 Container logs:${NC}"
+  docker logs ${CONTAINER_NAME} --tail 50
   exit 1
 fi
 
