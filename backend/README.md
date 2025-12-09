@@ -1,198 +1,232 @@
-# Node.js Backend (Operational Dashboard)
+# Trevel Admin - Zero-Downtime Deployment
 
-Node.js + TypeScript backend implementing the Operational Dashboard services. Stack: Express, TypeScript, Prisma, JWT (with refresh tokens), bcrypt, Pino, Zod validation.
+## 🎯 Overview
 
-## Features
+This backend now supports **zero-downtime deployments** with automated CI/CD via GitHub Actions.
 
-✅ **Authentication & Authorization**
-- JWT-based authentication with access and refresh tokens
-- Role-based access control (RBAC) with permissions
-- User management (CRUD operations)
-- Password hashing with bcrypt
+## 🚀 Quick Start
 
-✅ **Core Modules**
-- **Vehicles**: Onboarding, review/approval, driver assignment, logs, metrics
-- **Drivers**: Onboarding, background checks, training assignments, approval, vehicle allocation, logs
-- **Tickets**: Create, list, update with status tracking
-- **Bookings**: Customer booking management with OTP validation, status updates, completion/cancellation
-- **Ride Summaries**: Track rides with distance and timing data
-- **Dashboards**: Fleet, vehicle, and driver aggregates
-- **Audit Logging**: Comprehensive audit trail for all operations
-- **Notifications**: Queue system for email/SMS/in-app notifications (stub implementation)
+### For Developers
 
-✅ **Data Validation**
-- Zod schemas with enum validation for statuses
-- Type-safe request/response handling
-- Comprehensive error handling
+1. Make your changes
+2. Commit and push to `main` branch
+3. GitHub Actions automatically deploys to EC2
+4. No downtime, automatic rollback on failure
 
-## Setup
-
-```powershell
-cd backend
-npm install
+```bash
+git add .
+git commit -m "Your changes"
+git push origin main
 ```
 
-### Environment Variables
+### For First-Time Setup
 
-Create `.env` file:
+See [CICD_SETUP.md](./CICD_SETUP.md) for complete setup instructions.
+
+## 📁 Project Structure
+
 ```
+backend/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Actions CI/CD workflow
+├── scripts/
+│   ├── deploy.sh              # Zero-downtime deployment script
+│   ├── health-check.sh        # Health validation script
+│   └── quick-deploy.sh        # Manual deployment helper
+├── src/                       # Application source code
+├── prisma/                    # Database schema and migrations
+├── docker-compose.yml         # Docker configuration
+├── Dockerfile                 # Container image definition
+├── .env.example              # Environment variables template
+└── CICD_SETUP.md             # Complete setup guide
+```
+
+## 🔧 Deployment Scripts
+
+### `deploy.sh` - Zero-Downtime Deployment
+Performs rolling updates with health checks and automatic rollback.
+
+```bash
+./scripts/deploy.sh
+```
+
+**Features:**
+- ✅ Builds new Docker image with version tagging
+- ✅ Starts new container before stopping old one
+- ✅ Runs health checks before switching traffic
+- ✅ Automatic rollback on failure
+- ✅ Database migrations
+- ✅ No downtime
+
+### `health-check.sh` - Validate Deployment
+Checks if the application is healthy and running correctly.
+
+```bash
+./scripts/health-check.sh
+```
+
+**Checks:**
+- Container status
+- Health endpoint (200 OK)
+- API response
+- Database connection
+- Error logs
+- Memory usage
+- Disk space
+
+### `quick-deploy.sh` - Manual Deployment
+Quick deployment from EC2 when you need manual control.
+
+```bash
+./scripts/quick-deploy.sh
+```
+
+## 🔄 Deployment Workflow
+
+### Automated (Recommended)
+
+```mermaid
+graph LR
+    A[Push to GitHub] --> B[GitHub Actions]
+    B --> C[Build & Test]
+    C --> D[Deploy to EC2]
+    D --> E[Health Check]
+    E --> F{Healthy?}
+    F -->|Yes| G[Success ✅]
+    F -->|No| H[Rollback ⚠️]
+```
+
+### Manual (When Needed)
+
+```bash
+# SSH to EC2
+ssh -i trevel-key.pem ubuntu@YOUR_EC2_IP
+
+# Navigate to backend
+cd ~/backend
+
+# Pull latest code
+git pull origin main
+
+# Deploy
+./scripts/quick-deploy.sh
+```
+
+## 🏥 Health Checks
+
+The application includes comprehensive health monitoring:
+
+- **Endpoint**: `GET /healthz`
+- **Expected Response**: `200 OK`
+- **Checks**: Database connectivity, API responsiveness
+
+## 🔐 Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```env
+NODE_ENV=production
 PORT=4000
-DATABASE_URL=postgres://user:pass@localhost:5432/trevel_admin
-JWT_SECRET=change-me-to-secure-random-string
-CORS_ORIGINS=*
-NODE_ENV=development
+DATABASE_URL=postgresql://...
+JWT_SECRET=your-secret
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_S3_BUCKET=your-bucket
 ```
 
-### Database Setup
+## 📊 Monitoring
 
-1. Update `DATABASE_URL` in `.env` with your PostgreSQL connection string
-2. Run migrations:
-   ```bash
-   npm run prisma:migrate -- --name init
-   ```
-3. Generate Prisma Client:
-   ```bash
-   npm run prisma:generate
-   ```
-4. Seed initial data (roles, permissions, admin user):
-   ```bash
-   npm run prisma:seed
-   ```
-
-### Development
+### View Logs
 
 ```bash
-npm run dev   # runs ts-node-dev in watch mode
+# Container logs
+docker logs trevel_admin_backend -f
+
+# Last 100 lines
+docker logs trevel_admin_backend --tail 100
 ```
 
-## Scripts
+### Check Status
 
-- `npm run dev` — Development server with hot reload
-- `npm run build` — Compile TypeScript to `dist/`
-- `npm start` — Run compiled production build
-- `npm test` — Run Jest tests
-- `npm run lint` — Run ESLint
-- `npm run prisma:generate` — Generate Prisma Client
-- `npm run prisma:migrate` — Run Prisma migrations (dev mode)
-- `npm run prisma:seed` — Seed database with initial data
-
-## API Endpoints
-
-### Authentication
-- `POST /auth/login` — Login (returns access + refresh tokens)
-- `POST /auth/refresh` — Refresh access token
-- `POST /auth/logout` — Logout (revoke refresh tokens)
-- `POST /auth/logout-all` — Logout from all devices
-- `GET /auth/me` — Get current user
-
-### Users
-- `POST /users` — Create user (requires `user:create`)
-- `GET /users` — List users (requires `user:view`)
-- `GET /users/:id` — Get user (requires `user:view`)
-- `PATCH /users/:id` — Update user (requires `user:update`)
-- `DELETE /users/:id` — Delete user (requires `user:delete`)
-
-### Vehicles
-- `POST /vehicles` — Create vehicle (requires `vehicle:create`)
-- `GET /vehicles` — List vehicles (requires `vehicle:view`)
-- `POST /vehicles/:id/review` — Review vehicle (requires `vehicle:review`)
-- `POST /vehicles/:id/assign-driver` — Assign driver (requires `vehicle:assign`)
-- `GET /vehicles/:id/logs` — Get vehicle logs (requires `vehicle:logs`)
-- `GET /vehicles/:id/metrics` — Get vehicle metrics (requires `vehicle:view`)
-
-### Drivers
-- `POST /drivers` — Create driver (requires `driver:create`)
-- `GET /drivers` — List drivers (requires `driver:view`)
-- `POST /drivers/:id/background` — Background check (requires `driver:verify`)
-- `POST /drivers/:id/training` — Assign training (requires `driver:train`)
-- `POST /drivers/:id/approve` — Approve driver (requires `driver:approve`)
-- `POST /drivers/:id/assign-vehicle` — Assign vehicle (requires `driver:assign`)
-- `GET /drivers/:id/logs` — Get driver logs (requires `driver:logs`)
-
-### Tickets
-- `POST /tickets` — Create ticket (requires `ticket:create`)
-- `GET /tickets` — List tickets (requires `ticket:view`)
-- `PATCH /tickets/:id` — Update ticket (requires `ticket:update`)
-
-### Bookings
-- `GET /customers/dashboard/summary` — Booking summary stats
-- `GET /customers/bookings` — List bookings
-- `GET /bookings/:id` — Get booking details
-- `POST /bookings/:id/assign` — Assign vehicle/driver to booking
-- `POST /bookings/:id/validate-otp` — Validate OTP code
-- `PATCH /bookings/:id/status` — Update booking status
-- `POST /bookings/:id/complete` — Complete booking
-- `POST /bookings/:id/cancel` — Cancel booking
-
-### Rides
-- `POST /rides` — Create ride summary (requires `ride:create`)
-- `GET /rides` — List rides (requires `ride:view`)
-- `GET /rides/:id` — Get ride details (requires `ride:view`)
-- `PATCH /rides/:id` — Update ride (requires `ride:update`)
-
-### Dashboards
-- `GET /dashboards/fleet` — Fleet overview
-- `GET /dashboards/vehicle/:id` — Vehicle dashboard
-- `GET /dashboards/drivers` — Drivers overview
-- `GET /dashboards/driver/:id` — Driver dashboard
-
-### Audit
-- `GET /audit-logs` — List audit logs (requires `audit:view`)
-
-## Test Users
-
-After seeding, the following test users are available:
-
-### Operational Admin
-- Email: `admin@example.com`
-- Password: `admin123`
-- Role: Operational Admin (full permissions)
-- Access: All sections
-
-### Fleet Admin
-- Email: `fleet@example.com`
-- Password: `fleet123`
-- Role: Fleet Admin
-- Access: Dashboard, Vehicles, Tickets, Bookings
-
-### Driver Admin
-- Email: `driver@example.com`
-- Password: `driver123`
-- Role: Driver Admin
-- Access: Dashboard, Drivers, Tickets, Bookings
-
-See [TEST_USERS.md](./TEST_USERS.md) for detailed information about testing different role-based dashboards.
-
-## Testing
-
-Run tests:
 ```bash
-npm test
+# Container status
+docker ps -f name=trevel_admin_backend
+
+# Run health check
+./scripts/health-check.sh
 ```
 
-Test files:
-- `tests/auth.test.ts` — Authentication tests
-- `tests/health.test.ts` — Health check tests
-- `tests/users.test.ts` — User management tests
+## 🐛 Troubleshooting
 
-## Code Quality
+### Deployment Failed
 
-- **ESLint**: Configured with TypeScript and import ordering rules
-- **Prettier**: Code formatting
-- **TypeScript**: Strict mode enabled
-- **Zod**: Runtime validation for all API inputs
+1. Check GitHub Actions logs
+2. SSH to EC2 and check container logs
+3. Run health check script
+4. Check `.env` file configuration
 
-## Architecture
+### Rollback to Previous Version
 
-- **Routes**: Modular Express routers (`src/routes/`)
-- **Middleware**: Auth and permission guards (`src/middleware/`)
-- **Validation**: Zod schemas (`src/validation/`)
-- **RBAC**: Roles and permissions (`src/rbac/`)
-- **Database**: Prisma ORM (`prisma/schema.prisma`)
-- **Utils**: Audit logging, pagination, OTP generation (`src/utils/`)
-- **Services**: Notification queue (`src/services/`)
+```bash
+# SSH to EC2
+ssh -i trevel-key.pem ubuntu@YOUR_EC2_IP
 
-## Migration Guide
+# Check if backup exists
+ls -la ~/backend_old
 
-See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for database migration instructions.
+# Restore backup
+cd ~
+rm -rf backend
+mv backend_old backend
+cd backend
+./scripts/deploy.sh
+```
 
+### Container Won't Start
+
+```bash
+# Check logs
+docker logs trevel_admin_backend
+
+# Check environment variables
+docker exec trevel_admin_backend env
+
+# Restart container
+docker restart trevel_admin_backend
+```
+
+## 📚 Documentation
+
+- **[CICD_SETUP.md](./CICD_SETUP.md)** - Complete CI/CD setup guide
+- **[EC2_DEPLOY_GUIDE.md](./EC2_DEPLOY_GUIDE.md)** - EC2 instance setup
+- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Common issues and solutions
+
+## 🎉 Benefits
+
+### Before (Manual Deployment)
+- ❌ Stop EC2 instance
+- ❌ Manual file transfers via SCP
+- ❌ Downtime during updates
+- ❌ Manual container rebuilds
+- ❌ No automatic rollback
+
+### After (Automated CI/CD)
+- ✅ Just `git push`
+- ✅ Automatic deployment
+- ✅ Zero downtime
+- ✅ Automatic health checks
+- ✅ Automatic rollback on failure
+- ✅ Version tracking
+- ✅ Persistent data
+
+## 🔗 Related Resources
+
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Docker Documentation](https://docs.docker.com/)
+- [Prisma Documentation](https://www.prisma.io/docs)
+
+## 📝 License
+
+MIT

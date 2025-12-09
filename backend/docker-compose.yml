@@ -17,12 +17,17 @@ services:
       # Mount uploads directory for persistent file storage
       - uploads_data:/app/uploads
     restart: unless-stopped
+    # Graceful shutdown
+    stop_grace_period: 30s
     healthcheck:
       test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
       interval: 30s
-      timeout: 3s
-      start_period: 10s
+      timeout: 5s
+      start_period: 40s
       retries: 3
+    labels:
+      - "app=trevel_backend"
+      - "environment=production"
 
 volumes:
   uploads_data:

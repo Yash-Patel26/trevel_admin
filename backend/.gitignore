@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+coverage/
+.nyc_output/
+
+# Uploads (local development)
+uploads/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+.cache/
+.temp/
+*.pid
+*.seed
+*.pid.lock
+
+# Prisma
+prisma/migrations/**/migration.sql.bak
+
+# Deployment
+backend_deploy.tar.gz
+deploy.tar.gz
+*.tar.gz
+backend_old/
+backend_new/

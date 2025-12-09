@@ -1,10 +1,18 @@
 # Deploy to EC2 with Docker (Complete Guide)
 
+> [!IMPORTANT]
+> **New: Automated CI/CD Available!**
+> 
+> This guide shows the **initial manual setup**. After completing this once, you can use our **automated CI/CD pipeline** for zero-downtime deployments.
+> 
+> 👉 See [CICD_SETUP.md](./CICD_SETUP.md) for automated deployment setup.
+
 This guide will help you deploy your entire backend + database to a single EC2 instance using Docker Compose.
 
 ---
 
 ## Part 1: Launch EC2 Instance
+
 
 ### Step 1: Go to EC2 Console
 
@@ -254,3 +262,21 @@ docker-compose up -d --build
 ✅ **API accessible** at `http://YOUR_EC2_IP:4000`  
 
 **Your backend is now live!** 🎉
+
+---
+
+## Next Steps: Automated Deployments
+
+Now that your EC2 is set up, you can enable **zero-downtime automated deployments**:
+
+1. **Set up GitHub repository** and push your code
+2. **Configure GitHub Actions** for CI/CD
+3. **Deploy with `git push`** - no more manual steps!
+
+👉 **See [CICD_SETUP.md](./CICD_SETUP.md) for complete instructions.**
+
+### Benefits of CI/CD:
+- ✅ No need to stop EC2 for updates
+- ✅ Zero downtime deployments
+- ✅ Automatic rollback on failure
+- ✅ Just `git push` to deploy
