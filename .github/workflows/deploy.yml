@@ -133,45 +133,56 @@ jobs:
           
           echo "🚀 Starting deployment on EC2..."
           
-          # Execute deployment script on EC2
-          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH'
-            set -e
+          # Execute deployment script on EC2 and capture all output
+          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST bash -s << 'ENDSSH' 2>&1 | tee deployment_output.log
             set -x  # Enable verbose output
             
+            echo "=== Starting Deployment ==="
             echo "📦 Extracting deployment package..."
-            mkdir -p ~/backend_new
-            tar -xzf /tmp/deploy.tar.gz -C ~/backend_new
-            rm /tmp/deploy.tar.gz
+            mkdir -p ~/backend_new || { echo "Failed to create backend_new directory"; exit 1; }
+            tar -xzf /tmp/deploy.tar.gz -C ~/backend_new || { echo "Failed to extract deployment package"; exit 1; }
+            rm /tmp/deploy.tar.gz || echo "Warning: Could not remove deploy.tar.gz"
             
             echo "📋 Copying environment file..."
             if [ -f ~/backend/.env ]; then
-              cp ~/backend/.env ~/backend_new/.env
-              echo "✅ .env file copied"
+              cp ~/backend/.env ~/backend_new/.env && echo "✅ .env file copied" || echo "Warning: Failed to copy .env"
             else
-              echo "⚠️  No .env file found, deployment may fail"
+              echo "⚠️  No .env file found at ~/backend/.env"
             fi
             
             echo "🚀 Running deployment script..."
-            cd ~/backend_new
-            chmod +x scripts/deploy.sh
+            cd ~/backend_new || { echo "Failed to cd to backend_new"; exit 1; }
+            chmod +x scripts/deploy.sh || { echo "Failed to chmod deploy.sh"; exit 1; }
+            
+            echo "=== Executing deploy.sh ==="
             ./scripts/deploy.sh
+            DEPLOY_EXIT_CODE=$?
+            
+            if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+              echo "❌ deploy.sh failed with exit code $DEPLOY_EXIT_CODE"
+              exit $DEPLOY_EXIT_CODE
+            fi
             
             echo "🧹 Cleaning up old versions..."
             if [ -d ~/backend_old ]; then
-              rm -rf ~/backend_old
+              rm -rf ~/backend_old || echo "Warning: Could not remove backend_old"
             fi
             if [ -d ~/backend ]; then
-              mv ~/backend ~/backend_old
+              mv ~/backend ~/backend_old || echo "Warning: Could not move backend to backend_old"
             fi
-            mv ~/backend_new ~/backend
+            mv ~/backend_new ~/backend || { echo "Failed to move backend_new to backend"; exit 1; }
             
             echo "✅ Deployment completed successfully!"
           ENDSSH
           
-          if [ $? -ne 0 ]; then
-            echo "❌ Deployment script failed!"
-            echo "📋 Fetching error logs from EC2..."
-            ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'if [ -d ~/backend_new ]; then echo "=== New container logs ==="; sudo docker logs trevel_admin_backend_new --tail 100 2>&1 || echo "No new container logs"; fi; if [ -d ~/backend ]; then echo "=== Current container logs ==="; sudo docker logs trevel_admin_backend --tail 50 2>&1 || echo "No current container logs"; fi'
+          DEPLOYMENT_EXIT_CODE=$?
+          cat deployment_output.log
+          
+          if [ $DEPLOYMENT_EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "❌ Deployment script failed with exit code $DEPLOYMENT_EXIT_CODE"
+            echo "📋 Fetching container logs from EC2..."
+            ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'if [ -d ~/backend_new ]; then echo "=== New container logs ==="; sudo docker logs trevel_admin_backend_new --tail 100 2>&1 || echo "No new container logs"; fi; if [ -d ~/backend ]; then echo "=== Current container logs ==="; sudo docker logs trevel_admin_backend --tail 50 2>&1 || echo "No current container logs"; fi' || true
             exit 1
           fi
       
