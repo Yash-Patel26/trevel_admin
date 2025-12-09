@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import { authMiddleware } from "../middleware/auth";
-import { requirePermissions } from "../middleware/permissions";
 import { uploadSingle, uploadMultiple } from "../middleware/upload";
 
 export const uploadRouter = Router();
@@ -10,7 +9,8 @@ uploadRouter.use(authMiddleware);
 // Single image upload endpoint
 uploadRouter.post(
   "/upload",
-  requirePermissions(["driver:create", "driver:edit"]),
+  // Removed permission check - any authenticated user can upload images
+  // Permission checks should be done at the entity level (e.g., when creating/editing drivers)
   async (req: Request, res: Response) => {
     uploadSingle(req, res, async (err) => {
       if (err) {
@@ -58,7 +58,7 @@ uploadRouter.post(
 // Multiple images upload endpoint
 uploadRouter.post(
   "/upload/multiple",
-  requirePermissions(["driver:create", "driver:edit"]),
+  // Removed permission check - any authenticated user can upload images
   async (req: Request, res: Response) => {
     uploadMultiple(req, res, async (err) => {
       if (err) {
@@ -76,7 +76,7 @@ uploadRouter.post(
       try {
         const { uploadToS3 } = await import("../middleware/upload");
         const filesArray = Array.isArray(req.files) ? req.files : [];
-        
+
         const uploadedFiles = await Promise.all(
           filesArray.map(async (f: Express.Multer.File) => {
             const { location, key } = await uploadToS3(

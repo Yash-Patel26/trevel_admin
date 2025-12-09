@@ -104,10 +104,9 @@ class AuthController extends StateNotifier<AuthState> {
     _client.setAuthToken(null);
     _client.setRefreshToken(null);
     final newState = state.copyWith(
-      accessToken: null,
-      refreshToken: null,
-      user: null,
       isLoading: false,
+      clearTokens: true,
+      clearUser: true,
     );
     state = newState;
     _controller.add(newState);

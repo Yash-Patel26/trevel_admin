@@ -18,12 +18,14 @@ class AuthState {
     String? refreshToken,
     bool? isLoading,
     UserInfo? user,
+    bool clearTokens = false,
+    bool clearUser = false,
   }) {
     return AuthState(
-      accessToken: accessToken ?? this.accessToken,
-      refreshToken: refreshToken ?? this.refreshToken,
+      accessToken: clearTokens ? null : (accessToken ?? this.accessToken),
+      refreshToken: clearTokens ? null : (refreshToken ?? this.refreshToken),
       isLoading: isLoading ?? this.isLoading,
-      user: user ?? this.user,
+      user: clearUser ? null : (user ?? this.user),
     );
   }
 

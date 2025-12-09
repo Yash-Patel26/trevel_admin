@@ -46,7 +46,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final loggedIn = auth.isAuthenticated;
       final goingToLogin = state.fullPath == '/login';
 
+      // If not logged in and not going to login, redirect to login
       if (!loggedIn && !goingToLogin) return '/login';
+      
+      // If not logged in and going to login, allow it (important for logout)
+      if (!loggedIn && goingToLogin) return null;
+      
+      // If logged in and trying to access login, redirect to dashboard
       if (loggedIn && goingToLogin) {
         // Redirect to role-specific dashboard
         return PermissionChecker.getDefaultDashboardRoute(auth.user);
