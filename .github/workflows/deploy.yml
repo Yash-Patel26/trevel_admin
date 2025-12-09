@@ -59,6 +59,8 @@ jobs:
           
           # Check EC2 connectivity and prerequisites
           ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH'
+            set -e  # Exit on error
+            
             echo "✅ SSH connection successful"
             
             # Check Docker
@@ -75,20 +77,22 @@ jobs:
             fi
             echo "✅ Docker daemon is running"
             
-            # Check .env file exists
+            # Check .env file exists (warning only, don't fail)
             if [ ! -f ~/backend/.env ]; then
               echo "⚠️  Warning: .env file not found at ~/backend/.env"
-              echo "   Deployment will proceed but may fail if environment variables are required"
+              echo "   First deployment or .env needs to be created manually on EC2"
             else
               echo "✅ .env file exists"
             fi
             
-            # Check disk space
+            # Check disk space (warning only, don't fail)
             DISK_USAGE=$(df -h ~ | awk 'NR==2 {print $5}' | sed 's/%//')
             echo "📊 Disk usage: ${DISK_USAGE}%"
             if [ "$DISK_USAGE" -gt 90 ]; then
               echo "⚠️  Warning: Disk usage is high (${DISK_USAGE}%)"
             fi
+            
+            echo "✅ Pre-deployment checks passed"
           ENDSSH
       
       - name: Deploy to EC2
