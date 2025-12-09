@@ -131,6 +131,15 @@ jobs:
           echo "📤 Uploading to EC2..."
           scp -i ~/.ssh/deploy_key.pem ../deploy.tar.gz $EC2_USER@$EC2_HOST:/tmp/
           
+          echo ""
+          echo "🔍 Testing SSH connection..."
+          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'echo "SSH connection successful"; whoami; pwd; ls -la /tmp/deploy.tar.gz'
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ SSH connection test failed!"
+            exit 1
+          fi
+          
           echo "🚀 Starting deployment on EC2..."
           echo ""
           
