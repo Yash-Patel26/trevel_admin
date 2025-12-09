@@ -59,5 +59,6 @@ prisma/migrations/**/migration.sql.bak
 backend_deploy.tar.gz
 deploy.tar.gz
 *.tar.gz
+*.tar
 backend_old/
 backend_new/
