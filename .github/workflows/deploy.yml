@@ -60,10 +60,14 @@ jobs:
           # Check EC2 connectivity and prerequisites
           ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH'
             set -e  # Exit on error
+            set -x  # Enable debug output
             
             echo "✅ SSH connection successful"
+            echo "Current user: $(whoami)"
+            echo "Groups: $(groups)"
             
             # Check Docker
+            echo "Checking if docker command exists..."
             if ! command -v docker &> /dev/null; then
               echo "❌ Docker is not installed"
               exit 1
@@ -71,8 +75,12 @@ jobs:
             echo "✅ Docker is installed: $(docker --version)"
             
             # Check if Docker daemon is running
-            if ! docker ps &> /dev/null; then
-              echo "❌ Docker daemon is not running"
+            echo "Checking if Docker daemon is running..."
+            echo "Attempting: docker ps"
+            if ! sudo docker ps &> /dev/null; then
+              echo "❌ Docker daemon is not running or user lacks permissions"
+              echo "Trying to check docker service status..."
+              sudo systemctl status docker || true
               exit 1
             fi
             echo "✅ Docker daemon is running"
