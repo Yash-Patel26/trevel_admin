@@ -1,0 +1,1164 @@
+{
+	"info": {
+		"_postman_id": "trevel-admin-api-v1",
+		"name": "Trevel Admin API",
+		"description": "Complete API collection for Trevel Admin backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:4000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/healthz",
+							"host": ["{{baseUrl}}"],
+							"path": ["healthz"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', jsonData.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', jsonData.refreshToken);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh"]
+						}
+					}
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "me"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						}
+					}
+				},
+				{
+					"name": "Logout All Devices",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout-all",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout-all"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Vehicles",
+			"item": [
+				{
+					"name": "Get Vehicle Makes and Models",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vehicles/makes-models",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles", "makes-models"]
+						}
+					}
+				},
+				{
+					"name": "Get Available Vehicles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vehicles/available?make=MG&shiftTiming=morning",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles", "available"],
+							"query": [
+								{
+									"key": "make",
+									"value": "MG"
+								},
+								{
+									"key": "shiftTiming",
+									"value": "morning"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Vehicles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vehicles?page=1&pageSize=10&status=approved&search=MG",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "approved"
+								},
+								{
+									"key": "search",
+									"value": "MG"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Vehicle by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vehicles/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Vehicle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"numberPlate\": \"ABC-1234\",\n  \"make\": \"MG\",\n  \"model\": \"Windsor\",\n  \"insurancePolicyNumber\": \"INS-12345\",\n  \"insuranceExpiry\": \"2025-12-31T00:00:00.000Z\",\n  \"liveLocationKey\": \"loc-key-123\",\n  \"dashcamKey\": \"cam-key-123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/vehicles",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles"]
+						}
+					}
+				},
+				{
+					"name": "Review Vehicle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\",\n  \"comments\": \"Vehicle approved for use\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/vehicles/:id/review",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles", ":id", "review"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Vehicle Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vehicles/:id/logs",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles", ":id", "logs"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Vehicle Assignments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/vehicles/:id/assignments",
+							"host": ["{{baseUrl}}"],
+							"path": ["vehicles", ":id", "assignments"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Drivers",
+			"item": [
+				{
+					"name": "Get All Drivers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/drivers?page=1&pageSize=10&status=pending&search=John",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "pending"
+								},
+								{
+									"key": "search",
+									"value": "John"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Driver by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Driver",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"mobile\": \"+1234567890\",\n  \"email\": \"john.doe@example.com\",\n  \"onboardingData\": {\n    \"licenseNumber\": \"DL123456\",\n    \"notes\": \"New driver onboarding\"\n  },\n  \"contactPreferences\": {\n    \"emailNotifications\": true,\n    \"smsNotifications\": true,\n    \"pushNotifications\": false,\n    \"preferredContactMethod\": \"email\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/drivers",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers"]
+						}
+					}
+				},
+				{
+					"name": "Background Check",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"clear\",\n  \"notes\": \"Background check passed\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/background",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "background"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Assign Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"module\": \"safety\",\n  \"status\": \"assigned\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/training",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "training"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Approve Driver",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"decision\": \"approved\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "approve"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Assign Vehicle to Driver",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vehicleId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/assign-vehicle",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "assign-vehicle"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Driver Audit Trail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/audit-trail",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "audit-trail"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Driver Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/logs",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "logs"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Driver Documents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "documents"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Upload Driver Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "type",
+									"value": "license",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "documents"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Verify Driver Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"verified\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/documents/:documentId/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "documents", ":documentId", "verify"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								},
+								{
+									"key": "documentId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Driver Document",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/drivers/:id/documents/:documentId",
+							"host": ["{{baseUrl}}"],
+							"path": ["drivers", ":id", "documents", ":documentId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								},
+								{
+									"key": "documentId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Tickets",
+			"item": [
+				{
+					"name": "Get All Tickets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tickets?page=1&pageSize=10&status=open&category=maintenance",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "open"
+								},
+								{
+									"key": "category",
+									"value": "maintenance"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vehicleNumber\": \"ABC-1234\",\n  \"driverName\": \"John Doe\",\n  \"driverMobile\": \"+1234567890\",\n  \"category\": \"maintenance\",\n  \"priority\": \"high\",\n  \"description\": \"Vehicle needs urgent maintenance\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets"]
+						}
+					}
+				},
+				{
+					"name": "Update Ticket",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"in_progress\",\n  \"assignedTo\": 1,\n  \"resolutionNotes\": \"Working on the issue\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users?page=1&pageSize=10&search=admin&roleId=1&isActive=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "admin"
+								},
+								{
+									"key": "roleId",
+									"value": "1"
+								},
+								{
+									"key": "isActive",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newuser@example.com\",\n  \"fullName\": \"New User\",\n  \"password\": \"password123\",\n  \"roleId\": 2,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"]
+						}
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"updated@example.com\",\n  \"fullName\": \"Updated User\",\n  \"roleId\": 3,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Rides",
+			"item": [
+				{
+					"name": "Get All Rides",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rides?page=1&pageSize=10&status=active",
+							"host": ["{{baseUrl}}"],
+							"path": ["rides"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "active"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Ride by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/rides/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["rides", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Ride",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"driverId\": 1,\n  \"vehicleId\": 1,\n  \"customerId\": 1,\n  \"pickupLocation\": \"123 Main St\",\n  \"dropoffLocation\": \"456 Oak Ave\",\n  \"scheduledAt\": \"2024-01-15T10:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rides",
+							"host": ["{{baseUrl}}"],
+							"path": ["rides"]
+						}
+					}
+				},
+				{
+					"name": "Update Ride",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"completed\",\n  \"actualPickupTime\": \"2024-01-15T10:05:00.000Z\",\n  \"actualDropoffTime\": \"2024-01-15T10:30:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rides/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["rides", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Customers",
+			"item": [
+				{
+					"name": "Get All Customers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/customers?page=1&pageSize=10&search=John",
+							"host": ["{{baseUrl}}"],
+							"path": ["customers"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "John"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Customer by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/customers/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["customers", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Customer\",\n  \"email\": \"customer@example.com\",\n  \"mobile\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/customers",
+							"host": ["{{baseUrl}}"],
+							"path": ["customers"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get Recent Activities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/activities",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "activities"]
+						}
+					}
+				},
+				{
+					"name": "Get Pending Approvals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/pending-approvals",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "pending-approvals"]
+						}
+					}
+				},
+				{
+					"name": "Get Alerts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/alerts",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "alerts"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Audit",
+			"item": [
+				{
+					"name": "Get Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/audit?page=1&pageSize=10&entityType=driver&action=driver:create",
+							"host": ["{{baseUrl}}"],
+							"path": ["audit"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "entityType",
+									"value": "driver"
+								},
+								{
+									"key": "action",
+									"value": "driver:create"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Upload",
+			"item": [
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/upload/image",
+							"host": ["{{baseUrl}}"],
+							"path": ["upload", "image"]
+						}
+					}
+				},
+				{
+					"name": "Upload Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "document",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/upload/document",
+							"host": ["{{baseUrl}}"],
+							"path": ["upload", "document"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
+

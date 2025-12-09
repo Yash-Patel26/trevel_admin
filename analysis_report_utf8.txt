@@ -1,0 +1,60 @@
+﻿Analyzing trevel_admin...                                       
+
+   info - The member 'stream' overrides an inherited member but isn't annotated with '@override' - lib\core\state\auth\auth_controller.dart:27:25 - annotate_overrides
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\widgets\app_shell.dart:224:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_shell.dart:225:22 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\widgets\app_shell.dart:327:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_shell.dart:327:63 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\audit\presentation\audit_log_detail_dialog.dart:42:56 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\audit\presentation\audit_log_detail_dialog.dart:63:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\audit\presentation\audit_page.dart:73:50 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\auth\data\auth_repository.dart:44:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\auth\data\auth_repository.dart:45:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\auth\data\auth_repository.dart:46:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\auth\data\auth_repository.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\auth\data\auth_repository.dart:76:7 - avoid_print
+   info - Statements in an if should be enclosed in a block - lib\features\auth\presentation\login_page.dart:114:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\auth\presentation\login_page.dart:129:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\bookings\data\bookings_repository.dart:34:7 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bookings\presentation\booking_detail_page.dart:48:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bookings\presentation\booking_detail_page.dart:79:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bookings\presentation\bookings_page.dart:73:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bookings\presentation\bookings_page.dart:107:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\dashboard_page.dart:165:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\drivers\presentation\driver_detail_page.dart:72:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\drivers\presentation\driver_detail_page.dart:104:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\drivers\presentation\drivers_page.dart:98:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\drivers\presentation\drivers_page.dart:124:61 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\drivers\presentation\onboarding\step1_basic_info_page.dart:234:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\drivers\presentation\onboarding\step3_contact_preferences_page.dart:267:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\drivers\presentation\onboarding\step3_contact_preferences_page.dart:323:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\drivers\presentation\onboarding\step3_contact_preferences_page.dart:400:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\drivers\presentation\onboarding\step5_vehicle_allocation_page.dart:206:25 - deprecated_member_use
+   info - Unnecessary braces in a string interpolation - lib\features\drivers\presentation\onboarding\step5_vehicle_allocation_page.dart:247:64 - unnecessary_brace_in_string_interps
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\drivers\presentation\onboarding\step5_vehicle_allocation_page.dart:268:33 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\drivers\presentation\onboarding\step5_vehicle_allocation_page.dart:269:33 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\drivers\presentation\onboarding\step6_review_page.dart:654:52 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\rides\data\rides_repository.dart:33:7 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\rides\presentation\ride_detail_page.dart:151:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\rides\presentation\ride_detail_page.dart:177:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\rides\presentation\rides_page.dart:129:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\rides\presentation\rides_page.dart:169:62 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\tickets\presentation\create_ticket_dialog.dart:119:17 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\tickets\presentation\create_ticket_dialog.dart:134:17 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\tickets\presentation\ticket_detail_page.dart:46:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\tickets\presentation\ticket_detail_page.dart:76:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\tickets\presentation\tickets_page.dart:105:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\tickets\presentation\tickets_page.dart:139:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\users\presentation\user_detail_page.dart:46:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\users\presentation\user_detail_page.dart:47:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\users\presentation\user_detail_page.dart:83:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\users\presentation\users_page.dart:91:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\users\presentation\users_page.dart:92:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\users\presentation\users_page.dart:134:46 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\vehicles\presentation\create_vehicle_page.dart:169:33 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\vehicles\presentation\create_vehicle_page.dart:202:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\vehicles\presentation\vehicle_detail_page.dart:66:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\vehicles\presentation\vehicle_detail_page.dart:100:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\vehicles\presentation\vehicles_page.dart:104:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\vehicles\presentation\vehicles_page.dart:133:62 - deprecated_member_use
+

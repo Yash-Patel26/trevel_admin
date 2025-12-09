@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build output
+dist
+build
+
+# Uploads (should be in volume, not in image)
+uploads
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
+*.test.ts
+*.spec.ts
+tests
+
+# Keep scripts for Docker
+!scripts/
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Misc
+*.log
+.cache
+
