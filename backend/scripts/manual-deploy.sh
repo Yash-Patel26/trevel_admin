@@ -21,7 +21,7 @@ echo ""
 CONTAINER_NAME="trevel_admin_backend"
 IMAGE_NAME="trevel_backend"
 VERSION=$(date +%Y%m%d_%H%M%S)
-BACKEND_DIR="$HOME/backend"
+BACKEND_DIR="$(pwd)"  # Use current directory instead of hardcoded path
 
 echo -e "${YELLOW}📋 Deployment Configuration:${NC}"
 echo "  Container Name: $CONTAINER_NAME"
