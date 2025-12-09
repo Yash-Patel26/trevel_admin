@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x  # Verbose output for debugging
 
 # Colors for output
 RED='\033[0;31m'
@@ -8,119 +9,45 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 Starting zero-downtime deployment...${NC}"
+echo -e "${GREEN}🚀 Starting simplified deployment...${NC}"
 
 # Configuration
 CONTAINER_NAME="trevel_admin_backend"
-NEW_CONTAINER_NAME="${CONTAINER_NAME}_new"
 IMAGE_NAME="trevel_backend"
-HEALTH_CHECK_RETRIES=30
-HEALTH_CHECK_INTERVAL=2
-
-# Get current commit hash for versioning
-# Note: .git directory is excluded from deployment tarball, so use timestamp
 VERSION=$(date +%Y%m%d_%H%M%S)
 
 echo -e "${YELLOW}📦 Version: ${VERSION}${NC}"
 
 # Step 1: Build new Docker image
-echo -e "${YELLOW}🔨 Building new Docker image...${NC}"
-docker build -t ${IMAGE_NAME}:${VERSION} -t ${IMAGE_NAME}:latest .
+echo -e "${YELLOW}🔨 Building Docker image...${NC}"
+sudo docker build -t ${IMAGE_NAME}:${VERSION} -t ${IMAGE_NAME}:latest .
 
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ Docker build failed!${NC}"
   exit 1
 fi
 
-# Step 2: Check if old container exists
-OLD_CONTAINER_EXISTS=$(docker ps -a -q -f name=^/${CONTAINER_NAME}$)
+# Step 2: Stop and remove old container if it exists
+echo -e "${YELLOW}� Stopping old container...${NC}"
+sudo docker stop ${CONTAINER_NAME} 2>/dev/null || true
+sudo docker rm ${CONTAINER_NAME} 2>/dev/null || true
 
-# Step 3: Start new container on different port temporarily
-echo -e "${YELLOW}🚢 Starting new container...${NC}"
-
-# Remove any existing new container
-docker rm -f ${NEW_CONTAINER_NAME} 2>/dev/null || true
-
-# Start new container on port 4001 temporarily
-docker run -d \
-  --name ${NEW_CONTAINER_NAME} \
+# Step 3: Run database migrations
+echo -e "${YELLOW}🗄️  Running database migrations...${NC}"
+sudo docker run --rm \
   --env-file .env \
   -e NODE_ENV=production \
-  -e PORT=4000 \
-  -p 4001:4000 \
-  -v $(pwd)/uploads:/app/uploads \
-  --restart unless-stopped \
-  ${IMAGE_NAME}:${VERSION}
-
-if [ $? -ne 0 ]; then
-  echo -e "${RED}❌ Failed to start new container!${NC}"
-  docker rm -f ${NEW_CONTAINER_NAME} 2>/dev/null || true
-  exit 1
-fi
-
-# Step 4: Wait for new container to be healthy
-echo -e "${YELLOW}🏥 Running health checks on new container...${NC}"
-
-HEALTHY=false
-for i in $(seq 1 $HEALTH_CHECK_RETRIES); do
-  echo -n "."
-  
-  # Check if container is still running
-  if ! docker ps -q -f name=^/${NEW_CONTAINER_NAME}$ | grep -q .; then
-    echo -e "\n${RED}❌ New container stopped unexpectedly!${NC}"
-    docker logs ${NEW_CONTAINER_NAME} --tail 50
-    docker rm -f ${NEW_CONTAINER_NAME} 2>/dev/null || true
-    exit 1
-  fi
-  
-  # Check health endpoint
-  if curl -f -s http://localhost:4001/healthz > /dev/null 2>&1; then
-    HEALTHY=true
-    echo -e "\n${GREEN}✅ New container is healthy!${NC}"
-    break
-  fi
-  
-  sleep $HEALTH_CHECK_INTERVAL
-done
-
-if [ "$HEALTHY" = false ]; then
-  echo -e "\n${RED}❌ Health check failed after ${HEALTH_CHECK_RETRIES} attempts!${NC}"
-  echo -e "${YELLOW}📋 Container logs:${NC}"
-  docker logs ${NEW_CONTAINER_NAME} --tail 50
-  
-  echo -e "${YELLOW}🔄 Rolling back...${NC}"
-  docker rm -f ${NEW_CONTAINER_NAME}
-  exit 1
-fi
-
-# Step 5: Run database migrations
-echo -e "${YELLOW}🗄️  Running database migrations...${NC}"
-docker exec ${NEW_CONTAINER_NAME} npx prisma migrate deploy
+  ${IMAGE_NAME}:${VERSION} \
+  npx prisma migrate deploy
 
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ Database migration failed!${NC}"
-  echo -e "${YELLOW}🔄 Rolling back...${NC}"
-  docker rm -f ${NEW_CONTAINER_NAME}
   exit 1
 fi
 
-# Step 6: Switch traffic to new container
-echo -e "${YELLOW}🔄 Switching traffic to new container...${NC}"
-
-# Stop and remove old container
-if [ -n "$OLD_CONTAINER_EXISTS" ]; then
-  echo -e "${YELLOW}🛑 Stopping old container...${NC}"
-  docker stop ${CONTAINER_NAME} 2>/dev/null || true
-  docker rm ${CONTAINER_NAME} 2>/dev/null || true
-fi
-
-# Stop the new container (currently on port 4001)
-echo -e "${YELLOW}🔄 Reconfiguring container for production port...${NC}"
-docker stop ${NEW_CONTAINER_NAME}
-docker rm ${NEW_CONTAINER_NAME}
-
-# Start container on production port 4000
-docker run -d \
+# Step 4: Start new container
+echo -e "${YELLOW}� Starting new container...${NC}"
+sudo docker run -d \
   --name ${CONTAINER_NAME} \
   --env-file .env \
   -e NODE_ENV=production \
@@ -130,17 +57,22 @@ docker run -d \
   --restart unless-stopped \
   ${IMAGE_NAME}:${VERSION}
 
-# Wait for container to be ready
-echo -e "${YELLOW}⏳ Waiting for container to start...${NC}"
-sleep 5
+if [ $? -ne 0 ]; then
+  echo -e "${RED}❌ Failed to start container!${NC}"
+  exit 1
+fi
 
-# Final health check
-echo -e "${YELLOW}🏥 Final health check...${NC}"
+# Step 5: Wait for container to be ready
+echo -e "${YELLOW}⏳ Waiting for container to start...${NC}"
+sleep 10
+
+# Step 6: Health check
+echo -e "${YELLOW}🏥 Running health check...${NC}"
 HEALTHY=false
-for i in $(seq 1 10); do
+for i in $(seq 1 15); do
   if curl -f -s http://localhost:4000/healthz > /dev/null 2>&1; then
     HEALTHY=true
-    echo -e "${GREEN}✅ Deployment successful!${NC}"
+    echo -e "${GREEN}✅ Container is healthy!${NC}"
     break
   fi
   echo -n "."
@@ -148,22 +80,16 @@ for i in $(seq 1 10); do
 done
 
 if [ "$HEALTHY" = false ]; then
-  echo -e "\n${RED}❌ Final health check failed!${NC}"
+  echo -e "\n${RED}❌ Health check failed!${NC}"
   echo -e "${YELLOW}📋 Container logs:${NC}"
-  docker logs ${CONTAINER_NAME} --tail 50
+  sudo docker logs ${CONTAINER_NAME} --tail 50
   exit 1
 fi
 
 # Step 7: Cleanup old images
 echo -e "${YELLOW}🧹 Cleaning up old images...${NC}"
-docker image prune -f --filter "label=app=trevel_backend" --filter "until=24h" 2>/dev/null || true
+sudo docker image prune -f 2>/dev/null || true
 
 echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
 echo -e "${GREEN}📊 Container status:${NC}"
-docker ps -f name=${CONTAINER_NAME}
-
-echo -e "\n${GREEN}📝 Deployment Summary:${NC}"
-echo -e "  Version: ${VERSION}"
-echo -e "  Container: ${CONTAINER_NAME}"
-echo -e "  Status: Running"
-echo -e "  Health: OK"
+sudo docker ps -f name=${CONTAINER_NAME}
