@@ -133,24 +133,17 @@ jobs:
           
           echo "🚀 Starting deployment on EC2..."
           
-          # Execute deployment script on EC2 with verbose output
-          ssh -v -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH' || {
-            echo "❌ Deployment script failed!"
-            echo "📋 Fetching error logs from EC2..."
-            ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'if [ -d ~/backend_new ]; then echo "=== New container logs ==="; docker logs trevel_admin_backend_new --tail 100 2>&1 || echo "No new container logs"; fi; if [ -d ~/backend ]; then echo "=== Current container logs ==="; docker logs trevel_admin_backend --tail 50 2>&1 || echo "No current container logs"; fi'
-            exit 1
-          }
+          # Execute deployment script on EC2
+          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH'
             set -e
             set -x  # Enable verbose output
             
             echo "📦 Extracting deployment package..."
-            # Extract new code
             mkdir -p ~/backend_new
             tar -xzf /tmp/deploy.tar.gz -C ~/backend_new
             rm /tmp/deploy.tar.gz
             
             echo "📋 Copying environment file..."
-            # Copy environment file
             if [ -f ~/backend/.env ]; then
               cp ~/backend/.env ~/backend_new/.env
               echo "✅ .env file copied"
@@ -159,13 +152,11 @@ jobs:
             fi
             
             echo "🚀 Running deployment script..."
-            # Run deployment script
             cd ~/backend_new
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
             
             echo "🧹 Cleaning up old versions..."
-            # Cleanup
             if [ -d ~/backend_old ]; then
               rm -rf ~/backend_old
             fi
@@ -176,6 +167,13 @@ jobs:
             
             echo "✅ Deployment completed successfully!"
           ENDSSH
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ Deployment script failed!"
+            echo "📋 Fetching error logs from EC2..."
+            ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'if [ -d ~/backend_new ]; then echo "=== New container logs ==="; sudo docker logs trevel_admin_backend_new --tail 100 2>&1 || echo "No new container logs"; fi; if [ -d ~/backend ]; then echo "=== Current container logs ==="; sudo docker logs trevel_admin_backend --tail 50 2>&1 || echo "No current container logs"; fi'
+            exit 1
+          fi
       
       - name: Verify deployment
         env:
