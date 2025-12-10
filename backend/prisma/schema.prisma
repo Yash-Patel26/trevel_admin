@@ -245,7 +245,11 @@ model Booking {
   customerId          Int
   customer            Customer  @relation(fields: [customerId], references: [id])
   pickupLocation      String
+  pickupLatitude      Float?
+  pickupLongitude     Float?
   destinationLocation String
+  destinationLatitude Float?
+  destinationLongitude Float?
   pickupTime          DateTime
   destinationTime     DateTime?
   vehicleModel        String?

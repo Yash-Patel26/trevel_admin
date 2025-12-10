@@ -10,6 +10,7 @@ import { generateOtp } from "../utils/otp";
 import { queueNotification } from "../services/notifications";
 import { logAudit } from "../utils/audit";
 import { z } from "zod";
+import { env } from "../config/env";
 
 export const customersRouter = Router();
 
@@ -101,6 +102,12 @@ customersRouter.post(
     const { vehicleId, driverId } = req.body;
     const booking = await prisma.booking.findUnique({ where: { id }, include: { customer: true } });
     if (!booking) return res.status(404).json({ message: "Not found" });
+
+    if (!isBookingWithinAllowedAreas(booking)) {
+      return res.status(400).json({
+        message: "Booking pickup/destination are outside allowed service areas. Update locations first.",
+      });
+    }
     const otpCode = generateOtp();
     const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     const updated = await prisma.booking.update({
@@ -161,6 +168,42 @@ const bookingStatusUpdateSchema = z.object({
   distanceKm: z.number().optional(),
 });
 
+const bookingLocationUpdateSchema = z.object({
+  pickupLocation: z.string().min(1).optional(),
+  destinationLocation: z.string().min(1).optional(),
+  pickupLatitude: z.number().optional(),
+  pickupLongitude: z.number().optional(),
+  destinationLatitude: z.number().optional(),
+  destinationLongitude: z.number().optional(),
+});
+
+// Basic point-in-polygon check (ray casting)
+function isPointInPolygon(lat: number, lng: number, polygon: number[][]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0], yi = polygon[i][1];
+    const xj = polygon[j][0], yj = polygon[j][1];
+
+    const intersect =
+      yi > lng !== yj > lng &&
+      lat < ((xj - xi) * (lng - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function isWithinAllowedAreas(lat?: number, lng?: number): boolean {
+  if (lat === undefined || lng === undefined) return true; // No coords to validate
+  if (!env.allowedServiceAreas.length) return true; // No restriction configured
+  return env.allowedServiceAreas.some((poly) => isPointInPolygon(lat, lng, poly));
+}
+
+function isBookingWithinAllowedAreas(booking: any): boolean {
+  const pickupOk = isWithinAllowedAreas(booking.pickupLatitude, booking.pickupLongitude);
+  const destOk = isWithinAllowedAreas(booking.destinationLatitude, booking.destinationLongitude);
+  return pickupOk && destOk;
+}
+
 customersRouter.patch(
   "/bookings/:id/status",
   requirePermissions(["customer:view", "dashboard:view"]),
@@ -209,6 +252,74 @@ customersRouter.patch(
       targetId: booking.customerId,
       type: "booking.status_update",
       payload: { bookingId: id, status },
+    });
+
+    return res.json(updated);
+  }
+);
+
+// Update booking pickup/drop locations and coordinates
+customersRouter.patch(
+  "/bookings/:id/locations",
+  requirePermissions(["customer:view", "dashboard:view"]),
+  validateBody(bookingLocationUpdateSchema),
+  async (req, res) => {
+    const id = Number(req.params.id);
+    const booking = await prisma.booking.findUnique({ where: { id } });
+    if (!booking) return res.status(404).json({ message: "Not found" });
+
+    const {
+      pickupLocation,
+      destinationLocation,
+      pickupLatitude,
+      pickupLongitude,
+      destinationLatitude,
+      destinationLongitude,
+    } = req.body;
+
+    // Validate pickup coordinates within allowed polygons if provided
+    if (
+      pickupLatitude !== undefined &&
+      pickupLongitude !== undefined &&
+      !isWithinAllowedAreas(pickupLatitude, pickupLongitude)
+    ) {
+      return res.status(400).json({ message: "Pickup location is outside allowed service areas" });
+    }
+
+    // Validate destination coordinates within allowed polygons if provided
+    if (
+      destinationLatitude !== undefined &&
+      destinationLongitude !== undefined &&
+      !isWithinAllowedAreas(destinationLatitude, destinationLongitude)
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Destination location is outside allowed service areas" });
+    }
+
+    // Use any to avoid Prisma type mismatch until client is regenerated
+    const updateData: any = {
+      pickupLocation: pickupLocation ?? booking.pickupLocation,
+      destinationLocation: destinationLocation ?? booking.destinationLocation,
+      pickupLatitude: pickupLatitude ?? (booking as any).pickupLatitude,
+      pickupLongitude: pickupLongitude ?? (booking as any).pickupLongitude,
+      destinationLatitude: destinationLatitude ?? (booking as any).destinationLatitude,
+      destinationLongitude: destinationLongitude ?? (booking as any).destinationLongitude,
+    };
+
+    const updated = await prisma.booking.update({
+      where: { id },
+      data: updateData,
+      include: { customer: true },
+    });
+
+    await logAudit({
+      actorId: req.user?.id,
+      action: "booking:update_locations",
+      entityType: "booking",
+      entityId: String(id),
+      before: booking,
+      after: updated,
     });
 
     return res.json(updated);

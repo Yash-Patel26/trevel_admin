@@ -8,6 +8,7 @@ import '../../features/audit/presentation/audit_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/bookings/presentation/booking_detail_page.dart';
 import '../../features/bookings/presentation/bookings_page.dart';
+import '../../features/bookings/presentation/edit_booking_location_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/drivers/presentation/create_driver_page.dart';
 import '../../features/drivers/presentation/driver_detail_page.dart';
@@ -48,10 +49,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // If not logged in and not going to login, redirect to login
       if (!loggedIn && !goingToLogin) return '/login';
-      
+
       // If not logged in and going to login, allow it (important for logout)
       if (!loggedIn && goingToLogin) return null;
-      
+
       // If logged in and trying to access login, redirect to dashboard
       if (loggedIn && goingToLogin) {
         // Redirect to role-specific dashboard
@@ -318,6 +319,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   final id = int.parse(state.pathParameters['id']!);
                   return MaterialPage(child: BookingDetailPage(bookingId: id));
                 },
+                routes: [
+                  GoRoute(
+                    path: 'edit-location',
+                    name: 'booking-edit-location',
+                    pageBuilder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return MaterialPage(
+                        child: EditBookingLocationPage(bookingId: id),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

@@ -108,6 +108,29 @@ class BookingsRepository {
     return response.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> updateBookingLocations({
+    required int bookingId,
+    String? pickupLocation,
+    String? destinationLocation,
+    double? pickupLatitude,
+    double? pickupLongitude,
+    double? destinationLatitude,
+    double? destinationLongitude,
+  }) async {
+    final response = await _dio.patch('/bookings/$bookingId/locations', data: {
+      if (pickupLocation != null) 'pickupLocation': pickupLocation,
+      if (destinationLocation != null)
+        'destinationLocation': destinationLocation,
+      if (pickupLatitude != null) 'pickupLatitude': pickupLatitude,
+      if (pickupLongitude != null) 'pickupLongitude': pickupLongitude,
+      if (destinationLatitude != null)
+        'destinationLatitude': destinationLatitude,
+      if (destinationLongitude != null)
+        'destinationLongitude': destinationLongitude,
+    });
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> getCustomer(int customerId) async {
     final response = await _dio.get('/customers/$customerId');
     return response.data as Map<String, dynamic>;

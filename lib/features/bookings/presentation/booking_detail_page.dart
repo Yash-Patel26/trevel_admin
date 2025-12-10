@@ -22,6 +22,19 @@ class BookingDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Booking Details'),
+        actions: [
+          IconButton(
+            tooltip: 'Edit pickup/drop',
+            icon: const Icon(Icons.edit_location_alt),
+            onPressed: () async {
+              final updated = await context
+                  .push<bool>('/bookings/$bookingId/edit-location');
+              if (updated == true && context.mounted) {
+                ref.invalidate(bookingDetailProvider(bookingId));
+              }
+            },
+          ),
+        ],
       ),
       body: bookingAsync.when(
         data: (booking) {
@@ -101,9 +114,23 @@ class BookingDetailPage extends ConsumerWidget {
                         if (booking['pickupLocation'] != null)
                           _buildInfoRow(context, 'Pickup Location',
                               booking['pickupLocation'] as String),
+                        if (booking['pickupLatitude'] != null ||
+                            booking['pickupLongitude'] != null)
+                          _buildInfoRow(
+                            context,
+                            'Pickup Lat/Lng',
+                            '${booking['pickupLatitude'] ?? '-'}, ${booking['pickupLongitude'] ?? '-'}',
+                          ),
                         if (booking['destinationLocation'] != null)
                           _buildInfoRow(context, 'Destination',
                               booking['destinationLocation'] as String),
+                        if (booking['destinationLatitude'] != null ||
+                            booking['destinationLongitude'] != null)
+                          _buildInfoRow(
+                            context,
+                            'Destination Lat/Lng',
+                            '${booking['destinationLatitude'] ?? '-'}, ${booking['destinationLongitude'] ?? '-'}',
+                          ),
                         if (booking['pickupTime'] != null)
                           _buildInfoRow(context, 'Pickup Time',
                               _formatDateTime(booking['pickupTime'])),
