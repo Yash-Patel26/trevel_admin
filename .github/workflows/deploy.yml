@@ -123,6 +123,31 @@ jobs:
           chmod 600 ~/.ssh/deploy_key.pem
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
           
+          # Test SSH connectivity first with timeout
+          echo "🔍 Testing SSH connectivity to EC2..."
+          SSH_OPTS="-i ~/.ssh/deploy_key.pem -o ConnectTimeout=10 -o StrictHostKeyChecking=no"
+          
+          for i in {1..3}; do
+            echo "Attempt $i of 3..."
+            if timeout 15 ssh $SSH_OPTS $EC2_USER@$EC2_HOST 'echo "SSH connection successful"; whoami; pwd' 2>&1; then
+              echo "✅ SSH connection successful!"
+              break
+            else
+              if [ $i -eq 3 ]; then
+                echo "❌ SSH connection failed after 3 attempts"
+                echo ""
+                echo "Troubleshooting steps:"
+                echo "1. Verify EC2 instance is running"
+                echo "2. Check EC2 security group allows SSH (port 22) from GitHub Actions IPs"
+                echo "3. Verify EC2_HOST secret is correct: $EC2_HOST"
+                echo "4. Check EC2 instance status in AWS Console"
+                exit 1
+              fi
+              echo "⏳ Waiting 5 seconds before retry..."
+              sleep 5
+            fi
+          done
+          
           echo "📦 Creating deployment package..."
           
           # Create deployment package
@@ -136,16 +161,28 @@ jobs:
             .
           
           echo "📤 Uploading to EC2..."
-          scp -i ~/.ssh/deploy_key.pem ../deploy.tar.gz $EC2_USER@$EC2_HOST:/tmp/
+          # Use timeout and retry for SCP
+          for i in {1..3}; do
+            echo "Upload attempt $i of 3..."
+            if timeout 60 scp $SSH_OPTS ../deploy.tar.gz $EC2_USER@$EC2_HOST:/tmp/ 2>&1; then
+              echo "✅ File uploaded successfully!"
+              break
+            else
+              if [ $i -eq 3 ]; then
+                echo "❌ File upload failed after 3 attempts"
+                exit 1
+              fi
+              echo "⏳ Waiting 5 seconds before retry..."
+              sleep 5
+            fi
+          done
           
           echo ""
-          echo "🔍 Testing SSH connection..."
-          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'echo "SSH connection successful"; whoami; pwd; ls -la /tmp/deploy.tar.gz'
-          
-          if [ $? -ne 0 ]; then
-            echo "❌ SSH connection test failed!"
+          echo "🔍 Verifying uploaded file..."
+          ssh $SSH_OPTS $EC2_USER@$EC2_HOST 'ls -lh /tmp/deploy.tar.gz' || {
+            echo "❌ Uploaded file not found on EC2!"
             exit 1
-          fi
+          }
           
           echo "🚀 Starting deployment on EC2..."
           echo ""

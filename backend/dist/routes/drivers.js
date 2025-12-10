@@ -18,6 +18,15 @@ const schemas_1 = require("../validation/schemas");
 const validate_1 = require("../validation/validate");
 const pagination_1 = require("../utils/pagination");
 exports.driversRouter = (0, express_1.Router)();
+// Helper function to transform driver object and extract profileImageUrl from onboardingData
+function transformDriver(driver) {
+    const onboardingData = driver.onboardingData;
+    const profileImageUrl = onboardingData?.profileImageUrl || null;
+    return {
+        ...driver,
+        profileImageUrl,
+    };
+}
 exports.driversRouter.use(auth_1.authMiddleware);
 exports.driversRouter.post("/drivers", (0, permissions_1.requirePermissions)(["driver:create"]), (0, validate_1.validateBody)(schemas_1.driverCreateSchema), async (req, res) => {
     const { name, mobile, email, onboardingData, contactPreferences } = req.body;
@@ -86,7 +95,7 @@ exports.driversRouter.post("/drivers", (0, permissions_1.requirePermissions)(["d
         action: "create",
         payload: driver,
     });
-    return res.json(driver);
+    return res.json(transformDriver(driver));
 });
 exports.driversRouter.get("/drivers", (0, permissions_1.requirePermissions)(["driver:view"]), async (req, res) => {
     const { skip, take, page, pageSize } = (0, pagination_1.getPagination)(req.query);
@@ -146,7 +155,16 @@ exports.driversRouter.get("/drivers", (0, permissions_1.requirePermissions)(["dr
         }),
         client_2.default.driver.count({ where }),
     ]);
-    return res.json({ data: drivers, page, pageSize, total });
+    // Transform drivers to extract profileImageUrl from onboardingData
+    const transformedDrivers = drivers.map((driver) => {
+        const onboardingData = driver.onboardingData;
+        const profileImageUrl = onboardingData?.profileImageUrl || null;
+        return {
+            ...driver,
+            profileImageUrl,
+        };
+    });
+    return res.json({ data: transformedDrivers, page, pageSize, total });
 });
 // Check if mobile number already exists
 exports.driversRouter.get("/drivers/check-mobile", (0, permissions_1.requirePermissions)(["driver:create", "driver:view"]), async (req, res) => {
@@ -603,9 +621,9 @@ exports.driversRouter.post("/drivers/:id/documents", (0, permissions_1.requirePe
             if (!driver) {
                 return res.status(404).json({ message: "Driver not found" });
             }
-            // Check ownership for Driver Individual
-            if (req.user?.role === "Driver Individual" && driver.createdBy !== req.user.id) {
-                return res.status(403).json({ message: "Forbidden: You can only upload documents for your own profile" });
+            // For Driver Individual users, verify ownership
+            if (req.user?.role === "Driver Individual" && driver.createdBy !== req.user?.id) {
+                return res.status(403).json({ message: "You can only upload documents for drivers you created" });
             }
             // Generate URL for the uploaded file
             const fileUrl = `/uploads/${req.file.filename}`;
@@ -643,18 +661,19 @@ exports.driversRouter.delete("/drivers/:id/documents/:documentId", (0, permissio
     const id = Number(req.params.id);
     const documentId = Number(req.params.documentId);
     try {
+        const driver = await client_2.default.driver.findUnique({ where: { id } });
+        if (!driver) {
+            return res.status(404).json({ message: "Driver not found" });
+        }
+        // For Driver Individual users, verify ownership
+        if (req.user?.role === "Driver Individual" && driver.createdBy !== req.user?.id) {
+            return res.status(403).json({ message: "You can only delete documents for drivers you created" });
+        }
         const document = await client_2.default.driverDocument.findFirst({
             where: { id: documentId, driverId: id },
         });
         if (!document) {
             return res.status(404).json({ message: "Document not found" });
-        }
-        // Check ownership for Driver Individual
-        if (req.user?.role === "Driver Individual") {
-            const driver = await client_2.default.driver.findUnique({ where: { id } });
-            if (driver && driver.createdBy !== req.user.id) {
-                return res.status(403).json({ message: "Forbidden: You can only delete documents from your own profile" });
-            }
         }
         await client_2.default.driverDocument.delete({
             where: { id: documentId },

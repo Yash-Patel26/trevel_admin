@@ -36,12 +36,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadRouter = void 0;
 const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
-const permissions_1 = require("../middleware/permissions");
 const upload_1 = require("../middleware/upload");
 exports.uploadRouter = (0, express_1.Router)();
 exports.uploadRouter.use(auth_1.authMiddleware);
 // Single image upload endpoint
-exports.uploadRouter.post("/upload", (0, permissions_1.requirePermissions)(["driver:create", "driver:edit"]), async (req, res) => {
+exports.uploadRouter.post("/upload", 
+// Removed permission check - any authenticated user can upload images
+// Permission checks should be done at the entity level (e.g., when creating/editing drivers)
+async (req, res) => {
     (0, upload_1.uploadSingle)(req, res, async (err) => {
         if (err) {
             console.error("Upload error:", err);
@@ -78,7 +80,9 @@ exports.uploadRouter.post("/upload", (0, permissions_1.requirePermissions)(["dri
     });
 });
 // Multiple images upload endpoint
-exports.uploadRouter.post("/upload/multiple", (0, permissions_1.requirePermissions)(["driver:create", "driver:edit"]), async (req, res) => {
+exports.uploadRouter.post("/upload/multiple", 
+// Removed permission check - any authenticated user can upload images
+async (req, res) => {
     (0, upload_1.uploadMultiple)(req, res, async (err) => {
         if (err) {
             console.error("Multiple upload error:", err);
