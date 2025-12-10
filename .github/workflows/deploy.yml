@@ -207,7 +207,7 @@ jobs:
             
             echo "🚀 Running deployment script..."
             cd ~/backend_new || { echo "ERROR: Failed to cd to backend_new"; exit 1; }
-            chmod +x scripts/deploy.sh || { echo "ERROR: Failed to chmod deploy.sh"; exit 1; }
+            chmod +x scripts/*.sh || { echo "ERROR: Failed to chmod scripts"; exit 1; }
             
             echo "=== Executing deploy.sh ==="
             ./scripts/deploy.sh
@@ -260,6 +260,7 @@ jobs:
           # Run health check
           ssh $SSH_OPTS $EC2_USER@$EC2_HOST << 'ENDSSH'
             cd ~/backend
+            chmod +x scripts/health-check.sh
             ./scripts/health-check.sh
           ENDSSH
       
