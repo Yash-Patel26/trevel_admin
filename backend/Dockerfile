@@ -71,12 +71,7 @@ VOLUME ["/app/uploads"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:4000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Copy database initialization script
-COPY --from=builder /app/scripts ./scripts
 
-# Copy seed file for database seeding
-COPY --from=builder /app/prisma/seed.js ./prisma/seed.js
 
 # Start the application
 CMD ["sh", "-c", "npm start"]
-
