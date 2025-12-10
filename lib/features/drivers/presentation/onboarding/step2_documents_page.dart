@@ -49,6 +49,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
   String? _aadharImageUrl;
   String? _licenseImageUrl;
   String? _policeVerificationImageUrl;
+  // ignore: unused_field
   bool _isUploading = false;
 
   bool _hasLoadedState = false;
@@ -171,7 +172,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
     try {
       final repo = ref.read(uploadRepositoryProvider);
       final uploadedFile = await repo.uploadFile(file);
-      
+
       if (mounted) {
         setState(() {
           switch (type) {
@@ -190,7 +191,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
           }
           _isUploading = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Document uploaded successfully'),
@@ -258,7 +259,8 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
         id: existingAadhar?.id ?? DateTime.now().millisecondsSinceEpoch + 1,
         name: 'Aadhar Card',
         type: 'aadhar',
-        fileUrl: _aadharImageUrl ?? _aadharImage?.path ?? existingAadhar?.fileUrl,
+        fileUrl:
+            _aadharImageUrl ?? _aadharImage?.path ?? existingAadhar?.fileUrl,
         uploadedAt: existingAadhar?.uploadedAt ?? now,
         aadharNumber: _aadharNumberController.text.trim().isEmpty
             ? null
@@ -278,7 +280,8 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
         id: existingLicense?.id ?? DateTime.now().millisecondsSinceEpoch + 2,
         name: 'Driving License',
         type: 'driving_license',
-        fileUrl: _licenseImageUrl ?? _licenseImage?.path ?? existingLicense?.fileUrl,
+        fileUrl:
+            _licenseImageUrl ?? _licenseImage?.path ?? existingLicense?.fileUrl,
         uploadedAt: existingLicense?.uploadedAt ?? now,
         licenseNumber: _licenseNumberController.text.trim().isEmpty
             ? null
@@ -300,7 +303,9 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
         id: existingPolice?.id ?? DateTime.now().millisecondsSinceEpoch + 3,
         name: 'Police Verification',
         type: 'police_verification',
-        fileUrl: _policeVerificationImageUrl ?? _policeVerificationImage?.path ?? existingPolice?.fileUrl,
+        fileUrl: _policeVerificationImageUrl ??
+            _policeVerificationImage?.path ??
+            existingPolice?.fileUrl,
         uploadedAt: existingPolice?.uploadedAt ?? now,
       ));
     }
@@ -309,34 +314,36 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
   }
 
   Widget _buildImagePreview(XFile? image, VoidCallback onRemove) {
-    if (image == null) return const SizedBox.shrink();
-    return Stack(
-      children: [
-        Container(
-          height: 150,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: kIsWeb
+    final preview = Container(
+      height: 140,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: image == null
+            ? _buildPreviewPlaceholder()
+            : kIsWeb
                 ? Image.network(
                     image.path,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(
-                        child: Icon(Icons.image_not_supported),
-                      );
-                    },
+                    errorBuilder: (_, __, ___) => _buildPreviewPlaceholder(),
                   )
                 : Image.file(
                     File(image.path),
                     fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _buildPreviewPlaceholder(),
                   ),
-          ),
-        ),
+      ),
+    );
+
+    if (image == null) return preview;
+
+    return Stack(
+      children: [
+        preview,
         Positioned(
           top: 4,
           right: 4,
@@ -352,55 +359,76 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
     );
   }
 
+  Widget _buildPreviewPlaceholder() {
+    return Container(
+      color: Colors.grey.shade100,
+      child: const Center(
+        child: Icon(Icons.insert_drive_file, color: Colors.grey),
+      ),
+    );
+  }
+
   Widget _buildPanSection() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _panFormKey,
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.credit_card, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  Text(
-                    'PAN Card',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.credit_card, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        Text(
+                          'PAN Card',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _panNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'PAN Number',
-                  hintText: 'e.g., ABCDE1234F',
-                  prefixIcon: Icon(Icons.badge),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _panNumberController,
+                      decoration: const InputDecoration(
+                        labelText: 'PAN Number',
+                        hintText: 'e.g., ABCDE1234F',
+                        prefixIcon: Icon(Icons.badge),
+                      ),
+                      textCapitalization: TextCapitalization.characters,
+                      maxLength: 10,
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => _showImageSourceDialog((image) {
+                        setState(() {
+                          _panImage = image;
+                        });
+                        _uploadDocument(image, 'pan');
+                      }),
+                      icon: const Icon(Icons.camera_alt),
+                      label: Text(_panImage == null
+                          ? 'Upload PAN Image'
+                          : 'Change Image'),
+                    ),
+                  ],
                 ),
-                textCapitalization: TextCapitalization.characters,
-                maxLength: 10,
               ),
-              const SizedBox(height: 16),
-              _buildImagePreview(_panImage, () {
-                setState(() {
-                  _panImage = null;
-                });
-              }),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => _showImageSourceDialog((image) {
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 160,
+                child: _buildImagePreview(_panImage, () {
                   setState(() {
-                    _panImage = image;
+                    _panImage = null;
                   });
-                  _uploadDocument(image, 'pan');
                 }),
-                icon: const Icon(Icons.camera_alt),
-                label: Text(
-                    _panImage == null ? 'Upload PAN Image' : 'Change Image'),
               ),
             ],
           ),
@@ -415,50 +443,61 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _aadharFormKey,
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.verified_user, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Aadhar Card',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.verified_user, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Aadhar Card',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _aadharNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Aadhar Number',
-                  hintText: 'e.g., 1234 5678 9012',
-                  prefixIcon: Icon(Icons.perm_identity),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _aadharNumberController,
+                      decoration: const InputDecoration(
+                        labelText: 'Aadhar Number',
+                        hintText: 'e.g., 1234 5678 9012',
+                        prefixIcon: Icon(Icons.perm_identity),
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 12,
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => _showImageSourceDialog((image) {
+                        setState(() {
+                          _aadharImage = image;
+                        });
+                        _uploadDocument(image, 'aadhar');
+                      }),
+                      icon: const Icon(Icons.camera_alt),
+                      label: Text(_aadharImage == null
+                          ? 'Upload Aadhar Image'
+                          : 'Change Image'),
+                    ),
+                  ],
                 ),
-                keyboardType: TextInputType.number,
-                maxLength: 12,
               ),
-              const SizedBox(height: 16),
-              _buildImagePreview(_aadharImage, () {
-                setState(() {
-                  _aadharImage = null;
-                });
-              }),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => _showImageSourceDialog((image) {
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 160,
+                child: _buildImagePreview(_aadharImage, () {
                   setState(() {
-                    _aadharImage = image;
+                    _aadharImage = null;
                   });
-                  _uploadDocument(image, 'aadhar');
                 }),
-                icon: const Icon(Icons.camera_alt),
-                label: Text(_aadharImage == null
-                    ? 'Upload Aadhar Image'
-                    : 'Change Image'),
               ),
             ],
           ),
@@ -473,123 +512,138 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _licenseFormKey,
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.drive_eta, color: Colors.orange),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Driving License',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.drive_eta, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Driving License',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _licenseNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'License Number',
-                  hintText: 'e.g., DL-1234567890',
-                  prefixIcon: Icon(Icons.credit_card),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _issuingAuthorityController,
-                decoration: const InputDecoration(
-                  labelText: 'Issuing Authority',
-                  hintText: 'e.g., RTO Mumbai',
-                  prefixIcon: Icon(Icons.location_city),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _selectDate(
-                        context: context,
-                        onDateSelected: (date) {
-                          setState(() {
-                            _licenseIssuedDate = date;
-                          });
-                        },
-                        initialDate: _licenseIssuedDate,
-                      ),
-                      icon: const Icon(Icons.calendar_today),
-                      label: Text(
-                        _licenseIssuedDate == null
-                            ? 'Issued Date'
-                            : 'Issued: ${_licenseIssuedDate!.day}/${_licenseIssuedDate!.month}/${_licenseIssuedDate!.year}',
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _licenseNumberController,
+                      decoration: const InputDecoration(
+                        labelText: 'License Number',
+                        hintText: 'e.g., DL-1234567890',
+                        prefixIcon: Icon(Icons.credit_card),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          if (_licenseIssuedDate == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please select Issued Date first'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-                          _selectDate(
-                            context: context,
-                            onDateSelected: (date) {
-                              if (date.isBefore(_licenseIssuedDate!)) {
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _issuingAuthorityController,
+                      decoration: const InputDecoration(
+                        labelText: 'Issuing Authority',
+                        hintText: 'e.g., RTO Mumbai',
+                        prefixIcon: Icon(Icons.location_city),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _selectDate(
+                              context: context,
+                              onDateSelected: (date) {
+                                setState(() {
+                                  _licenseIssuedDate = date;
+                                });
+                              },
+                              initialDate: _licenseIssuedDate,
+                            ),
+                            icon: const Icon(Icons.calendar_today),
+                            label: Text(
+                              _licenseIssuedDate == null
+                                  ? 'Issued Date'
+                                  : 'Issued: ${_licenseIssuedDate!.day}/${_licenseIssuedDate!.month}/${_licenseIssuedDate!.year}',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              if (_licenseIssuedDate == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Expiry Date cannot be before Issued Date'),
+                                    content:
+                                        Text('Please select Issued Date first'),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
                                 return;
                               }
-                              setState(() {
-                                _licenseExpiryDate = date;
-                              });
+                              _selectDate(
+                                context: context,
+                                onDateSelected: (date) {
+                                  if (date.isBefore(_licenseIssuedDate!)) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Expiry Date cannot be before Issued Date'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  setState(() {
+                                    _licenseExpiryDate = date;
+                                  });
+                                },
+                                initialDate: _licenseExpiryDate ??
+                                    (_licenseIssuedDate!
+                                        .add(const Duration(days: 1))),
+                                firstDate: _licenseIssuedDate!
+                                    .add(const Duration(days: 1)),
+                              );
                             },
-                            initialDate: _licenseExpiryDate ?? 
-                                (_licenseIssuedDate!.add(const Duration(days: 1))),
-                            firstDate: _licenseIssuedDate!.add(const Duration(days: 1)),
-                          );
-                        },
-                        icon: const Icon(Icons.event),
-                        label: Text(
-                          _licenseExpiryDate == null
-                              ? 'Expiry Date'
-                              : 'Expires: ${_licenseExpiryDate!.day}/${_licenseExpiryDate!.month}/${_licenseExpiryDate!.year}',
+                            icon: const Icon(Icons.event),
+                            label: Text(
+                              _licenseExpiryDate == null
+                                  ? 'Expiry Date'
+                                  : 'Expires: ${_licenseExpiryDate!.day}/${_licenseExpiryDate!.month}/${_licenseExpiryDate!.year}',
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                ],
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => _showImageSourceDialog((image) {
+                        setState(() {
+                          _licenseImage = image;
+                        });
+                        _uploadDocument(image, 'driving_license');
+                      }),
+                      icon: const Icon(Icons.camera_alt),
+                      label: Text(_licenseImage == null
+                          ? 'Upload License Image'
+                          : 'Change Image'),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              _buildImagePreview(_licenseImage, () {
-                setState(() {
-                  _licenseImage = null;
-                });
-              }),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => _showImageSourceDialog((image) {
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 160,
+                child: _buildImagePreview(_licenseImage, () {
                   setState(() {
-                    _licenseImage = image;
+                    _licenseImage = null;
                   });
-                  _uploadDocument(image, 'driving_license');
                 }),
-                icon: const Icon(Icons.camera_alt),
-                label: Text(_licenseImage == null
-                    ? 'Upload License Image'
-                    : 'Change Image'),
               ),
             ],
           ),
@@ -602,46 +656,56 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.shield, color: Colors.red),
-                const SizedBox(width: 8),
-                Text(
-                  'Police Verification',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.shield, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Police Verification',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Upload police verification certificate',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ],
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Upload police verification certificate',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () => _showImageSourceDialog((image) {
+                      setState(() {
+                        _policeVerificationImage = image;
+                      });
+                      _uploadDocument(image, 'police_verification');
+                    }),
+                    icon: const Icon(Icons.camera_alt),
+                    label: Text(_policeVerificationImage == null
+                        ? 'Upload Police Verification'
+                        : 'Change Image'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            _buildImagePreview(_policeVerificationImage, () {
-              setState(() {
-                _policeVerificationImage = null;
-              });
-            }),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () => _showImageSourceDialog((image) {
+            const SizedBox(width: 16),
+            SizedBox(
+              width: 160,
+              child: _buildImagePreview(_policeVerificationImage, () {
                 setState(() {
-                  _policeVerificationImage = image;
+                  _policeVerificationImage = null;
                 });
-                _uploadDocument(image, 'police_verification');
               }),
-              icon: const Icon(Icons.camera_alt),
-              label: Text(_policeVerificationImage == null
-                  ? 'Upload Police Verification'
-                  : 'Change Image'),
             ),
           ],
         ),

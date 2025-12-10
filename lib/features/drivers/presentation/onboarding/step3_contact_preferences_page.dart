@@ -454,15 +454,24 @@ class _Step3ContactPreferencesPageState
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _referenceContact1MobileController,
+                        maxLength: 10,
+                        buildCounter: (context,
+                                {required currentLength,
+                                required isFocused,
+                                required maxLength}) =>
+                            null,
                         decoration: const InputDecoration(
                           labelText: 'Mobile Number *',
-                          hintText: 'e.g., +1234567890',
+                          hintText: 'Enter 10-digit mobile number',
                           prefixIcon: Icon(Icons.phone),
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Reference contact 1 mobile number is required';
+                          }
+                          if (value.trim().length != 10) {
+                            return 'Mobile number must be 10 digits';
                           }
                           return null;
                         },
@@ -532,15 +541,24 @@ class _Step3ContactPreferencesPageState
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _referenceContact2MobileController,
+                        maxLength: 10,
+                        buildCounter: (context,
+                                {required currentLength,
+                                required isFocused,
+                                required maxLength}) =>
+                            null,
                         decoration: const InputDecoration(
                           labelText: 'Mobile Number *',
-                          hintText: 'e.g., +1234567890',
+                          hintText: 'Enter 10-digit mobile number',
                           prefixIcon: Icon(Icons.phone),
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Reference contact 2 mobile number is required';
+                          }
+                          if (value.trim().length != 10) {
+                            return 'Mobile number must be 10 digits';
                           }
                           return null;
                         },
@@ -609,15 +627,24 @@ class _Step3ContactPreferencesPageState
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _emergencyContactNumberController,
+                        maxLength: 10,
+                        buildCounter: (context,
+                                {required currentLength,
+                                required isFocused,
+                                required maxLength}) =>
+                            null,
                         decoration: const InputDecoration(
                           labelText: 'Contact Number *',
-                          hintText: 'e.g., +1234567890',
+                          hintText: 'Enter 10-digit mobile number',
                           prefixIcon: Icon(Icons.phone),
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Emergency contact number is required';
+                          }
+                          if (value.trim().length != 10) {
+                            return 'Mobile number must be 10 digits';
                           }
                           return null;
                         },

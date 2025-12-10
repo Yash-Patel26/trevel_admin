@@ -669,32 +669,50 @@ driversRouter.post(
   }
 );
 
-driversRouter.get(
-  "/drivers/:id/logs",
-  requirePermissions(["driver:logs"]),
-  async (req, res) => {
-    const id = Number(req.params.id);
-    const logs = await prisma.driverLog.findMany({ where: { driverId: id }, orderBy: { createdAt: "desc" } });
-    return res.json(logs);
+driversRouter.get("/drivers/:id/logs", async (req, res) => {
+  const id = Number(req.params.id);
+  const driver = await prisma.driver.findUnique({ where: { id } });
+  if (!driver) return res.status(404).json({ message: "Driver not found" });
+
+  const canView =
+    req.user?.permissions?.includes("driver:logs") ||
+    (req.user?.role === "Driver Individual" && driver.createdBy === req.user?.id);
+
+  if (!canView) {
+    return res
+      .status(403)
+      .json({ message: "You do not have permission to view logs for this driver" });
   }
-);
+
+  const logs = await prisma.driverLog.findMany({
+    where: { driverId: id },
+    orderBy: { createdAt: "desc" },
+  });
+  return res.json(logs);
+});
 
 // Get driver documents
-driversRouter.get(
-  "/drivers/:id/documents",
-  requirePermissions(["driver:view"]),
-  async (req, res) => {
-    const id = Number(req.params.id);
-    const driver = await prisma.driver.findUnique({ where: { id } });
-    if (!driver) return res.status(404).json({ message: "Driver not found" });
+driversRouter.get("/drivers/:id/documents", async (req, res) => {
+  const id = Number(req.params.id);
+  const driver = await prisma.driver.findUnique({ where: { id } });
+  if (!driver) return res.status(404).json({ message: "Driver not found" });
 
-    const documents = await prisma.driverDocument.findMany({
-      where: { driverId: id },
-      orderBy: { id: "desc" },
-    });
-    return res.json(documents);
+  const canView =
+    req.user?.permissions?.includes("driver:view") ||
+    (req.user?.role === "Driver Individual" && driver.createdBy === req.user?.id);
+
+  if (!canView) {
+    return res
+      .status(403)
+      .json({ message: "You do not have permission to view documents for this driver" });
   }
-);
+
+  const documents = await prisma.driverDocument.findMany({
+    where: { driverId: id },
+    orderBy: { id: "desc" },
+  });
+  return res.json(documents);
+});
 
 // Upload driver document
 driversRouter.post(

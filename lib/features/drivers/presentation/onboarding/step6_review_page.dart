@@ -8,6 +8,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../../data/driver_document.dart';
 import '../../data/driver_onboarding_state.dart';
 import '../../data/drivers_repository.dart';
 
@@ -422,6 +423,145 @@ class _Step6ReviewPageState extends ConsumerState<Step6ReviewPage> {
     }
   }
 
+  Widget _buildDocumentCard(BuildContext context, DriverDocument doc) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildDocumentInfo(context, doc)),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 140,
+              height: 120,
+              child: _buildDocumentPreview(doc),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentInfo(BuildContext context, DriverDocument doc) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(_buildDocumentIcon(doc.type), size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                doc.name,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ),
+          ],
+        ),
+        if (doc.panNumber != null) ...[
+          const SizedBox(height: 4),
+          Text('PAN: ${doc.panNumber}'),
+        ],
+        if (doc.aadharNumber != null) ...[
+          const SizedBox(height: 4),
+          Text('Aadhar: ${doc.aadharNumber}'),
+        ],
+        if (doc.licenseNumber != null) ...[
+          const SizedBox(height: 4),
+          Text('License: ${doc.licenseNumber}'),
+        ],
+        if (doc.issuingAuthority != null) ...[
+          const SizedBox(height: 4),
+          Text('Authority: ${doc.issuingAuthority}'),
+        ],
+        if (doc.issuedDate != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Issued: ${doc.issuedDate!.day}/${doc.issuedDate!.month}/${doc.issuedDate!.year}',
+          ),
+        ],
+        if (doc.expiryDate != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Expires: ${doc.expiryDate!.day}/${doc.expiryDate!.month}/${doc.expiryDate!.year}',
+          ),
+        ],
+        if (doc.fileUrl != null && doc.fileUrl!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Image: ${doc.fileUrl!.split('/').last}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  IconData _buildDocumentIcon(String type) {
+    switch (type) {
+      case 'pan':
+        return Icons.credit_card;
+      case 'aadhar':
+        return Icons.verified_user;
+      case 'driving_license':
+        return Icons.drive_eta;
+      case 'police_verification':
+        return Icons.shield;
+      default:
+        return Icons.description;
+    }
+  }
+
+  Widget _buildDocumentPreview(DriverDocument doc) {
+    final url = doc.fileUrl;
+    if (url == null || url.isEmpty) {
+      return _buildPreviewPlaceholder();
+    }
+
+    final isNetwork = url.startsWith('http://') || url.startsWith('https://');
+
+    if (isNetwork) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildPreviewPlaceholder(),
+        ),
+      );
+    }
+
+    if (!kIsWeb) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.file(
+          File(url),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildPreviewPlaceholder(),
+        ),
+      );
+    }
+
+    return _buildPreviewPlaceholder();
+  }
+
+  Widget _buildPreviewPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: const Center(
+        child: Icon(Icons.insert_drive_file, color: Colors.grey),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(driverOnboardingStateProvider);
@@ -500,90 +640,28 @@ class _Step6ReviewPageState extends ConsumerState<Step6ReviewPage> {
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: state.documents
-                          .map((doc) => Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            doc.type == 'pan'
-                                                ? Icons.credit_card
-                                                : doc.type == 'aadhar'
-                                                    ? Icons.verified_user
-                                                    : doc.type ==
-                                                            'driving_license'
-                                                        ? Icons.drive_eta
-                                                        : Icons.shield,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              doc.name,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleSmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if (doc.panNumber != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text('PAN: ${doc.panNumber}'),
-                                      ],
-                                      if (doc.aadharNumber != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text('Aadhar: ${doc.aadharNumber}'),
-                                      ],
-                                      if (doc.licenseNumber != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text('License: ${doc.licenseNumber}'),
-                                      ],
-                                      if (doc.issuingAuthority != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                            'Authority: ${doc.issuingAuthority}'),
-                                      ],
-                                      if (doc.issuedDate != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Issued: ${doc.issuedDate!.day}/${doc.issuedDate!.month}/${doc.issuedDate!.year}',
-                                        ),
-                                      ],
-                                      if (doc.expiryDate != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Expires: ${doc.expiryDate!.day}/${doc.expiryDate!.month}/${doc.expiryDate!.year}',
-                                        ),
-                                      ],
-                                      if (doc.fileUrl != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Image: ${doc.fileUrl!.split('/').last}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primary,
-                                              ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ))
-                          .toList(),
+                      children: [
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final maxWidth = constraints.maxWidth;
+                            final double itemWidth =
+                                maxWidth >= 900 ? (maxWidth - 12) / 2 : maxWidth;
+
+                            return Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: state.documents
+                                  .map(
+                                    (doc) => SizedBox(
+                                      width: itemWidth,
+                                      child: _buildDocumentCard(context, doc),
+                                    ),
+                                  )
+                                  .toList(),
+                            );
+                          },
+                        ),
+                      ],
                     ),
             ),
             const SizedBox(height: 16),
