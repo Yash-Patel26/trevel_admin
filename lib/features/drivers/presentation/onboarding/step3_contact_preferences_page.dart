@@ -293,8 +293,8 @@ class _Step3ContactPreferencesPageState
             backgroundColor: Colors.green,
           ),
         );
-        // Stay on step 1 to create another driver
-        context.go('/drivers/onboard/step1');
+        // For Driver Individual, go to My Drivers list instead of restarting onboarding
+        context.go('/drivers');
       }
     } catch (e) {
       if (mounted) {
