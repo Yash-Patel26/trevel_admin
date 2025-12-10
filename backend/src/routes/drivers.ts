@@ -20,6 +20,16 @@ import { getPagination } from "../utils/pagination";
 
 export const driversRouter = Router();
 
+// Helper function to transform driver object and extract profileImageUrl from onboardingData
+function transformDriver(driver: any) {
+  const onboardingData = driver.onboardingData as any;
+  const profileImageUrl = onboardingData?.profileImageUrl || null;
+  return {
+    ...driver,
+    profileImageUrl,
+  };
+}
+
 driversRouter.use(authMiddleware);
 
 driversRouter.post(
@@ -96,7 +106,7 @@ driversRouter.post(
       action: "create",
       payload: driver,
     });
-    return res.json(driver);
+    return res.json(transformDriver(driver));
   }
 );
 
@@ -165,7 +175,18 @@ driversRouter.get(
       }),
       prisma.driver.count({ where }),
     ]);
-    return res.json({ data: drivers, page, pageSize, total });
+    
+    // Transform drivers to extract profileImageUrl from onboardingData
+    const transformedDrivers = drivers.map((driver) => {
+      const onboardingData = driver.onboardingData as any;
+      const profileImageUrl = onboardingData?.profileImageUrl || null;
+      return {
+        ...driver,
+        profileImageUrl,
+      };
+    });
+    
+    return res.json({ data: transformedDrivers, page, pageSize, total });
   }
 );
 

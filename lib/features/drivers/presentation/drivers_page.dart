@@ -48,14 +48,12 @@ class DriversPage extends ConsumerWidget {
                         if (isTeam)
                           Text(
                             'Review and verify drivers created by Driver Individual users',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
                           ),
                       ],
                     ),
@@ -122,19 +120,30 @@ class DriversPage extends ConsumerWidget {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                driver.status.color.withValues(alpha: 0.1),
-                            backgroundImage: driver.profileImageUrl != null
-                                ? NetworkImage(driver.profileImageUrl!)
-                                : null,
-                            child: driver.profileImageUrl != null
-                                ? null
-                                : Icon(
+                          leading: driver.profileImageUrl != null &&
+                                  driver.profileImageUrl!.isNotEmpty
+                              ? CircleAvatar(
+                                  backgroundColor: driver.status.color
+                                      .withValues(alpha: 0.1),
+                                  backgroundImage:
+                                      NetworkImage(driver.profileImageUrl!),
+                                  onBackgroundImageError:
+                                      (exception, stackTrace) {
+                                    // Image failed to load, will show fallback icon
+                                  },
+                                  child: Icon(
                                     Icons.person,
                                     color: driver.status.color,
                                   ),
-                          ),
+                                )
+                              : CircleAvatar(
+                                  backgroundColor: driver.status.color
+                                      .withValues(alpha: 0.1),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: driver.status.color,
+                                  ),
+                                ),
                           title: Text(
                             driver.fullName,
                             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -143,6 +152,11 @@ class DriversPage extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(driver.email),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Mobile: ${driver.mobile}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                               const SizedBox(height: 4),
                               Row(
                                 children: [

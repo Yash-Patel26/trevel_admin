@@ -244,6 +244,11 @@ class DriversRepository {
       trainingCompleted: json['trainingCompleted'] as bool? ?? false,
       assignedVehicleNumber: json['assignedVehicleNumber'] as String?,
       notes: json['notes'] as String?,
+      profileImageUrl: json['profileImageUrl'] as String? ??
+          (json['onboardingData'] != null
+              ? ((json['onboardingData']
+                  as Map<String, dynamic>)['profileImageUrl'] as String?)
+              : null),
       documents: (json['documents'] as List<dynamic>?)
               ?.map((d) => DriverDocument.fromJson(d as Map<String, dynamic>))
               .toList() ??

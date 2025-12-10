@@ -111,16 +111,34 @@ class DriverDetailPage extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 32,
-                            backgroundColor:
-                                driver.status.color.withValues(alpha: 0.1),
-                            child: Icon(
-                              Icons.person,
-                              color: driver.status.color,
-                              size: 32,
-                            ),
-                          ),
+                          driver.profileImageUrl != null &&
+                                  driver.profileImageUrl!.isNotEmpty
+                              ? CircleAvatar(
+                                  radius: 32,
+                                  backgroundColor: driver.status.color
+                                      .withValues(alpha: 0.1),
+                                  backgroundImage:
+                                      NetworkImage(driver.profileImageUrl!),
+                                  onBackgroundImageError:
+                                      (exception, stackTrace) {
+                                    // Image failed to load, will show fallback icon
+                                  },
+                                  child: Icon(
+                                    Icons.person,
+                                    color: driver.status.color,
+                                    size: 32,
+                                  ),
+                                )
+                              : CircleAvatar(
+                                  radius: 32,
+                                  backgroundColor: driver.status.color
+                                      .withValues(alpha: 0.1),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: driver.status.color,
+                                    size: 32,
+                                  ),
+                                ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
