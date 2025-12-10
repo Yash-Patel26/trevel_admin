@@ -244,47 +244,7 @@ jobs:
             echo "✅ Deployment completed successfully!"
           fi
       
-      - name: Reset and seed database
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key.pem
-          chmod 600 ~/.ssh/deploy_key.pem
-          SSH_OPTS="-i ~/.ssh/deploy_key.pem -o ConnectTimeout=10 -o StrictHostKeyChecking=no"
-          
-          echo "🗑️  Resetting and seeding database..."
-          echo ""
-          
-          # Execute database reset on EC2
-          ssh $SSH_OPTS $EC2_USER@$EC2_HOST << 'ENDSSH'
-            cd ~/backend
-            
-            echo "Running database reset..."
-            sudo docker-compose exec -T backend npm run db:reset
-            
-            if [ $? -eq 0 ]; then
-              echo ""
-              echo "✅ Database reset and seeded successfully!"
-            else
-              echo ""
-              echo "❌ Database reset failed!"
-              exit 1
-            fi
-          ENDSSH
-          
-          if [ $? -eq 0 ]; then
-            echo ""
-            echo "✅ Database is ready with fresh data!"
-          else
-            echo ""
-            echo "⚠️  Database reset failed, but deployment was successful"
-            echo "You can manually reset the database by running:"
-            echo "  docker-compose exec backend npm run db:reset"
-            # Don't fail the workflow if database reset fails
-            exit 0
-          fi
+
       
       - name: Verify deployment
         env:
