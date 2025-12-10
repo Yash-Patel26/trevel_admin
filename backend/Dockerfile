@@ -43,7 +43,7 @@ ENV NODE_ENV=production
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nodejs
+  adduser --system --uid 1001 nodejs
 
 # Copy necessary files from builder
 COPY --from=builder /app/dist ./dist
@@ -54,7 +54,7 @@ COPY --from=builder /app/prisma ./prisma
 
 # Create uploads directory for file storage
 RUN mkdir -p /app/uploads && \
-    chown -R nodejs:nodejs /app
+  chown -R nodejs:nodejs /app
 
 USER nodejs
 
@@ -78,5 +78,5 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/prisma/seed.js ./prisma/seed.js
 
 # Start the application
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+CMD ["sh", "-c", "npm start"]
 

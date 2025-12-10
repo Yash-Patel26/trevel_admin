@@ -9,6 +9,8 @@ const router = Router();
 router.post("/s3/create-folder", async (req, res) => {
     try {
         const { mobile } = req.body;
+        console.log("Received request to create S3 folder for mobile:", mobile);
+
 
         if (!mobile) {
             return res.status(400).json({ message: "Mobile number is required" });

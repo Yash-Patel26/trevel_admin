@@ -211,9 +211,13 @@ class _Step1BasicInfoPageState extends ConsumerState<Step1BasicInfoPage> {
       try {
         final uploadRepo = ref.read(uploadRepositoryProvider);
         
-        // 1. Create the S3 folder first
-        await uploadRepo.createDriverFolder(mobile);
-        debugPrint('Created S3 folder: drivers/$mobile/');
+        // 1. Create the S3 folder first (optional, good for structure but shouldn't block upload)
+        try {
+          await uploadRepo.createDriverFolder(mobile);
+          debugPrint('Created S3 folder: drivers/$mobile/');
+        } catch (e) {
+          debugPrint('Failed to create S3 folder explicitly (continuing to upload): $e');
+        }
         
         // 2. Upload profile image if selected
         if (_profileImage != null) {
