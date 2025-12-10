@@ -84,6 +84,92 @@ Add each of these secrets:
 
 ---
 
+## Step 2.5: Configure EC2 Security Group for GitHub Actions
+
+> ⚠️ **IMPORTANT**: GitHub Actions workflows need SSH access to your EC2 instance. You must allow GitHub Actions IP ranges in your EC2 security group.
+
+### Option A: Automated Script (Recommended)
+
+We provide scripts to automatically add all GitHub Actions IP ranges to your security group:
+
+#### On Windows (PowerShell):
+
+```powershell
+# 1. Find your security group ID
+# Go to EC2 Console → Instances → Select your instance → Security tab
+# Copy the Security Group ID (e.g., sg-0123456789abcdef0)
+
+# 2. Run the script
+cd C:\Users\yash4\Desktop\trevel_admin\trevel_admin
+.\scripts\update_github_actions_sg.ps1 -SecurityGroupId "sg-xxxxxxxxxxxxx" -Region "ap-south-1"
+```
+
+#### On Linux/Mac:
+
+```bash
+# 1. Find your security group ID
+aws ec2 describe-instances --region ap-south-1 \
+  --query 'Reservations[*].Instances[*].[InstanceId,SecurityGroups[0].GroupId]' \
+  --output table
+
+# 2. Run the script
+cd /path/to/trevel_admin
+export EC2_SECURITY_GROUP_ID=sg-xxxxxxxxxxxxx
+export AWS_REGION=ap-south-1
+chmod +x scripts/update_github_actions_sg.sh
+./scripts/update_github_actions_sg.sh
+```
+
+### Option B: Manual Configuration (Alternative)
+
+If you prefer to configure manually or the script doesn't work:
+
+1. **Get GitHub Actions IP ranges**:
+   - Visit: https://api.github.com/meta
+   - Copy all IP ranges from the `"actions"` array
+
+2. **Add to Security Group**:
+   - Go to [EC2 Console](https://ap-south-1.console.aws.amazon.com/ec2/home?region=ap-south-1#SecurityGroups:)
+   - Select your security group
+   - Click **Inbound rules** → **Edit inbound rules**
+   - Click **Add rule**
+   - Configure:
+     - **Type**: SSH
+     - **Port**: 22
+     - **Source**: Paste each GitHub Actions IP range (CIDR format)
+     - **Description**: "GitHub Actions"
+   - Repeat for all IP ranges (there are many, so this is tedious)
+
+### Option C: Allow All IPs (NOT RECOMMENDED for Production)
+
+⚠️ **Security Warning**: This allows SSH from anywhere on the internet. Only use for testing.
+
+1. Go to EC2 Console → Security Groups
+2. Select your security group
+3. Edit inbound rules
+4. Add rule:
+   - **Type**: SSH
+   - **Port**: 22
+   - **Source**: `0.0.0.0/0`
+   - **Description**: "GitHub Actions - Temporary"
+
+### Verify Configuration
+
+After running the script or manual configuration:
+
+```bash
+# Check security group rules
+aws ec2 describe-security-groups \
+  --group-ids sg-xxxxxxxxxxxxx \
+  --region ap-south-1 \
+  --query "SecurityGroups[0].IpPermissions[?FromPort==\`22\`]" \
+  --output table
+```
+
+You should see multiple SSH rules with GitHub Actions IP ranges.
+
+---
+
 ## Step 3: Prepare EC2 Instance
 
 SSH into your EC2 instance and set up the deployment environment:
