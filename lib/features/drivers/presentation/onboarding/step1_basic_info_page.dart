@@ -31,6 +31,7 @@ class _Step1BasicInfoPageState extends ConsumerState<Step1BasicInfoPage> {
   String? _profileImageUrl;
   bool _hasLoadedState = false;
   bool _isCheckingMobile = false;
+  bool _isUploading = false; // For folder creation and image upload
 
   static const List<String> _bloodGroupOptions = [
     'A+',
@@ -103,44 +104,17 @@ class _Step1BasicInfoPageState extends ConsumerState<Step1BasicInfoPage> {
 
     if (image != null) {
       setState(() {
-        _profileImage = image; // Store XFile directly for web compatibility
+        _profileImage = image; // Store XFile for later upload
       });
-
-      // Upload the image
-      try {
-        final uploadRepo = ref.read(uploadRepositoryProvider);
-        final mobile = _mobileController.text.trim();
-        
-        // Upload to drivers/{mobile}/ folder
-        final uploadedFile = await uploadRepo.uploadFile(
-          image,
-          entityType: 'drivers',
-          entityId: mobile.isNotEmpty ? mobile : null,
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile image selected. It will be uploaded when you continue.'),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
+          ),
         );
-        
-        setState(() {
-          _profileImageUrl = uploadedFile.url;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile image uploaded successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to upload image: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        setState(() {
-          _profileImage = null;
-        });
       }
     }
   }
@@ -232,7 +206,53 @@ class _Step1BasicInfoPageState extends ConsumerState<Step1BasicInfoPage> {
         }
       }
 
-      // Update state
+      // Create S3 folder and upload profile image
+      setState(() => _isUploading = true);
+      try {
+        final uploadRepo = ref.read(uploadRepositoryProvider);
+        
+        // 1. Create the S3 folder first
+        await uploadRepo.createDriverFolder(mobile);
+        debugPrint('Created S3 folder: drivers/$mobile/');
+        
+        // 2. Upload profile image if selected
+        if (_profileImage != null) {
+          final uploadedFile = await uploadRepo.uploadFile(
+            _profileImage!,
+            entityType: 'drivers',
+            entityId: mobile,
+          );
+          _profileImageUrl = uploadedFile.url;
+          debugPrint('Uploaded profile image to: $_profileImageUrl');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profile image uploaded successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Error creating folder or uploading image: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Warning: ${e.toString()}'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        // Continue anyway - uploads can happen later
+      } finally {
+        if (mounted) {
+          setState(() => _isUploading = false);
+        }
+      }
+
+      // Update state with profile image URL
       ref.read(driverOnboardingStateProvider.notifier).updateBasicInfo(
             fullName: _fullNameController.text.trim(),
             email: _emailController.text.trim(),
@@ -520,21 +540,21 @@ class _Step1BasicInfoPageState extends ConsumerState<Step1BasicInfoPage> {
               ),
               const SizedBox(height: 32),
               FilledButton(
-                onPressed: _isCheckingMobile ? null : _continueToNextStep,
+                onPressed: (_isCheckingMobile || _isUploading) ? null : _continueToNextStep,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: _isCheckingMobile
-                    ? const Row(
+                child: (_isCheckingMobile || _isUploading)
+                    ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                          SizedBox(width: 12),
-                          Text('Checking...'),
+                          const SizedBox(width: 12),
+                          Text(_isUploading ? 'Uploading...' : 'Checking...'),
                         ],
                       )
                     : const Row(

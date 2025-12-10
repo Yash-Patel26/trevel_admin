@@ -224,4 +224,11 @@ class UploadRepository {
       'key': key,
     });
   }
+
+  /// Create S3 folder for driver using mobile number
+  Future<void> createDriverFolder(String mobile) async {
+    await _dio.post('/s3/create-folder', data: {
+      'mobile': mobile,
+    });
+  }
 }

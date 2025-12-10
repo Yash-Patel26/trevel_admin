@@ -13,6 +13,7 @@ import { rolesRouter } from "./roles";
 import { ridesRouter } from "./rides";
 import { uploadRouter } from "./upload";
 import deleteRouter from "./delete";
+import s3Router from "./s3";
 
 export const apiRouter = Router();
 
@@ -29,3 +30,4 @@ apiRouter.use(usersRouter);
 apiRouter.use(rolesRouter);
 apiRouter.use(ridesRouter);
 apiRouter.use(deleteRouter);
+apiRouter.use(s3Router);
