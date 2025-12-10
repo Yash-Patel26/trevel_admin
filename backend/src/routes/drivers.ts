@@ -747,12 +747,13 @@ driversRouter.post(
         }
 
         // Upload to S3 and get a public URL
+        // Use driver mobile as the S3 folder key so each driver groups under their unique mobile
         const uploadResult = await uploadToS3(
           req.file.buffer,
           req.file.originalname,
           req.file.mimetype,
           "drivers",
-          String(id)
+          driver.mobile || String(id)
         );
         const fullUrl = uploadResult.location;
 

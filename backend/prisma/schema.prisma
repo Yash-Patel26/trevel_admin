@@ -125,7 +125,7 @@ model VehicleAssignment {
 model Driver {
   id                  Int                      @id @default(autoincrement())
   name                String
-  mobile              String
+  mobile              String                   @unique
   email               String?
   status              String                   @default("pending")
   onboardingData      Json?
