@@ -189,7 +189,7 @@ jobs:
           
           # Execute deployment script on EC2
           set +e  # Don't exit on error, we want to capture it
-          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'bash -s' << 'ENDSSH'
+          ssh $SSH_OPTS $EC2_USER@$EC2_HOST 'bash -s' << 'ENDSSH'
             set -x  # Enable verbose output
             
             echo "=== Starting Deployment ==="
@@ -238,7 +238,7 @@ jobs:
             echo "❌ Deployment failed with exit code $DEPLOYMENT_EXIT_CODE"
             echo ""
             echo "📋 Fetching container logs from EC2..."
-            ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST 'if [ -d ~/backend_new ]; then echo "=== New container logs ==="; sudo docker logs trevel_admin_backend_new --tail 100 2>&1 || echo "No new container logs"; fi; if [ -d ~/backend ]; then echo "=== Current container logs ==="; sudo docker logs trevel_admin_backend --tail 50 2>&1 || echo "No current container logs"; fi' || true
+            ssh $SSH_OPTS $EC2_USER@$EC2_HOST 'if [ -d ~/backend_new ]; then echo "=== New container logs ==="; sudo docker logs trevel_admin_backend_new --tail 100 2>&1 || echo "No new container logs"; fi; if [ -d ~/backend ]; then echo "=== Current container logs ==="; sudo docker logs trevel_admin_backend --tail 50 2>&1 || echo "No current container logs"; fi' || true
             exit 1
           else
             echo "✅ Deployment completed successfully!"
@@ -252,12 +252,13 @@ jobs:
         run: |
           echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key.pem
           chmod 600 ~/.ssh/deploy_key.pem
+          SSH_OPTS="-i ~/.ssh/deploy_key.pem -o ConnectTimeout=10 -o StrictHostKeyChecking=no"
           
           # Wait for service to stabilize
           sleep 10
           
           # Run health check
-          ssh -i ~/.ssh/deploy_key.pem $EC2_USER@$EC2_HOST << 'ENDSSH'
+          ssh $SSH_OPTS $EC2_USER@$EC2_HOST << 'ENDSSH'
             cd ~/backend
             ./scripts/health-check.sh
           ENDSSH
