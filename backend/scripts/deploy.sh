@@ -18,6 +18,10 @@ VERSION=$(date +%Y%m%d_%H%M%S)
 
 echo -e "${YELLOW}📦 Version: ${VERSION}${NC}"
 
+# Step 0: Free space before build
+echo -e "${YELLOW}🧹 Pruning unused Docker data before build...${NC}"
+sudo docker system prune -af 2>/dev/null || true
+
 # Step 1: Build new Docker image
 echo -e "${YELLOW}🔨 Building Docker image...${NC}"
 sudo docker build -t ${IMAGE_NAME}:${VERSION} -t ${IMAGE_NAME}:latest .
