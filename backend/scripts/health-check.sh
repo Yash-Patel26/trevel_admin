@@ -30,10 +30,10 @@ else
   exit 1
 fi
 
-# Check 3: API is responding
+# Check 3: API is responding (auth-protected endpoints may return 401/403)
 echo -n "3. API response... "
 API_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" ${API_URL})
-if [ "$API_RESPONSE" = "200" ] || [ "$API_RESPONSE" = "404" ]; then
+if [ "$API_RESPONSE" = "200" ] || [ "$API_RESPONSE" = "404" ] || [ "$API_RESPONSE" = "401" ] || [ "$API_RESPONSE" = "403" ]; then
   echo -e "${GREEN}✅ OK (${API_RESPONSE})${NC}"
 else
   echo -e "${RED}❌ Failed (${API_RESPONSE})${NC}"
