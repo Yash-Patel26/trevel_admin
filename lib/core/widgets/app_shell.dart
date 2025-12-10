@@ -412,7 +412,7 @@ class AppShell extends ConsumerWidget {
                         user?.role ?? '',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
- nm k,m                   ],
+                    ],
                   ),
                 ),
                 const PopupMenuDivider(),
