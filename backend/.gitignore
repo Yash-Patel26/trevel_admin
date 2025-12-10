@@ -62,3 +62,4 @@ deploy.tar.gz
 *.tar
 backend_old/
 backend_new/
+.deploy-trigger

@@ -111,11 +111,17 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
+          # Validate required secrets
+          if [ -z "$EC2_HOST" ] || [ -z "$EC2_USER" ] || [ -z "$EC2_SSH_KEY" ]; then
+            echo "❌ Missing required secrets: EC2_HOST, EC2_USER, or EC2_SSH_KEY"
+            exit 1
+          fi
+          
           # Setup SSH
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key.pem
           chmod 600 ~/.ssh/deploy_key.pem
-          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
           
           echo "📦 Creating deployment package..."
           
@@ -126,6 +132,7 @@ jobs:
             --exclude='.git' \
             --exclude='uploads' \
             --exclude='*.log' \
+            --exclude='.deploy-trigger' \
             .
           
           echo "📤 Uploading to EC2..."
