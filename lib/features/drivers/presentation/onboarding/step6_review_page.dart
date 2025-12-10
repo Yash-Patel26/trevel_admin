@@ -11,6 +11,7 @@ import 'package:printing/printing.dart';
 import '../../data/driver_document.dart';
 import '../../data/driver_onboarding_state.dart';
 import '../../data/drivers_repository.dart';
+import '../../../upload/data/upload_repository.dart';
 
 class Step6ReviewPage extends ConsumerStatefulWidget {
   const Step6ReviewPage({super.key});
@@ -226,10 +227,74 @@ class _Step6ReviewPageState extends ConsumerState<Step6ReviewPage> {
                 OutlinedButton.icon(
                   onPressed: isApproved
                       ? null
-                      : () {
-                          ref
-                              .read(driverOnboardingStateProvider.notifier)
-                              .disapproveSection(sectionKey);
+                      : () async {
+                          // Special handling for documents section
+                          if (sectionKey == 'review_documents') {
+                            // Show dialog to confirm document removal
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Documents?'),
+                                content: const Text(
+                                    'This will permanently delete all uploaded documents from storage. Continue?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            
+                            if (confirmed == true && context.mounted) {
+                              // Delete files from S3
+                              final state = ref.read(driverOnboardingStateProvider);
+                              final uploadRepo = ref.read(uploadRepositoryProvider);
+                              
+                              for (final doc in state.documents) {
+                                if (doc.fileUrl != null && 
+                                    doc.fileUrl!.isNotEmpty &&
+                                    (doc.fileUrl!.startsWith('http://') || 
+                                     doc.fileUrl!.startsWith('https://'))) {
+                                  try {
+                                    await uploadRepo.deleteFile(doc.fileUrl!);
+                                    debugPrint('Deleted ${doc.type} from S3');
+                                  } catch (e) {
+                                    debugPrint('Error deleting ${doc.type}: $e');
+                                    // Continue deleting other files even if one fails
+                                  }
+                                }
+                              }
+                              
+                              // Clear all documents from state
+                              ref
+                                  .read(driverOnboardingStateProvider.notifier)
+                                  .updateDocuments([]);
+                              ref
+                                  .read(driverOnboardingStateProvider.notifier)
+                                  .disapproveSection(sectionKey);
+                                  
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Documents deleted successfully'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            }
+                          } else {
+                            ref
+                                .read(driverOnboardingStateProvider.notifier)
+                                .disapproveSection(sectionKey);
+                          }
                         },
                   icon: const Icon(Icons.close),
                   label: const Text('Disapprove'),

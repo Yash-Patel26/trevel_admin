@@ -117,15 +117,32 @@ class DriversRepository {
     final data = response.data as List<dynamic>;
     return data.map((json) {
       final docJson = json as Map<String, dynamic>;
-      // Backend doesn't return createdAt, so use current time or a default
+      // Backend returns: id, type, url, status
+      // We need to map to: id, name, type, fileUrl, uploadedAt
       return DriverDocument(
         id: docJson['id'] as int,
-        name: docJson['type'] as String? ?? 'Document',
+        name: _formatDocumentName(docJson['type'] as String? ?? 'Document'),
         type: docJson['type'] as String? ?? '',
-        fileUrl: docJson['url'] as String?,
-        uploadedAt: DateTime.now(), // Backend doesn't provide createdAt
+        fileUrl: docJson['url'] as String?, // Backend uses 'url' not 'fileUrl'
+        uploadedAt: DateTime.now(), // Backend doesn't provide timestamp
       );
     }).toList();
+  }
+
+  // Helper to format document type as readable name
+  String _formatDocumentName(String type) {
+    switch (type.toLowerCase()) {
+      case 'pan':
+        return 'PAN Card';
+      case 'aadhar':
+        return 'Aadhar Card';
+      case 'driving_license':
+        return 'Driving License';
+      case 'police_verification':
+        return 'Police Verification';
+      default:
+        return type;
+    }
   }
 
   Future<DriverDocument> uploadDriverDocument({

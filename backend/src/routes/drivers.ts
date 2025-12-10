@@ -175,7 +175,7 @@ driversRouter.get(
       }),
       prisma.driver.count({ where }),
     ]);
-    
+
     // Transform drivers to extract profileImageUrl from onboardingData
     const transformedDrivers = drivers.map((driver) => {
       const onboardingData = driver.onboardingData as any;
@@ -185,7 +185,7 @@ driversRouter.get(
         profileImageUrl,
       };
     });
-    
+
     return res.json({ data: transformedDrivers, page, pageSize, total });
   }
 );
@@ -814,6 +814,22 @@ driversRouter.delete(
 
       if (!document) {
         return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Delete from S3 if URL exists
+      if (document.url) {
+        try {
+          // Extract S3 key from URL
+          // URL format: https://bucket.s3.region.amazonaws.com/key
+          const url = new URL(document.url);
+          const key = url.pathname.substring(1); // Remove leading slash
+
+          const { deleteFromS3 } = await import("../middleware/upload");
+          await deleteFromS3(key);
+        } catch (s3Error) {
+          console.error("Error deleting from S3:", s3Error);
+          // Continue with database deletion even if S3 deletion fails
+        }
       }
 
       await prisma.driverDocument.delete({

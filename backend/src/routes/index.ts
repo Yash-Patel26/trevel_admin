@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import { healthRouter } from "./health";
 import { authRouter } from "./auth";
@@ -11,6 +12,7 @@ import { usersRouter } from "./users";
 import { rolesRouter } from "./roles";
 import { ridesRouter } from "./rides";
 import { uploadRouter } from "./upload";
+import deleteRouter from "./delete";
 
 export const apiRouter = Router();
 
@@ -26,3 +28,4 @@ apiRouter.use(customersRouter);
 apiRouter.use(usersRouter);
 apiRouter.use(rolesRouter);
 apiRouter.use(ridesRouter);
+apiRouter.use(deleteRouter);

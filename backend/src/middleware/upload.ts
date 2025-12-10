@@ -84,6 +84,18 @@ export async function uploadToS3(
   return { location, key, signedUrl };
 }
 
+/**
+ * Delete a file from S3
+ */
+export async function deleteFromS3(key: string): Promise<void> {
+  const { DeleteObjectCommand } = await import("@aws-sdk/client-s3");
+
+  await s3Client.send(new DeleteObjectCommand({
+    Bucket: env.aws.bucketName,
+    Key: key,
+  }));
+}
+
 // Helper to create a signed URL for an existing key
 export async function getSignedUrlForKey(key: string, expiresInSeconds = 900): Promise<string> {
   return getSignedUrl(

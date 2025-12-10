@@ -60,7 +60,12 @@ class UploadRepository {
 
   /// Upload a file - works on both web and mobile
   /// Accepts either File (mobile) or XFile (web/mobile)
-  Future<UploadedFile> uploadFile(dynamic file) async {
+  /// Optional entityType and entityId for organized S3 folder structure
+  Future<UploadedFile> uploadFile(
+    dynamic file, {
+    String? entityType,  // e.g., "drivers"
+    String? entityId,    // e.g., mobile number
+  }) async {
     String fileName;
     List<int> fileBytes;
     String? mimeType;
@@ -98,6 +103,8 @@ class UploadRepository {
         filename: fileName,
         contentType: DioMediaType.parse(mimeType ?? _getMimeType(fileName)),
       ),
+      if (entityType != null) 'entityType': entityType,
+      if (entityId != null) 'entityId': entityId,
     });
 
     final response = await _dio.post('/upload', data: formData);
@@ -204,5 +211,17 @@ class UploadRepository {
     }
 
     return uploadMultipleFiles(files);
+  }
+
+  /// Delete a file from S3 by its URL
+  Future<void> deleteFile(String fileUrl) async {
+    // Extract the S3 key from the URL
+    // URL format: https://bucket.s3.region.amazonaws.com/key
+    final uri = Uri.parse(fileUrl);
+    final key = uri.path.substring(1); // Remove leading slash
+    
+    await _dio.delete('/upload/delete', data: {
+      'key': key,
+    });
   }
 }

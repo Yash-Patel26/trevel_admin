@@ -28,10 +28,17 @@ uploadRouter.post(
       try {
         // Upload to S3 manually
         const { uploadToS3 } = await import("../middleware/upload");
+
+        // Get optional entity information from request body
+        const entityType = req.body.entityType as string | undefined;
+        const entityId = req.body.entityId as string | undefined;
+
         const { location, key, signedUrl } = await uploadToS3(
           req.file.buffer,
           req.file.originalname,
-          req.file.mimetype
+          req.file.mimetype,
+          entityType,  // Pass entity type (e.g., "drivers")
+          entityId     // Pass entity ID (e.g., mobile number)
         );
 
         return res.json({

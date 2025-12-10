@@ -109,7 +109,15 @@ class _Step1BasicInfoPageState extends ConsumerState<Step1BasicInfoPage> {
       // Upload the image
       try {
         final uploadRepo = ref.read(uploadRepositoryProvider);
-        final uploadedFile = await uploadRepo.uploadFile(image);
+        final mobile = _mobileController.text.trim();
+        
+        // Upload to drivers/{mobile}/ folder
+        final uploadedFile = await uploadRepo.uploadFile(
+          image,
+          entityType: 'drivers',
+          entityId: mobile.isNotEmpty ? mobile : null,
+        );
+        
         setState(() {
           _profileImageUrl = uploadedFile.url;
         });

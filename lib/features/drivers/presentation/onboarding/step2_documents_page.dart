@@ -171,7 +171,15 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
     setState(() => _isUploading = true);
     try {
       final repo = ref.read(uploadRepositoryProvider);
-      final uploadedFile = await repo.uploadFile(file);
+      final state = ref.read(driverOnboardingStateProvider);
+      final mobile = state.mobile ?? '';
+      
+      // Upload to drivers/{mobile}/ folder
+      final uploadedFile = await repo.uploadFile(
+        file,
+        entityType: 'drivers',
+        entityId: mobile.isNotEmpty ? mobile : null,
+      );
 
       if (mounted) {
         setState(() {
