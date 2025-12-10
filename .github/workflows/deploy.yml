@@ -7,19 +7,6 @@ on:
     paths:
       - 'backend/**'
   workflow_dispatch:
-    inputs:
-      target_env:
-        description: "Target environment (dev or staging)"
-        required: false
-        default: "staging"
-      reset_rds:
-        description: "Set to true to reset RDS (dev/staging only)"
-        required: false
-        default: "false"
-      confirm_reset:
-        description: 'Type RESET to confirm destructive RDS reset'
-        required: false
-        default: ""
 
 jobs:
   deploy:
@@ -29,34 +16,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: (Optional) Reset RDS schema for dev/staging
-        if: >
-          github.event_name == 'workflow_dispatch' &&
-          inputs.reset_rds == 'true' &&
-          inputs.confirm_reset == 'RESET' &&
-          (inputs.target_env == 'dev' || inputs.target_env == 'staging')
-        env:
-          PGHOST: ${{ secrets.RDS_HOST }}
-          PGPORT: ${{ secrets.RDS_PORT || '5432' }}
-          PGDATABASE: ${{ secrets.RDS_DB }}
-          PGUSER: ${{ secrets.RDS_USER }}
-          PGPASSWORD: ${{ secrets.RDS_PASSWORD }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-          echo "⚠️  Resetting RDS schema for ${{ inputs.target_env }}..."
-          psql "sslmode=require" -v ON_ERROR_STOP=1 <<'SQL'
-          DROP SCHEMA public CASCADE;
-          CREATE SCHEMA public;
-          GRANT ALL ON SCHEMA public TO $PGUSER;
-          GRANT ALL ON SCHEMA public TO public;
-          SQL
-          echo "✅ Schema reset complete. Running Prisma migrations..."
-          cd backend
-          npm ci
-          npx prisma migrate deploy
-          echo "✅ RDS reset and migrations applied for ${{ inputs.target_env }}"
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
