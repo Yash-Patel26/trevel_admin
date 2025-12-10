@@ -41,9 +41,9 @@ uploadRouter.post(
             originalName: req.file.originalname,
             mimetype: req.file.mimetype,
             size: req.file.size,
-            url: signedUrl, // short-lived signed URL for client access
+            url: location, // Direct S3 URL (publicly accessible since bucket is public)
             path: key,
-            location, // raw S3 URL (not publicly accessible if bucket is private)
+            location, // raw S3 URL
           },
         });
       } catch (s3Error: any) {
@@ -90,7 +90,7 @@ uploadRouter.post(
               originalName: f.originalname,
               mimetype: f.mimetype,
               size: f.size,
-              url: signedUrl, // short-lived signed URL for client access
+              url: location, // Direct S3 URL (publicly accessible since bucket is public)
               path: key,
               location,
             };
