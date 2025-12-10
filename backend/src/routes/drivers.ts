@@ -7,7 +7,7 @@ import { requirePermissions } from "../middleware/permissions";
 import { logAudit } from "../utils/audit";
 import { logDriverAction } from "../utils/logs";
 import { queueNotification } from "../services/notifications";
-import { uploadSingle } from "../middleware/upload";
+import { uploadSingle, uploadToS3 } from "../middleware/upload";
 import {
   assignVehicleSchema,
   driverApproveSchema,
@@ -728,9 +728,15 @@ driversRouter.post(
           return res.status(403).json({ message: "You can only upload documents for drivers you created" });
         }
 
-        // Generate URL for the uploaded file
-        const fileUrl = `/uploads/${req.file.filename}`;
-        const fullUrl = `${req.protocol}://${req.get("host")}${fileUrl}`;
+        // Upload to S3 and get a public URL
+        const uploadResult = await uploadToS3(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype,
+          "drivers",
+          String(id)
+        );
+        const fullUrl = uploadResult.location;
 
         const document = await prisma.driverDocument.create({
           data: {
