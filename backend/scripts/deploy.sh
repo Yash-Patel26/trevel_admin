@@ -86,9 +86,10 @@ if [ "$HEALTHY" = false ]; then
   exit 1
 fi
 
-# Step 7: Cleanup old images
-echo -e "${YELLOW}🧹 Cleaning up old images...${NC}"
+# Step 7: Cleanup old images and stopped containers
+echo -e "${YELLOW}🧹 Cleaning up old images and containers...${NC}"
 sudo docker image prune -f 2>/dev/null || true
+sudo docker container prune -f 2>/dev/null || true
 
 echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
 echo -e "${GREEN}📊 Container status:${NC}"
