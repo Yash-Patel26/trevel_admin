@@ -28,7 +28,7 @@ uploadRouter.post(
       try {
         // Upload to S3 manually
         const { uploadToS3 } = await import("../middleware/upload");
-        const { location, key } = await uploadToS3(
+        const { location, key, signedUrl } = await uploadToS3(
           req.file.buffer,
           req.file.originalname,
           req.file.mimetype
@@ -41,8 +41,9 @@ uploadRouter.post(
             originalName: req.file.originalname,
             mimetype: req.file.mimetype,
             size: req.file.size,
-            url: location,
+            url: signedUrl, // short-lived signed URL for client access
             path: key,
+            location, // raw S3 URL (not publicly accessible if bucket is private)
           },
         });
       } catch (s3Error: any) {
@@ -79,7 +80,7 @@ uploadRouter.post(
 
         const uploadedFiles = await Promise.all(
           filesArray.map(async (f: Express.Multer.File) => {
-            const { location, key } = await uploadToS3(
+            const { location, key, signedUrl } = await uploadToS3(
               f.buffer,
               f.originalname,
               f.mimetype
@@ -89,8 +90,9 @@ uploadRouter.post(
               originalName: f.originalname,
               mimetype: f.mimetype,
               size: f.size,
-              url: location,
+              url: signedUrl, // short-lived signed URL for client access
               path: key,
+              location,
             };
           })
         );

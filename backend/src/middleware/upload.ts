@@ -1,5 +1,6 @@
 import multer from "multer";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Request } from "express";
 import { env } from "../config/env";
 
@@ -47,7 +48,7 @@ export async function uploadToS3(
   mimetype: string,
   entityType?: string,  // e.g., "drivers", "vehicles"
   entityId?: string     // e.g., driver ID or vehicle ID
-): Promise<{ location: string; key: string }> {
+): Promise<{ location: string; key: string; signedUrl: string }> {
   const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
   const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
 
@@ -70,5 +71,27 @@ export async function uploadToS3(
   // Construct the S3 URL
   const location = `https://${env.aws.bucketName}.s3.${env.aws.region}.amazonaws.com/${key}`;
 
-  return { location, key };
+  // Generate short-lived signed URL for client access
+  const signedUrl = await getSignedUrl(
+    s3Client,
+    new GetObjectCommand({
+      Bucket: env.aws.bucketName,
+      Key: key,
+    }),
+    { expiresIn: 900 } // 15 minutes
+  );
+
+  return { location, key, signedUrl };
+}
+
+// Helper to create a signed URL for an existing key
+export async function getSignedUrlForKey(key: string, expiresInSeconds = 900): Promise<string> {
+  return getSignedUrl(
+    s3Client,
+    new GetObjectCommand({
+      Bucket: env.aws.bucketName,
+      Key: key,
+    }),
+    { expiresIn: expiresInSeconds }
+  );
 }
