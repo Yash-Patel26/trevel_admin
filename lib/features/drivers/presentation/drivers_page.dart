@@ -6,9 +6,37 @@ import '../../../core/state/auth/auth_controller.dart';
 import '../data/driver_model.dart';
 import '../data/drivers_repository.dart';
 
-final driversProvider = FutureProvider.autoDispose<List<Driver>>((ref) async {
-  final repo = ref.watch(driversRepositoryProvider);
-  return await repo.getDrivers();
+// AsyncNotifier to manage drivers list with local state control
+class DriversNotifier extends AutoDisposeAsyncNotifier<List<Driver>> {
+  @override
+  Future<List<Driver>> build() async {
+    final repo = ref.read(driversRepositoryProvider);
+    return await repo.getDrivers();
+  }
+
+  // Method to immediately remove a driver from the local state
+  void removeDriverLocally(int driverId) {
+    final currentState = state;
+    if (currentState is AsyncData<List<Driver>>) {
+      final updatedDrivers = currentState.value
+          .where((driver) => driver.id != driverId)
+          .toList();
+      state = AsyncData(updatedDrivers);
+    }
+  }
+
+  // Method to refresh the drivers list
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(driversRepositoryProvider);
+      return await repo.getDrivers();
+    });
+  }
+}
+
+final driversProvider = AsyncNotifierProvider.autoDispose<DriversNotifier, List<Driver>>(() {
+  return DriversNotifier();
 });
 
 class DriversPage extends ConsumerWidget {
@@ -70,7 +98,7 @@ class DriversPage extends ConsumerWidget {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                ref.invalidate(driversProvider);
+                await ref.read(driversProvider.notifier).refresh();
               },
               child: driversAsync.when(
                 data: (drivers) {

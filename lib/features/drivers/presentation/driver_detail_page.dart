@@ -10,9 +10,12 @@ import 'drivers_page.dart';
 
 final driverDetailProvider =
     FutureProvider.autoDispose.family<Driver, int>((ref, driverId) async {
-  final repo = ref.watch(driversRepositoryProvider);
-  final drivers = await repo.getDrivers();
-  return drivers.firstWhere((d) => d.id == driverId);
+  final driversAsync = ref.watch(driversProvider);
+  return driversAsync.when(
+    data: (drivers) => drivers.firstWhere((d) => d.id == driverId),
+    loading: () => throw Exception('Loading drivers...'),
+    error: (error, stack) => throw error,
+  );
 });
 
 final driverLogsProvider = FutureProvider.autoDispose
@@ -101,7 +104,7 @@ class DriverDetailPage extends ConsumerWidget {
               );
 
               if (confirmed == true && context.mounted) {
-                // Optimistic deletion: immediately navigate back and flush from UI
+                // Optimistic deletion: immediately remove from UI
                 final repo = ref.read(driversRepositoryProvider);
                 
                 // Show immediate feedback
@@ -115,8 +118,8 @@ class DriverDetailPage extends ConsumerWidget {
                 // Navigate back immediately
                 context.pop();
                 
-                // Invalidate the drivers list to remove from UI instantly
-                ref.invalidate(driversProvider);
+                // Immediately remove driver from the local state (instant UI update)
+                ref.read(driversProvider.notifier).removeDriverLocally(driverId);
                 
                 // Perform actual deletion in background
                 try {
@@ -135,7 +138,7 @@ class DriverDetailPage extends ConsumerWidget {
                     );
                   }
                 } catch (e) {
-                  // If deletion fails, show error and refresh the list
+                  // If deletion fails, show error and refresh to restore the driver
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -145,8 +148,8 @@ class DriverDetailPage extends ConsumerWidget {
                       ),
                     );
                   }
-                  // Refresh the list to restore the driver if deletion failed
-                  ref.invalidate(driversProvider);
+                  // Refresh the list from backend to restore the driver if deletion failed
+                  await ref.read(driversProvider.notifier).refresh();
                 }
               }
             },
