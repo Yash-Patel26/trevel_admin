@@ -175,6 +175,12 @@ class AppShell extends ConsumerWidget {
         checkAccess: () => PermissionChecker.canAccessBookings(user),
       ),
       _NavItem(
+        '/customers',
+        'Customers',
+        Icons.people_alt_outlined,
+        requiredPermission: 'customer:view',
+      ),
+      _NavItem(
         '/users',
         'Users',
         Icons.people_outline,

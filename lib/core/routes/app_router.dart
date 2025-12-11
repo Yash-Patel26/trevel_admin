@@ -9,6 +9,10 @@ import '../../features/auth/presentation/login_page.dart';
 import '../../features/bookings/presentation/booking_detail_page.dart';
 import '../../features/bookings/presentation/bookings_page.dart';
 import '../../features/bookings/presentation/edit_booking_location_page.dart';
+import '../../features/customers/presentation/create_customer_page.dart';
+import '../../features/customers/presentation/customer_detail_page.dart';
+import '../../features/customers/presentation/customers_dashboard_page.dart';
+import '../../features/customers/presentation/ride_detail_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/drivers/presentation/create_driver_page.dart';
 import '../../features/drivers/presentation/driver_detail_page.dart';
@@ -351,6 +355,44 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
           GoRoute(
+            path: '/customers',
+            name: 'customers',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CustomersDashboardPage()),
+            routes: [
+              GoRoute(
+                path: 'create',
+                name: 'create-customer',
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: CreateCustomerPage()),
+              ),
+              GoRoute(
+                path: ':id',
+                name: 'customer-detail',
+                pageBuilder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return MaterialPage(child: CustomerDetailPage(customerId: id));
+                },
+                routes: [
+                  GoRoute(
+                    path: 'rides/:rideId',
+                    name: 'customer-ride-detail',
+                    pageBuilder: (context, state) {
+                      final customerId = int.parse(state.pathParameters['id']!);
+                      final rideId = int.parse(state.pathParameters['rideId']!);
+                      return MaterialPage(
+                        child: CustomerRideDetailPage(
+                          customerId: customerId,
+                          rideId: rideId,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GoRoute(
             path: '/users',
             name: 'users',
             pageBuilder: (context, state) =>
@@ -380,7 +422,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: ':id',
-                name: 'ride-detail',
+                name: 'rides-detail',
                 pageBuilder: (context, state) {
                   final id = int.parse(state.pathParameters['id']!);
                   return MaterialPage(child: RideDetailPage(rideId: id));

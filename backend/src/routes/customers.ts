@@ -459,3 +459,296 @@ customersRouter.get(
   }
 );
 
+// Get customer dashboard statistics
+customersRouter.get(
+  "/customers/stats",
+  requirePermissions(["customer:view"]),
+  async (_req, res) => {
+    try {
+      const totalCustomers = await prisma.customer.count();
+
+      const totalBookings = await prisma.booking.count();
+
+      const upcomingBookings = await prisma.booking.count({
+        where: {
+          status: "upcoming",
+        },
+      });
+
+      const cancelledBookings = await prisma.booking.count({
+        where: {
+          status: "canceled",
+        },
+      });
+
+      return res.json({
+        totalCustomers,
+        totalBookings,
+        upcomingBookings,
+        cancelledBookings,
+      });
+    } catch (error) {
+      console.error("Error fetching customer stats:", error);
+      return res.status(500).json({ message: "Failed to fetch statistics" });
+    }
+  }
+);
+
+// Create new customer
+customersRouter.post(
+  "/customers",
+  requirePermissions(["customer:create"]),
+  validateBody(z.object({
+    name: z.string().min(1, "Name is required"),
+    mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
+    email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  })),
+  async (req, res) => {
+    try {
+      const { name, mobile, email } = req.body;
+
+      const existingCustomer = await prisma.customer.findFirst({
+        where: { mobile },
+      });
+
+      if (existingCustomer) {
+        return res.status(400).json({ message: "Customer with this mobile number already exists" });
+      }
+
+      const newCustomer = await prisma.customer.create({
+        data: {
+          name,
+          mobile,
+          email: email || null,
+        },
+      });
+
+      return res.status(201).json(newCustomer);
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      return res.status(500).json({ message: "Failed to create customer" });
+    }
+  }
+);
+
+// Get all customers with pagination
+customersRouter.get(
+  "/customers",
+  requirePermissions(["customer:view"]),
+  async (req, res) => {
+    try {
+      const { skip, take, page, pageSize } = getPagination(req.query);
+      const { search, status } = req.query;
+
+      // Build where clause
+      const where: any = {};
+
+      if (search) {
+        where.OR = [
+          { name: { contains: String(search), mode: "insensitive" } },
+          { mobile: { contains: String(search), mode: "insensitive" } },
+          { email: { contains: String(search), mode: "insensitive" } },
+        ];
+      }
+
+      const customers = await prisma.customer.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { id: "desc" },
+        include: {
+          bookings: {
+            select: {
+              id: true,
+              status: true,
+            },
+          },
+        },
+      });
+
+      const total = await prisma.customer.count({ where });
+
+      // Transform customers to include booking counts and computed status
+      const transformedCustomers = customers.map((customer) => ({
+        id: customer.id,
+        name: customer.name,
+        mobile: customer.mobile,
+        email: customer.email,
+        bookingsCount: customer.bookings.length,
+        upcomingBookingsCount: customer.bookings.filter(
+          (b) => b.status === "upcoming"
+        ).length,
+        // Compute status: active if has bookings, inactive otherwise
+        status: customer.bookings.length > 0 ? "active" : "inactive",
+      }));
+
+      // Filter by status if provided
+      let filteredCustomers = transformedCustomers;
+      if (status) {
+        filteredCustomers = transformedCustomers.filter(
+          (c) => c.status === String(status)
+        );
+      }
+
+      return res.json({
+        data: filteredCustomers,
+        page,
+        pageSize,
+        total: status ? filteredCustomers.length : total,
+      });
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      return res.status(500).json({ message: "Failed to fetch customers" });
+    }
+  }
+);
+
+// Get customer's rides/bookings
+customersRouter.get(
+  "/customers/:id/rides",
+  requirePermissions(["customer:view"]),
+  async (req, res) => {
+    try {
+      const customerId = Number(req.params.id);
+      const limit = req.query.limit ? Number(req.query.limit) : 5;
+
+      const bookings = await prisma.booking.findMany({
+        where: { customerId },
+        take: limit,
+        orderBy: { pickupTime: "desc" },
+        select: {
+          id: true,
+          pickupLocation: true,
+          destinationLocation: true,
+          pickupTime: true,
+          destinationTime: true,
+          status: true,
+          vehicleModel: true,
+          driverId: true,
+          vehicleId: true,
+        },
+      });
+
+      // Fetch driver and vehicle details for each booking
+      const ridesWithDetails = await Promise.all(
+        bookings.map(async (booking) => {
+          let driverName = "Not Assigned";
+          let vehicleInfo = booking.vehicleModel || "Not Assigned";
+
+          if (booking.driverId) {
+            const driver = await prisma.driver.findUnique({
+              where: { id: booking.driverId },
+              select: { name: true },
+            });
+            if (driver) driverName = driver.name;
+          }
+
+          if (booking.vehicleId) {
+            const vehicle = await prisma.vehicle.findUnique({
+              where: { id: booking.vehicleId },
+              select: { numberPlate: true, make: true, model: true },
+            });
+            if (vehicle) {
+              vehicleInfo = `${vehicle.make} ${vehicle.model} (${vehicle.numberPlate})`;
+            }
+          }
+
+          return {
+            id: booking.id,
+            driverName,
+            vehicleInfo,
+            pickupTime: booking.pickupTime,
+            dropTime: booking.destinationTime,
+            pickupLocation: booking.pickupLocation,
+            dropLocation: booking.destinationLocation,
+            status: booking.status,
+          };
+        })
+      );
+
+      return res.json(ridesWithDetails);
+    } catch (error) {
+      console.error("Error fetching customer rides:", error);
+      return res.status(500).json({ message: "Failed to fetch rides" });
+    }
+  }
+);
+
+// Get ride/booking details
+customersRouter.get(
+  "/rides/:id",
+  requirePermissions(["customer:view"]),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      const booking = await prisma.booking.findUnique({
+        where: { id },
+        include: {
+          customer: {
+            select: { name: true, mobile: true },
+          },
+        },
+      });
+
+      if (!booking) {
+        return res.status(404).json({ message: "Ride not found" });
+      }
+
+      // Fetch driver details
+      let driverName = "Not Assigned";
+      let driverMobile = "";
+      if (booking.driverId) {
+        const driver = await prisma.driver.findUnique({
+          where: { id: booking.driverId },
+          select: { name: true, mobile: true },
+        });
+        if (driver) {
+          driverName = driver.name;
+          driverMobile = driver.mobile;
+        }
+      }
+
+      // Fetch vehicle details
+      let vehicleInfo = booking.vehicleModel || "Not Assigned";
+      let vehicleNumberPlate = "";
+      if (booking.vehicleId) {
+        const vehicle = await prisma.vehicle.findUnique({
+          where: { id: booking.vehicleId },
+          select: { numberPlate: true, make: true, model: true },
+        });
+        if (vehicle) {
+          vehicleInfo = `${vehicle.make} ${vehicle.model}`;
+          vehicleNumberPlate = vehicle.numberPlate;
+        }
+      }
+
+      const rideDetails = {
+        id: booking.id,
+        customerName: booking.customer.name,
+        customerMobile: booking.customer.mobile,
+        driverName,
+        driverMobile,
+        vehicleInfo,
+        vehicleNumberPlate,
+        pickupTime: booking.pickupTime,
+        dropTime: booking.destinationTime,
+        pickupLocation: booking.pickupLocation,
+        pickupLatitude: (booking as any).pickupLatitude,
+        pickupLongitude: (booking as any).pickupLongitude,
+        dropLocation: booking.destinationLocation,
+        destinationLatitude: (booking as any).destinationLatitude,
+        destinationLongitude: (booking as any).destinationLongitude,
+        status: booking.status,
+        otpCode: booking.otpCode,
+        createdAt: booking.createdAt,
+      };
+
+      return res.json(rideDetails);
+    } catch (error) {
+      console.error("Error fetching ride details:", error);
+      return res.status(500).json({ message: "Failed to fetch ride details" });
+    }
+  }
+);
+
