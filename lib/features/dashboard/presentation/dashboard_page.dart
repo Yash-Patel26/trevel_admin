@@ -30,6 +30,7 @@ class DashboardPage extends ConsumerWidget {
         user.role == 'Fleet Admin' || PermissionChecker.canAccessVehicles(user);
     final isDriverAdmin =
         user.role == 'Driver Admin' || PermissionChecker.canAccessDrivers(user);
+    final isDriverIndividual = user.role == 'Driver Individual';
 
     // Fetch dashboard data
     final fleetDashboardAsync = ref.watch(fleetDashboardProvider);
@@ -38,85 +39,129 @@ class DashboardPage extends ConsumerWidget {
     final ticketsAsync = ref.watch(ticketsProvider);
     final bookingsSummaryAsync = ref.watch(bookingsSummaryProvider);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isOperationalAdmin) ...[
-            _buildSectionTitle(context, 'Operational Overview'),
-            const SizedBox(height: 16),
-            _buildOperationalStats(context, ref, vehiclesAsync, driversAsync,
-                ticketsAsync, bookingsSummaryAsync),
-          ] else if (isFleetAdmin) ...[
-            _buildSectionTitle(context, 'Fleet Management Dashboard'),
-            const SizedBox(height: 16),
-            _buildFleetStats(
-                context, ref, fleetDashboardAsync, vehiclesAsync, ticketsAsync),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Quick Actions'),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                if (user.hasPermission('vehicle:create'))
-                  _ActionChip(
-                    label: 'Add Vehicle',
-                    icon: Icons.add,
-                    onTap: () => context.push('/vehicles/create'),
-                  ),
-                if (user.hasPermission('vehicle:review'))
-                  _ActionChip(
-                    label: 'Review Vehicles',
-                    icon: Icons.rate_review,
-                    onTap: () => context.push('/vehicles'),
-                  ),
-                if (user.hasPermission('ticket:view'))
-                  _ActionChip(
-                    label: 'View Tickets',
-                    icon: Icons.confirmation_num,
-                    onTap: () => context.push('/tickets'),
-                  ),
+    return Scaffold(
+      appBar: (isDriverIndividual)
+          ? AppBar(
+              title: const Text('My Dashboard'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () {
+                    // Refresh all dashboard data
+                    ref.invalidate(dashboardDriversProvider);
+                    ref.invalidate(fleetDashboardProvider);
+                    ref.invalidate(dashboardVehiclesProvider);
+                    ref.invalidate(ticketsProvider);
+                    ref.invalidate(bookingsSummaryProvider);
+                  },
+                  tooltip: 'Refresh Dashboard',
+                ),
               ],
-            ),
-          ] else if (isDriverAdmin) ...[
-            _buildSectionTitle(context, 'Driver Management Dashboard'),
-            const SizedBox(height: 16),
-            _buildDriverStats(context, ref, driversAsync),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Quick Actions'),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                if (user.hasPermission('driver:create'))
+            )
+          : null,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isOperationalAdmin) ...[
+              _buildSectionTitle(context, 'Operational Overview'),
+              const SizedBox(height: 16),
+              _buildOperationalStats(context, ref, vehiclesAsync, driversAsync,
+                  ticketsAsync, bookingsSummaryAsync),
+            ] else if (isFleetAdmin) ...[
+              _buildSectionTitle(context, 'Fleet Management Dashboard'),
+              const SizedBox(height: 16),
+              _buildFleetStats(
+                  context, ref, fleetDashboardAsync, vehiclesAsync, ticketsAsync),
+              const SizedBox(height: 24),
+              _buildSectionTitle(context, 'Quick Actions'),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  if (user.hasPermission('vehicle:create'))
+                    _ActionChip(
+                      label: 'Add Vehicle',
+                      icon: Icons.add,
+                      onTap: () => context.push('/vehicles/create'),
+                    ),
+                  if (user.hasPermission('vehicle:review'))
+                    _ActionChip(
+                      label: 'Review Vehicles',
+                      icon: Icons.rate_review,
+                      onTap: () => context.push('/vehicles'),
+                    ),
+                  if (user.hasPermission('ticket:view'))
+                    _ActionChip(
+                      label: 'View Tickets',
+                      icon: Icons.confirmation_num,
+                      onTap: () => context.push('/tickets'),
+                    ),
+                ],
+              ),
+            ] else if (isDriverAdmin) ...[
+              _buildSectionTitle(context, 'Driver Management Dashboard'),
+              const SizedBox(height: 16),
+              _buildDriverStats(context, ref, driversAsync),
+              const SizedBox(height: 24),
+              _buildSectionTitle(context, 'Quick Actions'),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  if (user.hasPermission('driver:create'))
+                    _ActionChip(
+                      label: 'Add Driver',
+                      icon: Icons.person_add,
+                      onTap: () => context.push('/drivers/create'),
+                    ),
+                  if (user.hasPermission('driver:verify'))
+                    _ActionChip(
+                      label: 'Verify Background',
+                      icon: Icons.verified_user,
+                      onTap: () => context.push('/drivers'),
+                    ),
+                  if (user.hasPermission('driver:train'))
+                    _ActionChip(
+                      label: 'Assign Training',
+                      icon: Icons.school,
+                      onTap: () => context.push('/drivers'),
+                    ),
+                ],
+              ),
+            ] else if (isDriverIndividual) ...[
+              _buildSectionTitle(context, 'My Drivers'),
+              const SizedBox(height: 16),
+              _buildDriverIndividualStats(context, ref, driversAsync),
+              const SizedBox(height: 24),
+              _buildSectionTitle(context, 'Quick Actions'),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
                   _ActionChip(
-                    label: 'Add Driver',
+                    label: 'Add New Driver',
                     icon: Icons.person_add,
                     onTap: () => context.push('/drivers/create'),
                   ),
-                if (user.hasPermission('driver:verify'))
                   _ActionChip(
-                    label: 'Verify Background',
-                    icon: Icons.verified_user,
+                    label: 'View My Drivers',
+                    icon: Icons.people,
                     onTap: () => context.push('/drivers'),
                   ),
-                if (user.hasPermission('driver:train'))
-                  _ActionChip(
-                    label: 'Assign Training',
-                    icon: Icons.school,
-                    onTap: () => context.push('/drivers'),
-                  ),
-              ],
-            ),
-          ] else ...[
-            _buildSectionTitle(context, 'Dashboard'),
-            const SizedBox(height: 16),
-            const Text('Welcome! Select a section from the navigation menu.'),
+                ],
+              ),
+            ] else ...[
+              _buildSectionTitle(context, 'Dashboard'),
+              const SizedBox(height: 16),
+              const Text('Welcome! Select a section from the navigation menu.'),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -405,6 +450,44 @@ class DashboardPage extends ConsumerWidget {
         _StatCard('Pending Approval', '0', Icons.pending, Colors.orange),
         _StatCard('In Training', '0', Icons.school, Colors.blue),
         _StatCard('Active Drivers', '0', Icons.check_circle, Colors.green),
+      ]),
+    );
+  }
+
+  Widget _buildDriverIndividualStats(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<Driver>> driversAsync,
+  ) {
+    return driversAsync.when(
+      data: (drivers) => _buildStatsGrid(context, [
+        _StatCard('My Drivers', drivers.length.toString(), Icons.person,
+            Colors.blue),
+        _StatCard(
+            'Pending Review',
+            drivers
+                .where((d) => d.status == DriverStatus.pending)
+                .length
+                .toString(),
+            Icons.pending_actions,
+            Colors.orange),
+        _StatCard(
+            'Verified',
+            drivers
+                .where((d) =>
+                    d.status == DriverStatus.verified ||
+                    d.status == DriverStatus.active ||
+                    d.status == DriverStatus.approved)
+                .length
+                .toString(),
+            Icons.verified,
+            Colors.green),
+      ]),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => _buildStatsGrid(context, [
+        _StatCard('My Drivers', '0', Icons.person, Colors.blue),
+        _StatCard('Pending Review', '0', Icons.pending_actions, Colors.orange),
+        _StatCard('Verified', '0', Icons.verified, Colors.green),
       ]),
     );
   }

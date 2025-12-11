@@ -60,11 +60,14 @@ class UploadRepository {
 
   /// Upload a file - works on both web and mobile
   /// Accepts either File (mobile) or XFile (web/mobile)
-  /// Optional entityType and entityId for organized S3 folder structure
+  /// Optional entityType, entityId, and documentType for organized S3 folder structure
+  /// Structure: {entityType}/{entityId}/{documentType}/file.ext
+  /// Example: drivers/9876543210/PAN_Card/pan_image.jpg
   Future<UploadedFile> uploadFile(
     dynamic file, {
-    String? entityType,  // e.g., "drivers"
-    String? entityId,    // e.g., mobile number
+    String? entityType,    // e.g., "drivers"
+    String? entityId,      // e.g., mobile number
+    String? documentType,  // e.g., "PAN_Card", "Aadhar_Card", "Driving_License", "Police_Verification"
   }) async {
     String fileName;
     List<int> fileBytes;
@@ -105,6 +108,7 @@ class UploadRepository {
       ),
       if (entityType != null) 'entityType': entityType,
       if (entityId != null) 'entityId': entityId,
+      if (documentType != null) 'documentType': documentType,
     });
 
     final response = await _dio.post('/upload', data: formData);

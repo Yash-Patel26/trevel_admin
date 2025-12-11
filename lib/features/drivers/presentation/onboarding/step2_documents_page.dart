@@ -174,11 +174,31 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
       final state = ref.read(driverOnboardingStateProvider);
       final mobile = state.mobile ?? '';
       
-      // Upload to drivers/{mobile}/ folder
+      // Map document type to folder name
+      String documentType;
+      switch (type) {
+        case 'pan':
+          documentType = 'PAN_Card';
+          break;
+        case 'aadhar':
+          documentType = 'Aadhar_Card';
+          break;
+        case 'driving_license':
+          documentType = 'Driving_License';
+          break;
+        case 'police_verification':
+          documentType = 'Police_Verification';
+          break;
+        default:
+          documentType = 'Other';
+      }
+      
+      // Upload to drivers/{mobile}/{documentType}/ folder
       final uploadedFile = await repo.uploadFile(
         file,
         entityType: 'drivers',
         entityId: mobile.isNotEmpty ? mobile : null,
+        documentType: documentType,
       );
 
       if (mounted) {
