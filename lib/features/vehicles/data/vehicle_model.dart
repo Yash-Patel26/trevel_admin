@@ -19,8 +19,10 @@ class Vehicle {
   // Access keys (PRD requirement)
   final String? liveLocationAccessKey;
   final String? dashcamAccessKey;
-  // Display helper
+  // Driver assignment
+  final int? assignedDriverId;
   final String? assignedDriverName;
+  final String? assignedDriverStatus; // 'active', 'inactive', etc.
 
   Vehicle({
     required this.id,
@@ -39,7 +41,9 @@ class Vehicle {
     this.insuranceExpiryDate,
     this.liveLocationAccessKey,
     this.dashcamAccessKey,
+    this.assignedDriverId,
     this.assignedDriverName,
+    this.assignedDriverStatus,
   }) : color = color ?? 'Black'; // Default to "Black" if not provided
 
   Vehicle copyWith({
@@ -59,7 +63,9 @@ class Vehicle {
     DateTime? insuranceExpiryDate,
     String? liveLocationAccessKey,
     String? dashcamAccessKey,
+    int? assignedDriverId,
     String? assignedDriverName,
+    String? assignedDriverStatus,
   }) {
     return Vehicle(
       id: id ?? this.id,
@@ -80,7 +86,9 @@ class Vehicle {
       liveLocationAccessKey:
           liveLocationAccessKey ?? this.liveLocationAccessKey,
       dashcamAccessKey: dashcamAccessKey ?? this.dashcamAccessKey,
+      assignedDriverId: assignedDriverId ?? this.assignedDriverId,
       assignedDriverName: assignedDriverName ?? this.assignedDriverName,
+      assignedDriverStatus: assignedDriverStatus ?? this.assignedDriverStatus,
     );
   }
 
@@ -132,10 +140,22 @@ class Vehicle {
           : null,
       liveLocationAccessKey: json['liveLocationAccessKey'] as String?,
       dashcamAccessKey: json['dashcamAccessKey'] as String?,
+      assignedDriverId: json['assignments'] != null &&
+              (json['assignments'] as List).isNotEmpty
+          ? ((json['assignments'] as List).first['driver'] != null
+              ? (json['assignments'] as List).first['driver']['id'] as int?
+              : null)
+          : null,
       assignedDriverName: json['assignments'] != null &&
               (json['assignments'] as List).isNotEmpty
           ? ((json['assignments'] as List).first['driver'] != null
               ? (json['assignments'] as List).first['driver']['name']
+              : null)
+          : null,
+      assignedDriverStatus: json['assignments'] != null &&
+              (json['assignments'] as List).isNotEmpty
+          ? ((json['assignments'] as List).first['driver'] != null
+              ? (json['assignments'] as List).first['driver']['status'] as String?
               : null)
           : null,
     );

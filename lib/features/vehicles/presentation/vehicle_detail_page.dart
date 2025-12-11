@@ -26,6 +26,12 @@ final vehicleMetricsProvider = FutureProvider.autoDispose
   return await repo.getVehicleMetrics(vehicleId);
 });
 
+final vehicleAssignmentLogsProvider = FutureProvider.autoDispose
+    .family<List<Map<String, dynamic>>, int>((ref, vehicleId) async {
+  final repo = ref.watch(vehiclesRepositoryProvider);
+  return await repo.getVehicleAssignmentLogs(vehicleId);
+});
+
 class VehicleDetailPage extends ConsumerWidget {
   final int vehicleId;
 
@@ -170,6 +176,166 @@ class VehicleDetailPage extends ConsumerWidget {
                     ),
                   ),
                 ),
+              const SizedBox(height: 16),
+              // Driver Assignment Section
+              if (vehicle.assignedDriverName != null ||
+                  vehicle.assignedDriverStatus != null)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Driver Assignment',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (vehicle.assignedDriverName != null)
+                          _buildInfoRow(
+                              context, 'Assigned Driver', vehicle.assignedDriverName!),
+                        if (vehicle.assignedDriverStatus != null)
+                          _buildInfoRow(
+                            context,
+                            'Driver Status',
+                            vehicle.assignedDriverStatus!.toUpperCase(),
+                          ),
+                        // Show reassign button if driver is inactive
+                        if (vehicle.assignedDriverStatus != null &&
+                            (vehicle.assignedDriverStatus!.toLowerCase() == 'inactive' ||
+                                vehicle.assignedDriverStatus!.toLowerCase() == 'suspended')) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.errorContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: Theme.of(context).colorScheme.onErrorContainer,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Assigned driver is inactive. Please reassign this vehicle.',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onErrorContainer,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: () async {
+                              final result = await context.push<bool>(
+                                '/vehicles/$vehicleId/reassign',
+                                extra: vehicle,
+                              );
+                              if (result == true && context.mounted) {
+                                ref.invalidate(vehicleDetailProvider(vehicleId));
+                                ref.invalidate(vehicleAssignmentLogsProvider(vehicleId));
+                                ref.invalidate(vehiclesProvider);
+                              }
+                            },
+                            icon: const Icon(Icons.swap_horiz),
+                            label: const Text('Reassign Driver'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              // Assignment Logs
+              ref.watch(vehicleAssignmentLogsProvider(vehicleId)).when(
+                    data: (assignmentLogs) {
+                      if (assignmentLogs.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Assignment History',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              const SizedBox(height: 12),
+                              ...assignmentLogs.take(10).map((log) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(
+                                          Icons.swap_horiz,
+                                          size: 20,
+                                          color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                log['action']?.toString() ??
+                                                    'Driver Assignment',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold),
+                                              ),
+                                              if (log['driverName'] != null)
+                                                Text(
+                                                  'Driver: ${log['driverName']}',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall,
+                                                ),
+                                              if (log['createdAt'] != null)
+                                                Text(
+                                                  _formatDate(DateTime.parse(
+                                                      log['createdAt'])),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurfaceVariant,
+                                                      ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
               const SizedBox(height: 16),
               // Approval Actions (for Fleet Admin)
               if (canApprove && vehicle.status == VehicleStatus.pending)

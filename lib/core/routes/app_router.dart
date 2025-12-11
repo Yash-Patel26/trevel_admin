@@ -29,7 +29,9 @@ import '../../features/users/presentation/users_page.dart';
 import '../../features/vehicles/presentation/assign_driver_to_vehicle_page.dart';
 import '../../features/vehicles/presentation/create_vehicle_page.dart';
 import '../../features/vehicles/presentation/vehicle_detail_page.dart';
+import '../../features/vehicles/presentation/vehicle_reassign_page.dart';
 import '../../features/vehicles/presentation/vehicles_page.dart';
+import '../../features/vehicles/data/vehicle_model.dart';
 import '../state/auth/auth_controller.dart';
 import '../utils/permissions.dart';
 import '../widgets/app_shell.dart';
@@ -184,6 +186,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       final id = int.parse(state.pathParameters['id']!);
                       return MaterialPage(
                         child: AssignDriverToVehiclePage(vehicleId: id),
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'reassign',
+                    name: 'reassign-vehicle',
+                    pageBuilder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      final vehicle = state.extra as Vehicle;
+                      return MaterialPage(
+                        child: VehicleReassignPage(
+                          vehicleId: id,
+                          vehicle: vehicle,
+                        ),
                       );
                     },
                   ),

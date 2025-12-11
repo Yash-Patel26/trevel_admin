@@ -113,6 +113,21 @@ class VehiclesRepository {
     return response.data as Map<String, dynamic>;
   }
 
+  Future<void> reassignVehicle({
+    required int vehicleId,
+    required int newDriverId,
+  }) async {
+    await _dio.post('/vehicles/$vehicleId/reassign', data: {
+      'driverId': newDriverId,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getVehicleAssignmentLogs(
+      int vehicleId) async {
+    final response = await _dio.get('/vehicles/$vehicleId/assignment-logs');
+    return (response.data as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
   // Map backend response to Vehicle model
   Vehicle _vehicleFromBackendJson(Map<String, dynamic> json) {
     // Backend uses: id, numberPlate, make, model, status, createdAt, etc.
