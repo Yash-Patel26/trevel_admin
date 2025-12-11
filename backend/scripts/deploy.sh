@@ -49,6 +49,25 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Step 3.5: Seed database with test users
+echo -e "${YELLOW}🌱 Seeding database with test users...${NC}"
+sudo docker run --rm \
+  --env-file .env \
+  -e NODE_ENV=production \
+  ${IMAGE_NAME}:${VERSION} \
+  npm run seed
+
+if [ $? -ne 0 ]; then
+  echo -e "${YELLOW}⚠️  Database seeding failed or already seeded (this is usually OK)${NC}"
+  # Don't exit on seed failure - it might already be seeded
+else
+  echo -e "${GREEN}✅ Database seeded successfully!${NC}"
+  echo -e "${GREEN}Test users available:${NC}"
+  echo -e "  - driver-individual@trevel.in (Driver Individual) - password: 112233"
+  echo -e "  - admin@trevel.in (Operational Admin) - password: 112233"
+  echo -e "  - team@trevel.in (Team) - password: 112233"
+fi
+
 # Step 4: Start new container
 echo -e "${YELLOW}� Starting new container...${NC}"
 sudo docker run -d \
