@@ -193,6 +193,14 @@ jobs:
             set -x  # Enable verbose output
             
             echo "=== Starting Deployment ==="
+            
+            echo "🧹 Cleaning up previous deployment attempts..."
+            # Remove backend_new if it exists from previous failed deployment
+            if [ -d ~/backend_new ]; then
+              rm -rf ~/backend_new || { echo "ERROR: Failed to remove existing backend_new directory"; exit 1; }
+              echo "✅ Removed existing backend_new directory"
+            fi
+            
             echo "📦 Extracting deployment package..."
             mkdir -p ~/backend_new || { echo "ERROR: Failed to create backend_new directory"; exit 1; }
             tar -xzf /tmp/deploy.tar.gz -C ~/backend_new || { echo "ERROR: Failed to extract deployment package"; exit 1; }
