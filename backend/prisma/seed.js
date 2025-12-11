@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
-const { PERMISSIONS } = require("../dist/rbac/permissions");
-const { ROLES } = require("../dist/rbac/roles");
+const { PERMISSIONS } = require("../dist/src/rbac/permissions");
+const { ROLES } = require("../dist/src/rbac/roles");
 
 const prisma = new PrismaClient();
 
