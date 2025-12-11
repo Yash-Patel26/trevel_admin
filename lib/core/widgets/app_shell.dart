@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../state/auth/auth_controller.dart';
 import '../utils/permissions.dart';
+import '../../features/drivers/data/drivers_repository.dart';
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child});
@@ -52,6 +53,16 @@ class AppShell extends ConsumerWidget {
           title: const Text('My Drivers'),
           automaticallyImplyLeading: false,
           actions: [
+            if (isDriversList)
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  // Refresh drivers list by invalidating the repository
+                  // This will cause all providers watching it to refetch
+                  ref.invalidate(driversRepositoryProvider);
+                },
+                tooltip: 'Refresh',
+              ),
             if (isDriversList)
               FilledButton.icon(
                 onPressed: () => context.go('/drivers/onboard/step1'),

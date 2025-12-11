@@ -6,6 +6,7 @@ import '../../../core/state/auth/auth_controller.dart';
 import '../data/drivers_repository.dart';
 import '../data/driver_model.dart';
 import '../data/driver_document.dart';
+import 'drivers_page.dart';
 
 final driverDetailProvider =
     FutureProvider.autoDispose.family<Driver, int>((ref, driverId) async {
@@ -67,9 +68,9 @@ class DriverDetailPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
-              final confirmed = await showDialog\u003cbool\u003e(
+              final confirmed = await showDialog<bool>(
                 context: context,
-                builder: (context) =\u003e AlertDialog(
+                builder: (context) => AlertDialog(
                   title: const Text('Delete Driver'),
                   content: const Text(
                     'Are you sure you want to permanently delete this driver?\n\n'
@@ -85,11 +86,11 @@ class DriverDetailPage extends ConsumerWidget {
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () =\u003e Navigator.of(context).pop(false),
+                      onPressed: () => Navigator.of(context).pop(false),
                       child: const Text('Cancel'),
                     ),
                     FilledButton(
-                      onPressed: () =\u003e Navigator.of(context).pop(true),
+                      onPressed: () => Navigator.of(context).pop(true),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
@@ -100,10 +101,28 @@ class DriverDetailPage extends ConsumerWidget {
               );
 
               if (confirmed == true && context.mounted) {
+                // Optimistic deletion: immediately navigate back and flush from UI
+                final repo = ref.read(driversRepositoryProvider);
+                
+                // Show immediate feedback
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Deleting driver...'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                
+                // Navigate back immediately
+                context.pop();
+                
+                // Invalidate the drivers list to remove from UI instantly
+                ref.invalidate(driversProvider);
+                
+                // Perform actual deletion in background
                 try {
-                  final repo = ref.read(driversRepositoryProvider);
                   final result = await repo.deleteDriver(driverId);
                   
+                  // Show success message on the drivers list page
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -114,18 +133,20 @@ class DriverDetailPage extends ConsumerWidget {
                         backgroundColor: Colors.green,
                       ),
                     );
-                    // Navigate back to drivers list
-                    context.pop();
                   }
                 } catch (e) {
+                  // If deletion fails, show error and refresh the list
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error deleting driver: ${e.toString()}'),
                         backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 4),
                       ),
                     );
                   }
+                  // Refresh the list to restore the driver if deletion failed
+                  ref.invalidate(driversProvider);
                 }
               }
             },
