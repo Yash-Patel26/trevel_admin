@@ -12,13 +12,13 @@ final customerStatsProvider = FutureProvider.autoDispose<CustomerStats>((ref) as
 });
 
 final customersProvider = FutureProvider.autoDispose
-    .family<List<Customer>, Map<String, dynamic>>((ref, params) async {
+    .family<List<Customer>, ({int? page, int? pageSize, String? search, String? status})>((ref, params) async {
   final repo = ref.watch(customersRepositoryProvider);
   return await repo.getCustomers(
-    page: params['page'] as int?,
-    pageSize: params['pageSize'] as int?,
-    search: params['search'] as String?,
-    status: params['status'] as String?,
+    page: params.page,
+    pageSize: params.pageSize,
+    search: params.search,
+    status: params.status,
   );
 });
 
@@ -38,10 +38,12 @@ class _CustomersDashboardPageState
   @override
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(customerStatsProvider);
-    final customersAsync = ref.watch(customersProvider({
-      'search': searchQuery,
-      'status': statusFilter,
-    }));
+    final customersAsync = ref.watch(customersProvider((
+      page: null,
+      pageSize: null,
+      search: searchQuery,
+      status: statusFilter,
+    )));
 
     return Scaffold(
       appBar: AppBar(
