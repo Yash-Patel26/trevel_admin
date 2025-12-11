@@ -501,7 +501,7 @@ customersRouter.post(
   validateBody(z.object({
     name: z.string().min(1, "Name is required"),
     mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-    email: z.string().email("Invalid email address").optional().or(z.literal("")),
+    email: z.string().email("Invalid email address").nullish().or(z.literal("")),
   })),
   async (req, res) => {
     try {
