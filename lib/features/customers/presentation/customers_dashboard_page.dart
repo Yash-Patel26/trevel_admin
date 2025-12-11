@@ -141,7 +141,7 @@ class _CustomersDashboardPageState
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                       maxCrossAxisExtent: 400,
-                      childAspectRatio: 2.5,
+                      childAspectRatio: 2.2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
                     ),
