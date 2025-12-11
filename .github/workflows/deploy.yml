@@ -196,8 +196,9 @@ jobs:
             
             echo "🧹 Cleaning up previous deployment attempts..."
             # Remove backend_new if it exists from previous failed deployment
+            # Use sudo because Docker may have created files with different permissions
             if [ -d ~/backend_new ]; then
-              rm -rf ~/backend_new || { echo "ERROR: Failed to remove existing backend_new directory"; exit 1; }
+              sudo rm -rf ~/backend_new || { echo "ERROR: Failed to remove existing backend_new directory"; exit 1; }
               echo "✅ Removed existing backend_new directory"
             fi
             
@@ -228,7 +229,7 @@ jobs:
             
             echo "🧹 Cleaning up old versions..."
             if [ -d ~/backend_old ]; then
-              rm -rf ~/backend_old || echo "Warning: Could not remove backend_old"
+              sudo rm -rf ~/backend_old || echo "Warning: Could not remove backend_old"
             fi
             if [ -d ~/backend ]; then
               mv ~/backend ~/backend_old || echo "Warning: Could not move backend to backend_old"
