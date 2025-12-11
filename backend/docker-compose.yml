@@ -1,34 +1,28 @@
+version: '3.8'
+
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: trevel_admin_backend
-    ports:
-      - "4000:4000"
+  postgres:
+    image: postgres:15-alpine
+    container_name: trevel_postgres
+    restart: always
     environment:
-      - NODE_ENV=production
-      - PORT=4000
-      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
-      - CORS_ORIGINS=${CORS_ORIGINS:-*}
-    env_file:
-      - .env
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: trevel_admin
+    ports:
+      - "5432:5432"
     volumes:
-      # Mount uploads directory for persistent file storage
-      - uploads_data:/app/uploads
-    restart: unless-stopped
-    # Graceful shutdown
-    stop_grace_period: 30s
-    healthcheck:
-      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
-      interval: 30s
-      timeout: 5s
-      start_period: 40s
-      retries: 3
-    labels:
-      - "app=trevel_backend"
-      - "environment=production"
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: trevel_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
 volumes:
-  uploads_data:
-    driver: local
+  postgres_data:
+  redis_data:

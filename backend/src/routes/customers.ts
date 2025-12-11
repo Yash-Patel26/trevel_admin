@@ -11,6 +11,7 @@ import { queueNotification } from "../services/notifications";
 import { logAudit } from "../utils/audit";
 import { z } from "zod";
 import { env } from "../config/env";
+import redisClient from "../config/redis";
 
 export const customersRouter = Router();
 
@@ -415,12 +416,26 @@ customersRouter.post(
   }
 );
 
+
+
 // Get customer dashboard statistics
 customersRouter.get(
   "/customers/stats",
   requirePermissions(["customer:view"]),
   async (_req, res) => {
     try {
+      const cacheKey = "customer:stats";
+      let cachedData = null;
+      try {
+        cachedData = await redisClient.get(cacheKey);
+      } catch (err) {
+        console.warn("Redis cache get error:", err);
+      }
+
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+
       const totalCustomers = await prisma.customer.count();
 
       const totalBookings = await prisma.booking.count();
@@ -437,12 +452,20 @@ customersRouter.get(
         },
       });
 
-      return res.json({
+      const result = {
         totalCustomers,
         totalBookings,
         upcomingBookings,
         cancelledBookings,
-      });
+      };
+
+      try {
+        await redisClient.setEx(cacheKey, 60, JSON.stringify(result)); // Cache for 60 seconds
+      } catch (err) {
+        console.warn("Redis cache set error:", err);
+      }
+
+      return res.json(result);
     } catch (error) {
       console.error("Error fetching customer stats:", error);
       return res.status(500).json({ message: "Failed to fetch statistics" });
@@ -553,6 +576,18 @@ customersRouter.get(
       const { skip, take, page, pageSize } = getPagination(req.query);
       const { search, status } = req.query;
 
+      const cacheKey = `customers:list:${page}:${pageSize}:${search || ""}:${status || ""}`;
+      let cachedData = null;
+      try {
+        cachedData = await redisClient.get(cacheKey);
+      } catch (err) {
+        console.warn("Redis cache get error:", err);
+      }
+
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+
       // Build where clause
       const where: any = {};
 
@@ -564,51 +599,55 @@ customersRouter.get(
         ];
       }
 
+      if (status === "active") {
+        where.bookings = { some: {} };
+      } else if (status === "inactive") {
+        where.bookings = { none: {} };
+      }
+
       const customers = await prisma.customer.findMany({
         where,
         skip,
         take,
         orderBy: { id: "desc" },
         include: {
+          _count: {
+            select: { bookings: true },
+          },
           bookings: {
-            select: {
-              id: true,
-              status: true,
-            },
+            where: { status: "upcoming" },
+            select: { id: true },
           },
         },
       });
 
       const total = await prisma.customer.count({ where });
 
-      // Transform customers to include booking counts and computed status
       const transformedCustomers = customers.map((customer) => ({
         id: customer.id,
         name: customer.name,
         mobile: customer.mobile,
         email: customer.email,
-        bookingsCount: customer.bookings.length,
-        upcomingBookingsCount: customer.bookings.filter(
-          (b) => b.status === "upcoming"
-        ).length,
-        // Compute status: active if has bookings, inactive otherwise
-        status: customer.bookings.length > 0 ? "active" : "inactive",
+        bookingsCount: customer._count.bookings,
+        upcomingBookingsCount: customer.bookings.length,
+        status: customer._count.bookings > 0 ? "active" : "inactive",
       }));
 
-      // Filter by status if provided
-      let filteredCustomers = transformedCustomers;
-      if (status) {
-        filteredCustomers = transformedCustomers.filter(
-          (c) => c.status === String(status)
-        );
-      }
 
-      return res.json({
-        data: filteredCustomers,
+      const result = {
+        data: transformedCustomers,
         page,
         pageSize,
-        total: status ? filteredCustomers.length : total,
-      });
+        total,
+      };
+
+      try {
+        await redisClient.setEx(cacheKey, 30, JSON.stringify(result));
+      } catch (err) {
+        console.warn("Redis cache set error:", err);
+      }
+
+      return res.json(result);
     } catch (error) {
       console.error("Error fetching customers:", error);
       return res.status(500).json({ message: "Failed to fetch customers" });
