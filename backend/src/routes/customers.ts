@@ -447,8 +447,19 @@ customersRouter.get(
 
     const mostVisited = topDestinations[0]?.destinationLocation ?? null;
 
+    const totalBookings = await prisma.booking.count({
+      where: { customerId: id },
+    });
+
+    const upcomingBookings = await prisma.booking.count({
+      where: { customerId: id, status: "upcoming" },
+    });
+
     return res.json({
-      customer,
+      ...customer,
+      bookingsCount: totalBookings,
+      upcomingBookingsCount: upcomingBookings,
+      status: totalBookings > 0 ? "active" : "inactive",
       stats: {
         ridesCompleted: completedCount,
         mostVisitedLocation: mostVisited,
