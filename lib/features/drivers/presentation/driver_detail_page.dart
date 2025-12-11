@@ -64,6 +64,73 @@ class DriverDetailPage extends ConsumerWidget {
             },
             tooltip: 'Refresh',
           ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () async {
+              final confirmed = await showDialog\u003cbool\u003e(
+                context: context,
+                builder: (context) =\u003e AlertDialog(
+                  title: const Text('Delete Driver'),
+                  content: const Text(
+                    'Are you sure you want to permanently delete this driver?\n\n'
+                    'This will remove:\n'
+                    '• Driver record\n'
+                    '• All documents (from database and S3)\n'
+                    '• Vehicle assignments\n'
+                    '• Training records\n'
+                    '• Background checks\n'
+                    '• Audit logs\n'
+                    '• User account\n\n'
+                    'This action cannot be undone!',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () =\u003e Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      onPressed: () =\u003e Navigator.of(context).pop(true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: const Text('Delete Permanently'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true && context.mounted) {
+                try {
+                  final repo = ref.read(driversRepositoryProvider);
+                  final result = await repo.deleteDriver(driverId);
+                  
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          result['message'] as String? ?? 
+                          'Driver deleted successfully',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    // Navigate back to drivers list
+                    context.pop();
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error deleting driver: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            tooltip: 'Delete Driver',
+          ),
         ],
       ),
       body: driverAsync.when(

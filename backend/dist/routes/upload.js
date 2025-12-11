@@ -61,8 +61,10 @@ async (req, res) => {
             // Get optional entity information from request body
             const entityType = req.body.entityType;
             const entityId = req.body.entityId;
+            const documentType = req.body.documentType;
             const { location, key, signedUrl } = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype, entityType, // Pass entity type (e.g., "drivers")
-            entityId // Pass entity ID (e.g., mobile number)
+            entityId, // Pass entity ID (e.g., mobile number)
+            documentType // Pass document type (e.g., "PAN_Card")
             );
             return res.json({
                 message: "File uploaded successfully",

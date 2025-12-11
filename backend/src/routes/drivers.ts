@@ -908,3 +908,122 @@ driversRouter.post(
   }
 );
 
+// Delete driver - permanently removes driver and all associated data
+driversRouter.delete(
+  "/drivers/:id",
+  authMiddleware, // Only requires authentication, no specific permissions
+  async (req, res) => {
+    const id = Number(req.params.id);
+
+    try {
+      // Check if driver exists
+      const driver = await prisma.driver.findUnique({
+        where: { id },
+        include: {
+          assignments: true,
+        }
+      });
+
+      if (!driver) {
+        return res.status(404).json({ message: "Driver not found" });
+      }
+
+      // Get all driver documents to delete from S3
+      const documents = await prisma.driverDocument.findMany({
+        where: { driverId: id },
+      });
+
+      // Delete documents from S3
+      const { deleteFromS3 } = await import("../middleware/upload");
+      for (const doc of documents) {
+        if (doc.url) {
+          try {
+            // Extract S3 key from URL
+            // URL format: https://bucket.s3.region.amazonaws.com/key
+            const urlParts = doc.url.split('.amazonaws.com/');
+            if (urlParts.length > 1) {
+              const key = urlParts[1];
+              await deleteFromS3(key);
+            }
+          } catch (s3Error) {
+            console.error(`Failed to delete S3 file for document ${doc.id}:`, s3Error);
+            // Continue with deletion even if S3 deletion fails
+          }
+        }
+      }
+
+      // Delete all related records in proper order (respecting foreign key constraints)
+      // 1. Delete driver documents
+      await prisma.driverDocument.deleteMany({
+        where: { driverId: id },
+      });
+
+      // 2. Delete driver logs
+      await prisma.driverLog.deleteMany({
+        where: { driverId: id },
+      });
+
+      // 3. Delete vehicle assignments
+      await prisma.vehicleAssignment.deleteMany({
+        where: { driverId: id },
+      });
+
+      // 4. Delete background checks
+      await prisma.driverBackgroundCheck.deleteMany({
+        where: { driverId: id },
+      });
+
+      // 5. Delete training assignments
+      await prisma.driverTrainingAssignment.deleteMany({
+        where: { driverId: id },
+      });
+
+      // 6. Delete audit logs related to this driver
+      await prisma.auditLog.deleteMany({
+        where: {
+          entityType: "driver",
+          entityId: String(id),
+        },
+      });
+
+      // 7. Delete the driver record itself
+      await prisma.driver.delete({
+        where: { id },
+      });
+
+      // 8. Optionally delete the associated user account
+      // Find and delete user by email
+      if (driver.email) {
+        try {
+          await prisma.user.deleteMany({
+            where: { email: driver.email },
+          });
+        } catch (userError) {
+          console.error(`Failed to delete user account for driver ${id}:`, userError);
+          // Continue even if user deletion fails
+        }
+      }
+
+      // Log the deletion action (create a new audit log entry)
+      await logAudit({
+        actorId: req.user?.id,
+        action: "driver:delete",
+        entityType: "driver",
+        entityId: String(id),
+        before: driver,
+      });
+
+      return res.json({
+        message: "Driver and all associated data deleted successfully",
+        deletedDriverId: id,
+        deletedDriverName: driver.name,
+      });
+    } catch (error) {
+      console.error("Error deleting driver:", error);
+      return res.status(500).json({
+        message: "Failed to delete driver",
+        error: String(error)
+      });
+    }
+  }
+);

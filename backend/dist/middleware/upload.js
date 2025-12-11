@@ -77,15 +77,21 @@ exports.uploadSingle = exports.upload.single("image");
 // Multiple files upload middleware
 exports.uploadMultiple = exports.upload.array("images", 10);
 // Helper function to upload buffer to S3 with entity-based folder organization
+// Structure: {entityType}/{entityId}/{documentType}/file.ext
+// Example: drivers/9876543210/PAN_Card/pan_image.jpg
 async function uploadToS3(buffer, filename, mimetype, entityType, // e.g., "drivers", "vehicles"
-entityId // e.g., driver ID or vehicle ID
+entityId, // e.g., mobile number or vehicle ID
+documentType // e.g., "PAN_Card", "Aadhar_Card", "Driving_License", "Police_Verification"
 ) {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
-    // Organize files by entity type and ID if provided
-    // Example: drivers/123/1234567890-profile.jpg
+    // Organize files by entity type, ID, and document type if provided
+    // Example: drivers/9876543210/PAN_Card/1234567890-pan.jpg
     let key;
-    if (entityType && entityId) {
+    if (entityType && entityId && documentType) {
+        key = `${entityType}/${entityId}/${documentType}/${uniqueSuffix}-${safeName}`;
+    }
+    else if (entityType && entityId) {
         key = `${entityType}/${entityId}/${uniqueSuffix}-${safeName}`;
     }
     else {

@@ -219,6 +219,12 @@ class DriversRepository {
     await _dio.delete('/drivers/$driverId/documents/$documentId');
   }
 
+  Future<Map<String, dynamic>> deleteDriver(int driverId) async {
+    final response = await _dio.delete('/drivers/$driverId');
+    return response.data as Map<String, dynamic>;
+  }
+
+
   Future<DriverDocument> verifyDriverDocument({
     required int driverId,
     required int documentId,
