@@ -415,6 +415,41 @@ customersRouter.post(
   }
 );
 
+// Get customer dashboard statistics
+customersRouter.get(
+  "/customers/stats",
+  requirePermissions(["customer:view"]),
+  async (_req, res) => {
+    try {
+      const totalCustomers = await prisma.customer.count();
+
+      const totalBookings = await prisma.booking.count();
+
+      const upcomingBookings = await prisma.booking.count({
+        where: {
+          status: "upcoming",
+        },
+      });
+
+      const cancelledBookings = await prisma.booking.count({
+        where: {
+          status: "canceled",
+        },
+      });
+
+      return res.json({
+        totalCustomers,
+        totalBookings,
+        upcomingBookings,
+        cancelledBookings,
+      });
+    } catch (error) {
+      console.error("Error fetching customer stats:", error);
+      return res.status(500).json({ message: "Failed to fetch statistics" });
+    }
+  }
+);
+
 customersRouter.get(
   "/customers/:id",
   requirePermissions(["customer:view", "dashboard:view"]),
@@ -470,40 +505,7 @@ customersRouter.get(
   }
 );
 
-// Get customer dashboard statistics
-customersRouter.get(
-  "/customers/stats",
-  requirePermissions(["customer:view"]),
-  async (_req, res) => {
-    try {
-      const totalCustomers = await prisma.customer.count();
 
-      const totalBookings = await prisma.booking.count();
-
-      const upcomingBookings = await prisma.booking.count({
-        where: {
-          status: "upcoming",
-        },
-      });
-
-      const cancelledBookings = await prisma.booking.count({
-        where: {
-          status: "canceled",
-        },
-      });
-
-      return res.json({
-        totalCustomers,
-        totalBookings,
-        upcomingBookings,
-        cancelledBookings,
-      });
-    } catch (error) {
-      console.error("Error fetching customer stats:", error);
-      return res.status(500).json({ message: "Failed to fetch statistics" });
-    }
-  }
-);
 
 // Create new customer
 customersRouter.post(
