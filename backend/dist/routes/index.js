@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apiRouter = void 0;
 const express_1 = require("express");
@@ -14,6 +17,8 @@ const users_1 = require("./users");
 const roles_1 = require("./roles");
 const rides_1 = require("./rides");
 const upload_1 = require("./upload");
+const delete_1 = __importDefault(require("./delete"));
+const s3_1 = __importDefault(require("./s3"));
 exports.apiRouter = (0, express_1.Router)();
 exports.apiRouter.use(health_1.healthRouter);
 exports.apiRouter.use(auth_1.authRouter);
@@ -27,3 +32,5 @@ exports.apiRouter.use(customers_1.customersRouter);
 exports.apiRouter.use(users_1.usersRouter);
 exports.apiRouter.use(roles_1.rolesRouter);
 exports.apiRouter.use(rides_1.ridesRouter);
+exports.apiRouter.use(delete_1.default);
+exports.apiRouter.use(s3_1.default);

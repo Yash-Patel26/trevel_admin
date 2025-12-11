@@ -1,8 +1,8 @@
-# Trevel Admin - Zero-Downtime Deployment
+# Trevel Admin Backend - Zero-Downtime Deployment
 
 ## 🎯 Overview
 
-This backend now supports **zero-downtime deployments** with automated CI/CD via GitHub Actions.
+This is the **Admin Panel Backend** for Trevel's fleet management system. It supports **zero-downtime deployments** with automated CI/CD via GitHub Actions.
 
 ## 🚀 Quick Start
 

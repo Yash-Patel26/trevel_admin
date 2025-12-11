@@ -18,4 +18,19 @@ exports.env = {
         region: process.env.AWS_REGION || "ap-south-1",
         bucketName: process.env.AWS_BUCKET_NAME || "",
     },
+    // JSON array of polygons: [[ [lat, lng], [lat, lng], ... ], ...]
+    allowedServiceAreas: (() => {
+        try {
+            const raw = process.env.ALLOWED_SERVICE_AREAS;
+            if (!raw)
+                return [];
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed))
+                return [];
+            return parsed;
+        }
+        catch {
+            return [];
+        }
+    })(),
 };

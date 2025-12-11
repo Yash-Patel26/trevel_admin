@@ -16,6 +16,7 @@ const otp_1 = require("../utils/otp");
 const notifications_1 = require("../services/notifications");
 const audit_1 = require("../utils/audit");
 const zod_1 = require("zod");
+const env_1 = require("../config/env");
 exports.customersRouter = (0, express_1.Router)();
 exports.customersRouter.use(auth_1.authMiddleware);
 exports.customersRouter.get("/customers/dashboard/summary", (0, permissions_1.requirePermissions)(["customer:view", "dashboard:view"]), async (_req, res) => {
@@ -81,6 +82,11 @@ exports.customersRouter.post("/bookings/:id/assign", (0, permissions_1.requirePe
     const booking = await client_2.default.booking.findUnique({ where: { id }, include: { customer: true } });
     if (!booking)
         return res.status(404).json({ message: "Not found" });
+    if (!isBookingWithinAllowedAreas(booking)) {
+        return res.status(400).json({
+            message: "Booking pickup/destination are outside allowed service areas. Update locations first.",
+        });
+    }
     const otpCode = (0, otp_1.generateOtp)();
     const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     const updated = await client_2.default.booking.update({
@@ -130,6 +136,39 @@ const bookingStatusUpdateSchema = zod_1.z.object({
     destinationTime: zod_1.z.coerce.date().optional(),
     distanceKm: zod_1.z.number().optional(),
 });
+const bookingLocationUpdateSchema = zod_1.z.object({
+    pickupLocation: zod_1.z.string().min(1).optional(),
+    destinationLocation: zod_1.z.string().min(1).optional(),
+    pickupLatitude: zod_1.z.number().optional(),
+    pickupLongitude: zod_1.z.number().optional(),
+    destinationLatitude: zod_1.z.number().optional(),
+    destinationLongitude: zod_1.z.number().optional(),
+});
+// Basic point-in-polygon check (ray casting)
+function isPointInPolygon(lat, lng, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i][0], yi = polygon[i][1];
+        const xj = polygon[j][0], yj = polygon[j][1];
+        const intersect = yi > lng !== yj > lng &&
+            lat < ((xj - xi) * (lng - yi)) / (yj - yi) + xi;
+        if (intersect)
+            inside = !inside;
+    }
+    return inside;
+}
+function isWithinAllowedAreas(lat, lng) {
+    if (lat === undefined || lng === undefined)
+        return true; // No coords to validate
+    if (!env_1.env.allowedServiceAreas.length)
+        return true; // No restriction configured
+    return env_1.env.allowedServiceAreas.some((poly) => isPointInPolygon(lat, lng, poly));
+}
+function isBookingWithinAllowedAreas(booking) {
+    const pickupOk = isWithinAllowedAreas(booking.pickupLatitude, booking.pickupLongitude);
+    const destOk = isWithinAllowedAreas(booking.destinationLatitude, booking.destinationLongitude);
+    return pickupOk && destOk;
+}
 exports.customersRouter.patch("/bookings/:id/status", (0, permissions_1.requirePermissions)(["customer:view", "dashboard:view"]), (0, validate_1.validateBody)(bookingStatusUpdateSchema), async (req, res) => {
     const id = Number(req.params.id);
     const { status, destinationTime, distanceKm } = req.body;
@@ -171,6 +210,51 @@ exports.customersRouter.patch("/bookings/:id/status", (0, permissions_1.requireP
         targetId: booking.customerId,
         type: "booking.status_update",
         payload: { bookingId: id, status },
+    });
+    return res.json(updated);
+});
+// Update booking pickup/drop locations and coordinates
+exports.customersRouter.patch("/bookings/:id/locations", (0, permissions_1.requirePermissions)(["customer:view", "dashboard:view"]), (0, validate_1.validateBody)(bookingLocationUpdateSchema), async (req, res) => {
+    const id = Number(req.params.id);
+    const booking = await client_2.default.booking.findUnique({ where: { id } });
+    if (!booking)
+        return res.status(404).json({ message: "Not found" });
+    const { pickupLocation, destinationLocation, pickupLatitude, pickupLongitude, destinationLatitude, destinationLongitude, } = req.body;
+    // Validate pickup coordinates within allowed polygons if provided
+    if (pickupLatitude !== undefined &&
+        pickupLongitude !== undefined &&
+        !isWithinAllowedAreas(pickupLatitude, pickupLongitude)) {
+        return res.status(400).json({ message: "Pickup location is outside allowed service areas" });
+    }
+    // Validate destination coordinates within allowed polygons if provided
+    if (destinationLatitude !== undefined &&
+        destinationLongitude !== undefined &&
+        !isWithinAllowedAreas(destinationLatitude, destinationLongitude)) {
+        return res
+            .status(400)
+            .json({ message: "Destination location is outside allowed service areas" });
+    }
+    // Use any to avoid Prisma type mismatch until client is regenerated
+    const updateData = {
+        pickupLocation: pickupLocation ?? booking.pickupLocation,
+        destinationLocation: destinationLocation ?? booking.destinationLocation,
+        pickupLatitude: pickupLatitude ?? booking.pickupLatitude,
+        pickupLongitude: pickupLongitude ?? booking.pickupLongitude,
+        destinationLatitude: destinationLatitude ?? booking.destinationLatitude,
+        destinationLongitude: destinationLongitude ?? booking.destinationLongitude,
+    };
+    const updated = await client_2.default.booking.update({
+        where: { id },
+        data: updateData,
+        include: { customer: true },
+    });
+    await (0, audit_1.logAudit)({
+        actorId: req.user?.id,
+        action: "booking:update_locations",
+        entityType: "booking",
+        entityId: String(id),
+        before: booking,
+        after: updated,
     });
     return res.json(updated);
 });

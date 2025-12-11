@@ -61,6 +61,7 @@ if (!fs_1.default.existsSync(uploadsPath)) {
     fs_1.default.mkdirSync(uploadsPath, { recursive: true });
 }
 exports.app.use("/uploads", express_1.default.static(uploadsPath));
+// Mount admin API routes
 exports.app.use(routes_1.apiRouter);
 exports.app.use((err, _req, res, _next) => {
     logger.error({ err }, "Unhandled error");

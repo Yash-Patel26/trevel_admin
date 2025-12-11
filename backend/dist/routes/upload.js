@@ -58,7 +58,12 @@ async (req, res) => {
         try {
             // Upload to S3 manually
             const { uploadToS3 } = await Promise.resolve().then(() => __importStar(require("../middleware/upload")));
-            const { location, key } = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
+            // Get optional entity information from request body
+            const entityType = req.body.entityType;
+            const entityId = req.body.entityId;
+            const { location, key, signedUrl } = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype, entityType, // Pass entity type (e.g., "drivers")
+            entityId // Pass entity ID (e.g., mobile number)
+            );
             return res.json({
                 message: "File uploaded successfully",
                 file: {
@@ -66,8 +71,9 @@ async (req, res) => {
                     originalName: req.file.originalname,
                     mimetype: req.file.mimetype,
                     size: req.file.size,
-                    url: location,
+                    url: location, // Direct S3 URL (publicly accessible since bucket is public)
                     path: key,
+                    location, // raw S3 URL
                 },
             });
         }
@@ -98,14 +104,15 @@ async (req, res) => {
             const { uploadToS3 } = await Promise.resolve().then(() => __importStar(require("../middleware/upload")));
             const filesArray = Array.isArray(req.files) ? req.files : [];
             const uploadedFiles = await Promise.all(filesArray.map(async (f) => {
-                const { location, key } = await uploadToS3(f.buffer, f.originalname, f.mimetype);
+                const { location, key, signedUrl } = await uploadToS3(f.buffer, f.originalname, f.mimetype);
                 return {
                     filename: key,
                     originalName: f.originalname,
                     mimetype: f.mimetype,
                     size: f.size,
-                    url: location,
+                    url: location, // Direct S3 URL (publicly accessible since bucket is public)
                     path: key,
+                    location,
                 };
             }));
             return res.json({

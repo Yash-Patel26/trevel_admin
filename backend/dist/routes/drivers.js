@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -585,17 +618,37 @@ exports.driversRouter.post("/drivers/:id/assign-vehicle", (0, permissions_1.requ
     });
     return res.json({ ...assignment, driver: updatedDriver });
 });
-exports.driversRouter.get("/drivers/:id/logs", (0, permissions_1.requirePermissions)(["driver:logs"]), async (req, res) => {
-    const id = Number(req.params.id);
-    const logs = await client_2.default.driverLog.findMany({ where: { driverId: id }, orderBy: { createdAt: "desc" } });
-    return res.json(logs);
-});
-// Get driver documents
-exports.driversRouter.get("/drivers/:id/documents", (0, permissions_1.requirePermissions)(["driver:view"]), async (req, res) => {
+exports.driversRouter.get("/drivers/:id/logs", async (req, res) => {
     const id = Number(req.params.id);
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
         return res.status(404).json({ message: "Driver not found" });
+    const canView = req.user?.permissions?.includes("driver:logs") ||
+        (req.user?.role === "Driver Individual" && driver.createdBy === req.user?.id);
+    if (!canView) {
+        return res
+            .status(403)
+            .json({ message: "You do not have permission to view logs for this driver" });
+    }
+    const logs = await client_2.default.driverLog.findMany({
+        where: { driverId: id },
+        orderBy: { createdAt: "desc" },
+    });
+    return res.json(logs);
+});
+// Get driver documents
+exports.driversRouter.get("/drivers/:id/documents", async (req, res) => {
+    const id = Number(req.params.id);
+    const driver = await client_2.default.driver.findUnique({ where: { id } });
+    if (!driver)
+        return res.status(404).json({ message: "Driver not found" });
+    const canView = req.user?.permissions?.includes("driver:view") ||
+        (req.user?.role === "Driver Individual" && driver.createdBy === req.user?.id);
+    if (!canView) {
+        return res
+            .status(403)
+            .json({ message: "You do not have permission to view documents for this driver" });
+    }
     const documents = await client_2.default.driverDocument.findMany({
         where: { driverId: id },
         orderBy: { id: "desc" },
@@ -625,9 +678,10 @@ exports.driversRouter.post("/drivers/:id/documents", (0, permissions_1.requirePe
             if (req.user?.role === "Driver Individual" && driver.createdBy !== req.user?.id) {
                 return res.status(403).json({ message: "You can only upload documents for drivers you created" });
             }
-            // Generate URL for the uploaded file
-            const fileUrl = `/uploads/${req.file.filename}`;
-            const fullUrl = `${req.protocol}://${req.get("host")}${fileUrl}`;
+            // Upload to S3 and get a public URL
+            // Use driver mobile as the S3 folder key so each driver groups under their unique mobile
+            const uploadResult = await (0, upload_1.uploadToS3)(req.file.buffer, req.file.originalname, req.file.mimetype, "drivers", driver.mobile || String(id));
+            const fullUrl = uploadResult.location;
             const document = await client_2.default.driverDocument.create({
                 data: {
                     driverId: id,
@@ -674,6 +728,21 @@ exports.driversRouter.delete("/drivers/:id/documents/:documentId", (0, permissio
         });
         if (!document) {
             return res.status(404).json({ message: "Document not found" });
+        }
+        // Delete from S3 if URL exists
+        if (document.url) {
+            try {
+                // Extract S3 key from URL
+                // URL format: https://bucket.s3.region.amazonaws.com/key
+                const url = new URL(document.url);
+                const key = url.pathname.substring(1); // Remove leading slash
+                const { deleteFromS3 } = await Promise.resolve().then(() => __importStar(require("../middleware/upload")));
+                await deleteFromS3(key);
+            }
+            catch (s3Error) {
+                console.error("Error deleting from S3:", s3Error);
+                // Continue with database deletion even if S3 deletion fails
+            }
         }
         await client_2.default.driverDocument.delete({
             where: { id: documentId },
