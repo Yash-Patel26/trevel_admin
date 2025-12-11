@@ -321,7 +321,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
     ref.read(driverOnboardingStateProvider.notifier).updateDocuments(documents);
   }
 
-  Widget _buildImagePreview(XFile? image, VoidCallback onRemove) {
+  Widget _buildImagePreview(XFile? image, String label, VoidCallback onRemove) {
     final preview = Container(
       height: 140,
       width: double.infinity,
@@ -352,6 +352,41 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
     return Stack(
       children: [
         preview,
+        // Document label overlay at bottom
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black.withOpacity(0.7),
+                  Colors.transparent,
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        // Close button at top right
         Positioned(
           top: 4,
           right: 4,
@@ -432,7 +467,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
               const SizedBox(width: 16),
               SizedBox(
                 width: 160,
-                child: _buildImagePreview(_panImage, () {
+                child: _buildImagePreview(_panImage, 'PAN Card', () {
                   setState(() {
                     _panImage = null;
                   });
@@ -501,7 +536,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
               const SizedBox(width: 16),
               SizedBox(
                 width: 160,
-                child: _buildImagePreview(_aadharImage, () {
+                child: _buildImagePreview(_aadharImage, 'Aadhar Card', () {
                   setState(() {
                     _aadharImage = null;
                   });
@@ -647,7 +682,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
               const SizedBox(width: 16),
               SizedBox(
                 width: 160,
-                child: _buildImagePreview(_licenseImage, () {
+                child: _buildImagePreview(_licenseImage, 'Driving License', () {
                   setState(() {
                     _licenseImage = null;
                   });
@@ -709,7 +744,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
             const SizedBox(width: 16),
             SizedBox(
               width: 160,
-              child: _buildImagePreview(_policeVerificationImage, () {
+              child: _buildImagePreview(_policeVerificationImage, 'Police Verification', () {
                 setState(() {
                   _policeVerificationImage = null;
                 });

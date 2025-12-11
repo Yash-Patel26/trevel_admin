@@ -219,40 +219,124 @@ class DriverDetailPage extends ConsumerWidget {
               const SizedBox(height: 16),
               // Documents
               documentsAsync.when(
-                data: (documents) => Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Documents',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                data: (documents) {
+                  // Define required document types
+                  final requiredDocs = [
+                    {'type': 'pan', 'label': 'PAN Card', 'icon': Icons.credit_card, 'color': Colors.blue},
+                    {'type': 'aadhar', 'label': 'Aadhar Card', 'icon': Icons.verified_user, 'color': Colors.green},
+                    {'type': 'driving_license', 'label': 'Driving License', 'icon': Icons.drive_eta, 'color': Colors.orange},
+                    {'type': 'police_verification', 'label': 'Police Verification', 'icon': Icons.shield, 'color': Colors.red},
+                  ];
+
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Documents',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          ...requiredDocs.map((docType) {
+                            // Find if this document type exists
+                            final doc = documents.firstWhere(
+                              (d) => d.type == docType['type'],
+                              orElse: () => DriverDocument(
+                                id: 0,
+                                name: docType['label'] as String,
+                                type: docType['type'] as String,
+                                uploadedAt: DateTime.now(),
+                              ),
+                            );
+
+                            final hasDocument = doc.fileUrl != null && doc.fileUrl!.isNotEmpty;
+                            final isValidUrl = hasDocument && 
+                                (doc.fileUrl!.startsWith('http://') || 
+                                 doc.fileUrl!.startsWith('https://'));
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: Icon(
+                                  docType['icon'] as IconData,
+                                  color: hasDocument 
+                                      ? (docType['color'] as Color)
+                                      : Colors.grey,
+                                ),
+                                title: Text(
+                                  docType['label'] as String,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: hasDocument ? null : Colors.grey,
                                   ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (documents.isEmpty)
-                          const Text('No documents uploaded')
-                        else
-                          ...documents.map((doc) => ListTile(
-                                leading: const Icon(Icons.description),
-                                title: Text(doc.name),
-                                subtitle: Text(doc.type),
-                                trailing: doc.fileUrl != null
-                                    ? IconButton(
-                                        icon: const Icon(Icons.open_in_new),
-                                        onPressed: () {
-                                          // TODO: Open document
-                                        },
+                                ),
+                                subtitle: Text(
+                                  hasDocument 
+                                      ? (isValidUrl ? 'Uploaded' : 'Uploaded (Local)')
+                                      : 'Document Pending',
+                                  style: TextStyle(
+                                    color: hasDocument 
+                                        ? Colors.green
+                                        : Colors.orange,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                trailing: hasDocument && isValidUrl
+                                    ? Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Chip(
+                                            label: const Text(
+                                              'Available',
+                                              style: TextStyle(fontSize: 11),
+                                            ),
+                                            backgroundColor: Colors.green.withValues(alpha: 0.1),
+                                            side: BorderSide(color: Colors.green.withValues(alpha: 0.3)),
+                                            padding: EdgeInsets.zero,
+                                            labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          IconButton(
+                                            icon: const Icon(Icons.open_in_new, size: 20),
+                                            onPressed: () {
+                                              // TODO: Open document in new tab
+                                            },
+                                            tooltip: 'View Document',
+                                          ),
+                                        ],
                                       )
-                                    : null,
-                              )),
-                      ],
+                                    : hasDocument
+                                        ? const Chip(
+                                            label: Text(
+                                              'Local File',
+                                              style: TextStyle(fontSize: 11),
+                                            ),
+                                            backgroundColor: Colors.blue,
+                                            padding: EdgeInsets.zero,
+                                            labelPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                          )
+                                        : Chip(
+                                            label: const Text(
+                                              'Pending',
+                                              style: TextStyle(fontSize: 11),
+                                            ),
+                                            backgroundColor: Colors.orange.withValues(alpha: 0.1),
+                                            side: BorderSide(color: Colors.orange.withValues(alpha: 0.3)),
+                                            padding: EdgeInsets.zero,
+                                            labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                          ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
                 loading: () => const Card(
                   child: Padding(
                     padding: EdgeInsets.all(16),

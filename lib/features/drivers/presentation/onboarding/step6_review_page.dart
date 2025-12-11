@@ -590,8 +590,10 @@ class _Step6ReviewPageState extends ConsumerState<Step6ReviewPage> {
 
     final isNetwork = url.startsWith('http://') || url.startsWith('https://');
 
+    Widget imageWidget;
+    
     if (isNetwork) {
-      return ClipRRect(
+      imageWidget = ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Image.network(
           url,
@@ -599,10 +601,8 @@ class _Step6ReviewPageState extends ConsumerState<Step6ReviewPage> {
           errorBuilder: (_, __, ___) => _buildPreviewPlaceholder(),
         ),
       );
-    }
-
-    if (!kIsWeb) {
-      return ClipRRect(
+    } else if (!kIsWeb) {
+      imageWidget = ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Image.file(
           File(url),
@@ -610,9 +610,49 @@ class _Step6ReviewPageState extends ConsumerState<Step6ReviewPage> {
           errorBuilder: (_, __, ___) => _buildPreviewPlaceholder(),
         ),
       );
+    } else {
+      imageWidget = _buildPreviewPlaceholder();
     }
 
-    return _buildPreviewPlaceholder();
+    // Add label overlay to identify the document type
+    return Stack(
+      children: [
+        imageWidget,
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black.withOpacity(0.7),
+                  Colors.transparent,
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: Text(
+              doc.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildPreviewPlaceholder() {
