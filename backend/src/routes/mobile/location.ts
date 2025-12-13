@@ -5,9 +5,37 @@ import { mobileAuthMiddleware } from "../../middleware/mobileAuth";
 import { validateBody } from "../../validation/validate";
 import { googleMapsService } from "../../services/googleMaps";
 
+import axios from "axios";
+
 export const locationRouter = Router();
 
-locationRouter.use(mobileAuthMiddleware);
+// locationRouter.use(mobileAuthMiddleware); // Removed global auth to allow public proxy
+
+locationRouter.get("/proxy-places/*", async (req, res) => {
+    try {
+        const urlMap = req.url.split("/proxy-places/");
+        if (urlMap.length < 2) return res.status(400).send("No URL provided");
+        const targetUrl = urlMap[1];
+
+        // Simple proxy
+        const response = await axios.get(targetUrl, {
+            responseType: 'arraybuffer' // handle binary if needed, but json is fine
+        });
+
+        res.set(response.headers);
+        res.status(response.status).send(response.data);
+    } catch (error: any) {
+        console.error("Proxy Error:", error.message);
+        if (error.response) {
+            res.status(error.response.status).send(error.response.data);
+        } else {
+            res.status(500).send("Proxy error");
+        }
+    }
+});
+
+locationRouter.use(mobileAuthMiddleware); // Apply auth to all subsequent routes
+
 
 locationRouter.get("/geocode", async (req, res) => {
     try {

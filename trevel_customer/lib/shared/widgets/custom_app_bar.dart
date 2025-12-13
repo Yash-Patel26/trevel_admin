@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../features/home/presentation/pages/notifications_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackButton;
@@ -93,15 +94,25 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Container(
-                    height: 32,
-                    width: 32,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber, width: 2),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/user_avatar.jpeg'),
-                        fit: BoxFit.cover,
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilePage(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 32,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber, width: 2),
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/user_avatar.jpeg'),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

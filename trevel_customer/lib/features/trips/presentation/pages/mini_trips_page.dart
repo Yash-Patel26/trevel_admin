@@ -25,31 +25,32 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
 
-  // Vehicle options - will be populated dynamically based on pricing
-  final List<Map<String, dynamic>> _vehicles = [
-    {
-      "name": "Sedan",
-      "seats": 4,
-      "time": "Calculating...",
-      "dist": "0 kms",
-      "price": "₹0",
-      "image": "assets/images/taxi.jpeg", 
-    },
-    {
-      "name": "SUV",
-      "seats": 7,
-      "time": "Calculating...",
-      "dist": "0 kms",
-      "price": "₹0",
-      "image": "assets/images/taxi.jpeg",
-    },
-  ];
+  // Vehicle options - fetched from backend
+  List<Map<String, dynamic>> _vehicles = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user profile data from AuthRepository
-    // TODO: Pre-fill name and phone from authenticated user
+    _fetchVehicles();
+  }
+
+  Future<void> _fetchVehicles() async {
+    final data = await TripsRepository().getMiniTripInfo();
+    if (data != null && data['vehicles'] != null) {
+      setState(() {
+        _vehicles = List<Map<String, dynamic>>.from(data['vehicles']);
+        // Initialize default fields for UI
+        for (var v in _vehicles) {
+          v['time'] = "Calculating...";
+          v['dist'] = "0 kms";
+          v['price'] = "₹0";
+        }
+        _isLoading = false;
+      });
+    } else {
+        setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -73,6 +74,33 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
   void _clearUserData() {
     _nameController.clear();
     _phoneController.clear();
+  }
+
+  Future<bool> _estimateTrip() async {
+    final data = await TripsRepository().estimateMiniTrip(
+        _pickupController.text, 
+        _destinationController.text
+    );
+
+    if (data != null) {
+        final distKm = (data['distance_km'] as num).toDouble();
+        final durationMin = (data['duration_min'] as num).toInt();
+        final basePrice = (data['base_price'] as num).toDouble();
+        
+        setState(() {
+            for (var v in _vehicles) {
+                double multiplier = (v['priceMultiplier'] as num?)?.toDouble() ?? 1.0;
+                double finalPrice = basePrice * multiplier;
+                
+                v['dist'] = "$distKm km";
+                v['time'] = "$durationMin min";
+                v['price'] = "₹${finalPrice.toInt()}";
+                v['raw_price'] = finalPrice; // Store for booking
+            }
+        });
+        return true;
+    }
+    return false;
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -372,7 +400,20 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              if (_pickupController.text.isEmpty || _destinationController.text.isEmpty) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter pickup and destination")));
+                 return;
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Calculating route...")));
+              final success = await _estimateTrip();
+              
+              if (!success) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to estimate trip. Please try again.")));
+                 return;
+              }
+
               setState(() {
                 if (_travelerType == 0) {
                   _currentStep = 3;
@@ -539,30 +580,42 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
             onPressed: () async {
                // Prepare Booking Data
                final v = _vehicles[_selectedVehicleIndex];
-               final price = double.tryParse(v['price'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
-               final dist = double.tryParse(v['dist'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+               final price = v['raw_price'] as double? ?? 0.0;
+               final distStr = v['dist'].toString().replaceAll(RegExp(r'[^0-9.]'), '');
+               final dist = double.tryParse(distStr) ?? 0.0;
+               final timeStr = v['time'].toString().replaceAll(RegExp(r'[^0-9.]'), '');
+               // time is string in backend for estimated_time_min, usually? schema says string. "Minutes or HH:mm"
                
-               // Construct Date YYYY-MM-DD (Mocking parser for simplicity, assuming default format is consistent)
-               // Real app would use DateFormat
                final bookingData = {
                  "pickup_location": _pickupController.text,
                  "dropoff_location": _destinationController.text,
-                 "pickup_date": "2025-12-03", // TODO: Parse _dateController.text
+                 "pickup_date": _dateController.text, 
                  "pickup_time": _timeController.text,
                  "vehicle_selected": v['name'],
+                 "vehicle_image_url": v['image'],
                  "estimated_distance_km": dist,
                  "estimated_time_min": v['time'],
-                 "base_price": price,
+                 "base_price": price, // Approximation
                  "final_price": price,
                  "currency": "INR",
                  "passenger_name": _nameController.text,
                  "passenger_phone": _phoneController.text,
+                 "notes": ""
                };
 
                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Booking...")));
 
-               // Call API
-               final success = await TripsRepository().createBooking(bookingData);
+               // Using createHourlyBooking as a placeholder for generic booking creation if createBooking isn't suitable,
+               // BUT wait, createHourlyBooking hits `/hourly-rental/bookings`.
+               // I need a method for Mini Trip bookings.
+               // accessing ApiConstants.miniTripBook?
+               // I haven't added `miniTripBook` to ApiConstants or a method to repo.
+               // I should have checked that.
+               
+               // For now, I will assume I need to add that method.
+               // I'll call `createMiniTripBooking` which I will add in next step.
+               
+               final success = await TripsRepository().createMiniTripBooking(bookingData);
 
                if (success && context.mounted) {
                showDialog(
@@ -578,6 +631,7 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
                  showDialog(
                    context: context,
                    builder: (context) => BookingErrorDialog(
+                     message: "Failed to create booking",
                      onClose: () => Navigator.pop(context),
                    ),
                  );

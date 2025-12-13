@@ -49,7 +49,7 @@ const AIRPORT_PRICING = {
     pickup: { basePrice: 1189.52, totalPrice: 1249 }
 };
 
-const HOURLY_RENTAL_PRICING: Record<number, { basePrice: number; totalPrice: number }> = {
+export const HOURLY_RENTAL_PRICING: Record<number, { basePrice: number; totalPrice: number }> = {
     2: { basePrice: 951.43, totalPrice: 999 },
     3: { basePrice: 1427.62, totalPrice: 1499 },
     4: { basePrice: 1903.81, totalPrice: 1999 },

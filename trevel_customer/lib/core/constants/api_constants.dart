@@ -1,44 +1,29 @@
 class ApiConstants {
-  // Environment-based base URL configuration
-  // Change this based on your testing environment
+  static const String baseUrl = 'http://localhost:4000/api';
   
-  // DOCKER DEPLOYMENT (Default for testing)
-  // Android Emulator: Use 10.0.2.2 to access host machine
-  // iOS Simulator: Use localhost
-  // Physical Device: Use your machine's IP address (e.g., 192.168.1.100)
+  // Auth
+  static const String login = '/mobile/auth/login-otp';
+  static const String verifyOtp = '/mobile/auth/verify-otp';
+
+  // Trips & Bookings
+  static const String miniTripEstimate = '/mobile/mini-trip/estimate';
+  static const String miniTripBook = '/mobile/mini-trip/bookings';
+  static const String myBookings = '/mobile/bookings'; 
   
-  static const String _environment = 'local'; // Changed to physical device for testing
+  static String bookingDetails(String id) => '/mobile/bookings/$id';
+
+  // Hourly Rental
+  static const String hourlyRentalInfo = '/mobile/hourly-rental/info';
+  static const String hourlyRentalBooking = '/mobile/hourly-rental/bookings';
   
-  static String get baseUrl {
-    switch (_environment) {
-      case 'docker_android':
-        return "http://10.0.2.2:4000/api/mobile";
-      case 'docker_ios':
-        return "http://localhost:4000/api/mobile";
-      case 'docker_physical':
-        // Replace with your machine's IP address
-        return "http://192.168.1.107:4000/api/mobile";
-      case 'local':
-        return "http://localhost:4000/api/mobile";
-      default:
-        return "http://10.0.2.2:4000/api/mobile";
-    }
-  }
-  
-  // Auth Routes
-  static const String sendOtp = "/auth/send-otp";
-  static const String verifyOtp = "/auth/verify-otp";
-  static const String resendOtp = "/auth/resend-otp";
-  
-  // Mini Trip Routes
-  static const String miniTripEstimate = "/mini-trip/estimate";
-  static const String miniTripBook = "/mini-trip/bookings";
-  
-  // Booking Routes
-  static String bookingDetails(String bookingId) => "/bookings/$bookingId";
-  static const String myBookings = "/bookings";
-  
-  // Airport Routes
-  static const String airports = "/airport";
-  static const String airportEstimate = "/airport/estimate";
+  // Missing constants
+  static const String sendOtp = '/mobile/auth/send-otp';
+  static const String clearAirports = '/mobile/airport/airports'; // Assuming this is correct based on missing member
+  static const String AirportEstimate = '/mobile/airport/estimate'; 
+  static const String locationAutocomplete = '/mobile/location/autocomplete';
+
+  // Mini Trip
+  static const String miniTripInfo = '/mobile/mini-trip/info';
+  static const String miniTripEstimate = '/mobile/mini-trip/estimate-trip';
+  static const String miniTripBooking = '/mobile/mini-trip/bookings';
 }

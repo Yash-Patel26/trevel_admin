@@ -6,12 +6,14 @@ class AirportData {
   final String airportName;
   final String airportCode;
   final String city;
+  final List<String> terminals;
 
   AirportData({
     required this.id,
     required this.airportName,
     required this.airportCode,
     required this.city,
+    required this.terminals,
   });
 
   factory AirportData.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,9 @@ class AirportData {
       airportName: json['airportName'],
       airportCode: json['airportCode'],
       city: json['city'],
+      terminals: json['terminal'] != null 
+          ? (json['terminal'] as String).split(',').map((e) => e.trim()).toList() 
+          : [],
     );
   }
 }
@@ -29,7 +34,7 @@ class AirportRepository {
 
   Future<List<AirportData>> getAirports() async {
     try {
-      final response = await _apiClient.dio.get(ApiConstants.airports);
+      final response = await _apiClient.dio.get(ApiConstants.clearAirports);
       
       if (response.statusCode == 200 && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
@@ -44,7 +49,7 @@ class AirportRepository {
   Future<List<Map<String, dynamic>>> getAirportEstimate(String type, String pickupTime) async {
       try {
         final response = await _apiClient.dio.post(
-          ApiConstants.airportEstimate,
+          ApiConstants.AirportEstimate,
           data: {
             "type": type,
             "pickup_time": pickupTime
@@ -59,5 +64,23 @@ class AirportRepository {
         print("Fetch Estimate Error: $e");
         return [];
       }
+    }
+
+  Future<List<String>> getPlacePredictions(String input) async {
+    try {
+      final response = await _apiClient.dio.get(
+        ApiConstants.locationAutocomplete,
+        queryParameters: {"input": input}
+      );
+      
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final List<dynamic> predictions = response.data['data'];
+        return predictions.map((e) => e['description'] as String).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Fetch Predictions Error: $e");
+      return []; 
+    }
   }
 }

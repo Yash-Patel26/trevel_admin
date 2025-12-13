@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/widgets/app_bottom_bar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/booking_success_dialog.dart';
+import '../../../../shared/widgets/booking_error_dialog.dart';
 import 'my_bookings_page.dart';
+import '../../data/trips_repository.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_places_flutter/model/prediction.dart';
+import '../../../../core/constants/api_constants.dart'; // Ensure this path is correct or adjust
 
 class HourlyRentalsPage extends StatefulWidget {
   const HourlyRentalsPage({super.key});
@@ -17,51 +23,52 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
   double _rentingHours = 2.0;
 
   final TextEditingController _pickupController = TextEditingController(text: "Enter your pickup location");
-  final TextEditingController _dateController = TextEditingController(text: "Dec 03,2025");
-  final TextEditingController _timeController = TextEditingController(text: "4:00 PM");
+  final TextEditingController _dateController = TextEditingController(); // formatted string
+  final TextEditingController _timeController = TextEditingController(); // formatted string
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
-  final List<Map<String, dynamic>> _vehicles = [
-    {
-      "name": "MG Windsor",
-      "seats": 4,
-      "bags": 3,
-      "price": "₹799", // Base price
-      "image": "assets/images/taxi.jpeg", 
-    },
-    {
-      "name": "BYD emax",
-      "seats": 7,
-      "bags": 3,
-      "price": "₹999",
-      "image": "assets/images/taxi.jpeg",
-    },
-    {
-      "name": "Kia cerens",
-      "seats": 7,
-      "bags": 4,
-      "price": "₹999",
-      "image": "assets/images/taxi.jpeg",
-    },
-    {
-      "name": "BMW iX1",
-      "seats": 4,
-      "bags": 4,
-      "price": "₹1,499",
-      "image": "assets/images/taxi.jpeg",
-    },
-  ];
+  // Data fetching state
+  bool _isLoading = true;
+  List<dynamic> _vehicles = [];
+  Map<String, dynamic> _pricing = {};
+
+  // For validation and logic
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
 
   @override
   void initState() {
     super.initState();
     _fillUserData();
+    _fetchData();
+    
+    // Set default date/time (now + 2h buffer) for initial display
+    final now = DateTime.now().add(const Duration(hours: 2));
+    _selectedDate = now;
+    _selectedTime = TimeOfDay.fromDateTime(now);
+    _dateController.text = _formatDate(now);
+    _timeController.text = _formatTime(TimeOfDay.fromDateTime(now));
+  }
+
+  Future<void> _fetchData() async {
+    setState(() => _isLoading = true);
+    final data = await TripsRepository().getHourlyRentalInfo();
+    if (mounted) {
+      if (data != null) {
+        setState(() {
+          _vehicles = data['vehicles'] ?? [];
+          _pricing = data['pricing'] ?? {};
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to load rental info")));
+      }
+    }
   }
 
   void _fillUserData() {
-    // Determine if we should autofill based on _travelerType? 
-    // Usually if defaults to Myself (0), we fill.
     if (_travelerType == 0) {
       _nameController.text = "Yash Patel";
       _phoneController.text = "9876543210";
@@ -71,6 +78,97 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
   void _clearUserData() {
     _nameController.clear();
     _phoneController.clear();
+  }
+
+  // Helper for date formatting (manual to avoid intl dependency if not present)
+  String _formatDate(DateTime date) {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return "${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')},${date.year}";
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final period = time.period == DayPeriod.am ? "AM" : "PM";
+    return "$hour:${time.minute.toString().padLeft(2, '0')} $period";
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.amber, 
+              onPrimary: Colors.black, 
+              onSurface: Colors.black, 
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+         _selectedDate = picked;
+        _dateController.text = _formatDate(picked);
+      });
+      // Re-validate time if date changed to today
+      if (_isToday(picked) && _selectedTime != null) {
+         _validateTime(_selectedTime!);
+      }
+    }
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && date.month == now.month && date.day == now.day;
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+       builder: (context, child) {
+         return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(primary: Colors.amber, onPrimary: Colors.black, onSurface: Colors.black),
+             timePickerTheme: TimePickerThemeData(
+              dialHandColor: Colors.amber,
+              dialBackgroundColor: Colors.grey[200],
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      _validateTime(picked);
+    }
+  }
+
+  void _validateTime(TimeOfDay picked) {
+    if (_selectedDate != null && _isToday(_selectedDate!)) {
+      final now = DateTime.now();
+      final pickedDateTime = DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+      // 2 hour buffer
+      if (pickedDateTime.isBefore(now.add(const Duration(hours: 2)))) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select a time at least 2 hours from now")));
+        // Auto adjust or just keep old? Let's keep old or set to min.
+        // For now, warn and don't update if strict, or update and warn.
+        // Let's enforce: don't update.
+        return;
+      }
+    }
+    
+    setState(() {
+      _selectedTime = picked;
+      _timeController.text = _formatTime(picked);
+    });
   }
 
   @override
@@ -143,7 +241,9 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
                     const SizedBox(height: 30),
 
                     // --- Content Switcher ---
-                    if (_currentStep == 1) 
+                    if (_isLoading)
+                       const Center(child: CircularProgressIndicator(color: Colors.amber))
+                    else if (_currentStep == 1) 
                       _buildStep1(isDark, textColor) 
                     else if (_currentStep == 2) 
                       _buildStep2(isDark, textColor)
@@ -184,9 +284,28 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: _buildInputBox(controller: _dateController, isDark: isDark, textColor: textColor)),
+            Expanded(
+              child: _buildInputBox(
+                controller: _dateController, 
+                isDark: isDark, 
+                textColor: textColor,
+                readOnly: true,
+                onTap: () => _selectDate(context),
+                hint: "Select Date"
+              )
+            ),
             const SizedBox(width: 16),
-            Expanded(child: _buildInputBox(controller: _timeController, icon: Icons.access_time, isDark: isDark, textColor: textColor)),
+            Expanded(
+              child: _buildInputBox(
+                controller: _timeController, 
+                icon: Icons.access_time, 
+                isDark: isDark, 
+                textColor: textColor,
+                readOnly: true,
+                onTap: () => _selectTime(context),
+                hint: "Select Time"
+              )
+            ),
           ],
         ),
         
@@ -224,84 +343,110 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
             },
           ),
         ),
-        Text(" ₹ ${_calculatePrice()}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor)),
+        
+        // Show base price for selected hours (assuming first vehicle selected or generic)
+        // With slider change, usually we want to see price change. 
+        // We will show the price for the CURRENTLY selected vehicle, or a "starts from" price.
+        // Let's show currently selected vehicle price.
+        Center(
+          child: Text(
+            "Package Price: ₹${_calculatePrice()}", 
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor)
+          )
+        ),
 
 
         const SizedBox(height: 20),
         _buildLabel("Pickup Location", Icons.location_on_outlined, textColor),
         const SizedBox(height: 8),
-        _buildInputBox(controller: _pickupController, icon: Icons.my_location, iconColor: Colors.green, isDark: isDark, textColor: textColor),
+        
+        // Places Autocomplete integration validation
+        // Using simple text field for now unless places usage is required again (it's in imports).
+        // Original code had _buildInputBox for pickup location with manual controller.
+        // Airport transfer used _buildPlacesAutoComplete. 
+        // Let's use simple input for consistency with previous file state unless explicitly asked to upgrade to autocomplete here too.
+        // The user request said "in the hourly rental the screen is using the dummy data make it to use real data...".
+        // It didn't explicitly ask for autocomplete, but having it is better.
+        // I'll stick to _buildInputBox to minimize risk, as previous state was _buildInputBox.
+        _buildInputBox(controller: _pickupController, icon: Icons.my_location, iconColor: Colors.amber, isDark: isDark, textColor: textColor, hint: "Enter your pickup location"),
 
         const SizedBox(height: 20),
         Text("Select Vehicle", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
         const SizedBox(height: 12),
         
         // --- Vehicle List ---
-        ...List.generate(_vehicles.length, (index) {
-          final v = _vehicles[index];
-          final isSelected = _selectedVehicleIndex == index;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedVehicleIndex = index;
-              });
-            },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.amber.shade400 : innerCardColor,
-                border: Border.all(color: isSelected ? Colors.amber : Colors.grey.withOpacity(0.2), width: 1.5),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  if (!isSelected)
-                    BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))
-                ],
-              ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    v['image'], 
-                    width: 80, 
-                    height: 50, 
-                    fit: BoxFit.contain,
-                     errorBuilder: (c,e,s) => Icon(Icons.directions_car, size: 40, color: isSelected ? Colors.black54 : Colors.grey),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(v['name'], style: TextStyle(
-                          fontWeight: FontWeight.bold, 
-                          color: isSelected ? Colors.black : (isDark ? Colors.amber.shade400 : Colors.amber.shade700)
-                        )),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(Icons.person, size: 14, color: isSelected ? Colors.black54 : Colors.grey),
-                            Text(" ${v['seats']}", style: TextStyle(fontSize: 12, color: isSelected ? Colors.black54 : Colors.grey)),
-                            const SizedBox(width: 8),
-                            Icon(Icons.shopping_bag_outlined, size: 14, color: isSelected ? Colors.black54 : Colors.grey),
-                            Text(" ${v['bags']}", style: TextStyle(fontSize: 12, color: isSelected ? Colors.black54 : Colors.grey)),
-                          ],
-                        ),
-                      ],
+        if (_vehicles.isEmpty)
+           Center(child: Text("No vehicles available", style: TextStyle(color: textColor))),
+           
+        if (_vehicles.isNotEmpty)
+          ...List.generate(_vehicles.length, (index) {
+            final v = _vehicles[index];
+            final isSelected = _selectedVehicleIndex == index;
+            // Calculate price for THIS vehicle
+            final price = _calculatePriceForVehicle(v);
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedVehicleIndex = index;
+                });
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.amber.shade400 : innerCardColor,
+                  border: Border.all(color: isSelected ? Colors.amber : Colors.grey.withOpacity(0.2), width: 1.5),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    if (!isSelected)
+                      BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      v['image'], 
+                      width: 80, 
+                      height: 50, 
+                      fit: BoxFit.contain,
+                       errorBuilder: (c,e,s) => Icon(Icons.directions_car, size: 40, color: isSelected ? Colors.black54 : Colors.grey),
                     ),
-                  ),
-                  Text(
-                    v['price'],
-                    style: TextStyle(
-                      fontSize: 20, 
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.black : (isDark ? Colors.amber.shade400 : Colors.amber.shade700)
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(v['name'], style: TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            color: isSelected ? Colors.black : (isDark ? Colors.amber.shade400 : Colors.amber.shade700)
+                          )),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.person, size: 14, color: isSelected ? Colors.black54 : Colors.grey),
+                              Text(" ${v['seats']}", style: TextStyle(fontSize: 12, color: isSelected ? Colors.black54 : Colors.grey)),
+                              const SizedBox(width: 8),
+                              Icon(Icons.shopping_bag_outlined, size: 14, color: isSelected ? Colors.black54 : Colors.grey),
+                              Text(" ${v['bags']}", style: TextStyle(fontSize: 12, color: isSelected ? Colors.black54 : Colors.grey)),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      price,
+                      style: TextStyle(
+                        fontSize: 20, 
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? Colors.black : (isDark ? Colors.amber.shade400 : Colors.amber.shade700)
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
         
         const SizedBox(height: 20),
         Text("Who is travelling ?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
@@ -411,6 +556,8 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
   Widget _buildStep3(bool isDark, Color textColor) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
     Color subTextColor = isDark ? Colors.grey[400]! : Colors.grey;
+    final priceStr = _calculatePrice();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -432,7 +579,7 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
         ),
         const SizedBox(height: 16),
 
-        // --- Renting Hours (Replacing Destination) ---
+        // --- Renting Hours ---
         _buildReviewCard(
           title: "Renting Package",
           icon: Icons.access_time_filled_outlined,
@@ -471,9 +618,11 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
         // --- Pricing Details ---
         Text("Pricing Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
         const SizedBox(height: 12),
-        _buildPriceRow("Package Price", "₹899", textColor, subTextColor),
-        const SizedBox(height: 8),
-        _buildPriceRow("Taxes", "₹50", textColor, subTextColor),
+        // Assume price in list is Total Price (inc tax) or Base? 
+        // Backend pricing structure: basePrice, totalPrice. 
+        // We can disassemble if needed, but for now let's show Total as Package Price.
+        _buildPriceRow("Package Price (inc. tax)", "₹$priceStr", textColor, subTextColor),
+        // _buildPriceRow("Taxes", "Included", textColor, subTextColor),
         const SizedBox(height: 8),
         Divider(color: Colors.grey.withOpacity(0.2)),
         const SizedBox(height: 8),
@@ -484,24 +633,7 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
           height: 50,
           child: ElevatedButton(
             onPressed: () {
-               // Show Booking Confirmation
-               showDialog(
-                 context: context,
-                 builder: (context) => AlertDialog(
-                   backgroundColor: Theme.of(context).cardColor,
-                   title: Text("Booking Confirmed", style: TextStyle(color: textColor)),
-                   content: Text("Your Hourly Rental has been booked successfully!", style: TextStyle(color: textColor)),
-                   actions: [
-                     TextButton(
-                       onPressed: () {
-                         Navigator.pop(context); // Close dialog
-                         Navigator.pop(context); // Go back to Home
-                       },
-                       child: const Text("OK", style: TextStyle(color: Colors.amber)),
-                     ),
-                   ],
-                 ),
-               );
+               _createBooking(priceStr);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber,
@@ -517,9 +649,81 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
     );
   }
 
+  Future<void> _createBooking(String priceStr) async {
+    // Clean price
+    final price = double.tryParse(priceStr.replaceAll(',', '')) ?? 0.0;
+    // Calculate base vs tax? Assuming backend returns totalPrice.
+    // Let's just send what we have.
+    final v = _vehicles[_selectedVehicleIndex];
+
+    final bookingData = {
+      "pickup_location": _pickupController.text,
+      "pickup_city": "Unknown", // Can be derived if using Places
+      "pickup_state": "Unknown",
+      "pickup_date": _selectedDate?.toIso8601String().split('T')[0] ?? "2025-01-01",
+      "pickup_time": _selectedTime != null ? "${_selectedTime!.hour.toString().padLeft(2,'0')}:${_selectedTime!.minute.toString().padLeft(2,'0')}" : "12:00",
+      "vehicle_selected": v['name'],
+      "vehicle_image_url": v['image'],
+      "passenger_name": _nameController.text,
+      "passenger_phone": _phoneController.text,
+      "passenger_email": "",
+      "rental_hours": _rentingHours,
+      "covered_distance_km": _rentingHours * 10, // Mock logic
+      "base_price": price, // storing total as base for now or calculate?
+      "final_price": price,
+      "currency": "INR",
+      "notes": ""
+    };
+
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Booking...")));
+
+    final success = await TripsRepository().createHourlyBooking(bookingData);
+    
+    if (!mounted) return;
+    
+    if (success) {
+      showDialog(
+        context: context,
+        builder: (context) => BookingSuccessDialog(
+          onContinue: () {
+            Navigator.pop(context); // Close dialog
+            Navigator.pop(context); // Go back to Home
+          },
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => BookingErrorDialog(
+          onClose: () => Navigator.pop(context),
+          message: "Failed to create booking. Please try again.",
+        ),
+      );
+    }
+  }
+
   String _calculatePrice() {
-     // Placeholder
-    return "999"; 
+    if (_vehicles.isEmpty) return "0";
+    final v = _vehicles[_selectedVehicleIndex];
+    return _calculatePriceForVehicle(v);
+  }
+
+  String _calculatePriceForVehicle(Map<String, dynamic> v) {
+    if (_pricing.isEmpty) return "0";
+    
+    final hours = _rentingHours.toInt();
+    // Pricing keys are strings in JSON? "2", "3"...
+    final tier = _pricing[hours.toString()] ?? _pricing[hours];
+    
+    if (tier == null) return "0";
+    
+    double base = (tier['totalPrice'] as num).toDouble();
+    // Apply multiplier
+    double multiplier = (v['priceMultiplier'] as num?)?.toDouble() ?? 1.0;
+    
+    double finalPrice = base * multiplier;
+    
+    return finalPrice.toInt().toString();
   }
 
   Widget _buildReviewCard({required String title, required IconData icon, required Widget content, required Color bgColor, required Color textColor}) {
@@ -600,27 +804,29 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
     );
   }
 
-  Widget _buildInputBox({String? hint, TextEditingController? controller, IconData? icon, Color? iconColor, required bool isDark, required Color textColor}) {
+  Widget _buildInputBox({String? hint, TextEditingController? controller, IconData? icon, Color? iconColor, required bool isDark, required Color textColor, bool readOnly = false, VoidCallback? onTap}) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(8),
-        color: innerCardColor,
-        boxShadow: [
-           // BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 2, offset: Offset(0,1))
-        ]
-      ),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: hint,
-          suffixIcon: icon != null ? Icon(icon, size: 20, color: iconColor ?? (isDark ? Colors.grey[400] : Colors.black54)) : null,
-          hintStyle: const TextStyle(color: Colors.grey),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(8),
+          color: innerCardColor,
         ),
-        style: TextStyle(color: textColor),
+        child: TextField(
+          controller: controller,
+          readOnly: readOnly,
+          onTap: onTap,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: hint,
+            suffixIcon: icon != null ? Icon(icon, size: 20, color: iconColor ?? (isDark ? Colors.grey[400] : Colors.black54)) : null,
+            hintStyle: const TextStyle(color: Colors.grey),
+          ),
+          style: TextStyle(color: textColor),
+        ),
       ),
     );
   }

@@ -31,6 +31,7 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
   final TextEditingController _timeController = TextEditingController();
 
   List<AirportData> _airports = [];
+  AirportData? _selectedAirport;
   bool _isLoadingAirports = false;
 
   List<Map<String, dynamic>> _vehicles = [];
@@ -909,6 +910,8 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
   }
   Widget _buildTerminalDropdown(bool isDark, Color textColor) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
+    List<String> terminals = _selectedAirport?.terminals ?? [];
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -917,10 +920,10 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         color: innerCardColor,
       ),
       child: DropdownButtonFormField<String>(
-        value: _terminalController.text.isNotEmpty && ["Terminal 1", "Terminal 2", "Terminal 3"].contains(_terminalController.text)
+        value: _terminalController.text.isNotEmpty && terminals.contains(_terminalController.text)
             ? _terminalController.text 
             : null,
-        hint: const Text("Select your terminal", style: TextStyle(color: Colors.grey)),
+        hint: Text(terminals.isEmpty ? "Select Airport First" : "Select your terminal", style: const TextStyle(color: Colors.grey)),
         decoration: const InputDecoration(
           border: InputBorder.none,
           isDense: true,
@@ -928,13 +931,13 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         dropdownColor: innerCardColor,
         icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.grey[400] : Colors.black54),
         style: TextStyle(color: textColor, fontSize: 16),
-        items: ["Terminal 1", "Terminal 2", "Terminal 3"].map((String value) {
+        items: terminals.map((String value) {
           return DropdownMenuItem<String>(
             value: value,
             child: Text(value),
           );
         }).toList(),
-        onChanged: (newValue) {
+        onChanged: terminals.isEmpty ? null : (newValue) {
           setState(() {
             _terminalController.text = newValue!;
           });
@@ -978,10 +981,7 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         color: innerCardColor,
       ),
       child: DropdownButtonFormField<String>(
-        // If current text matches one of the airports, set it, else null
-        value: _terminalController.text.isNotEmpty && _airports.any((a) => a.airportName == _terminalController.text) 
-            ? _terminalController.text 
-            : null,
+        value: _selectedAirport?.airportName,
         hint: const Text("Select your airport", style: TextStyle(color: Colors.grey)),
         decoration: const InputDecoration(
           border: InputBorder.none,
@@ -998,7 +998,8 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         }).toList(),
         onChanged: (newValue) {
           setState(() {
-            _terminalController.text = newValue!;
+             _selectedAirport = _airports.firstWhere((a) => a.airportName == newValue);
+             _terminalController.text = ""; // Reset terminal selection
           });
         },
       ),
@@ -1008,37 +1009,83 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
   Widget _buildPlacesAutoComplete(TextEditingController controller, String hint, bool isDark, Color textColor) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
     return Container(
-       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), 
+       padding: const EdgeInsets.symmetric(horizontal: 2), 
        decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.withOpacity(0.5)), // Slightly stronger border
-        borderRadius: BorderRadius.circular(12), // More rounded
+        border: Border.all(color: Colors.grey.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
         color: innerCardColor,
         boxShadow: [
            BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
         ]
       ),
-      child: GooglePlaceAutoCompleteTextField(
-        textEditingController: controller,
-        googleAPIKey: "AIzaSyDfhpRHmEWEoxr0Opgu84Pm3Ob9ecLJUHg",
-        inputDecoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
-          suffixIcon: const Icon(Icons.location_on, color: Colors.green), // Green filled icon
-        ),
-        debounceTime: 400,
-        // countries: const ["in"], // Optional: Restrict to India or remove for global
-        isLatLngRequired: true,
-        getPlaceDetailWithLatLng: (Prediction prediction) {
-          controller.text = prediction.description ?? "";
-          setState(() {}); 
+      child: Autocomplete<String>(
+        optionsBuilder: (TextEditingValue textEditingValue) async {
+           if (textEditingValue.text.length < 3) {
+             return const Iterable<String>.empty();
+           }
+           return await AirportRepository().getPlacePredictions(textEditingValue.text);
         },
-        itemClick: (Prediction prediction) {
-          controller.text = prediction.description ?? "";
-          controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
+        onSelected: (String selection) {
+          controller.text = selection;
           setState(() {});
         },
-        textStyle: TextStyle(color: textColor, fontSize: 16),
+        fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+            // Keep the initial value in sync if controller has text
+            if (controller.text.isNotEmpty && fieldTextEditingController.text.isEmpty) {
+                fieldTextEditingController.text = controller.text;
+            }
+            // Bind the internal controller updates to our main controller
+            fieldTextEditingController.addListener(() {
+              controller.text = fieldTextEditingController.text;
+            });
+
+            return TextField(
+              controller: fieldTextEditingController,
+              focusNode: fieldFocusNode,
+              style: TextStyle(color: textColor, fontSize: 16),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: hint,
+                hintStyle: const TextStyle(color: Colors.grey),
+                suffixIcon: const Icon(Icons.location_on, color: Colors.green),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+              onChanged: (val) {
+                  controller.text = val;
+              }
+            );
+        },
+        optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
+           return Align(
+             alignment: Alignment.topLeft,
+             child: Material(
+               elevation: 4.0,
+               color: innerCardColor,
+               borderRadius: BorderRadius.circular(8),
+               child: Container(
+                 width: MediaQuery.of(context).size.width - 60, // Adjust width
+                 constraints: const BoxConstraints(maxHeight: 200),
+                 child: ListView.builder(
+                   padding: EdgeInsets.zero,
+                   shrinkWrap: true,
+                   itemCount: options.length,
+                   itemBuilder: (BuildContext context, int index) {
+                     final String option = options.elementAt(index);
+                     return InkWell(
+                       onTap: () {
+                         onSelected(option);
+                       },
+                       child: Padding(
+                         padding: const EdgeInsets.all(16.0),
+                         child: Text(option, style: TextStyle(color: textColor)),
+                       ),
+                     );
+                   },
+                 ),
+               ),
+             ),
+           );
+        },
       ),
     );
   }
