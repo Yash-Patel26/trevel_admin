@@ -66,7 +66,7 @@ class ProfilePage extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Name", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                              Text("Name", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: textColor)),
                               const SizedBox(height: 4),
                               const Text("+91 9876543210", style: TextStyle(color: Colors.grey)),
                             ],
@@ -156,7 +156,7 @@ class ProfilePage extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("App theme", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                                Text("App theme", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor)),
                                 const SizedBox(height: 4),
                                 const Text("Customize your look: Dark mode and Light mode included.", style: TextStyle(fontSize: 12, color: Colors.grey)),
                               ],
@@ -183,7 +183,7 @@ class ProfilePage extends StatelessWidget {
                           child: ElevatedButton.icon(
                             onPressed: () {},
                             icon: const Icon(Icons.logout, color: Colors.red),
-                            label: const Text("Logout", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            label: const Text("Logout", style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.withOpacity(0.1),
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -197,7 +197,7 @@ class ProfilePage extends StatelessWidget {
                           child: OutlinedButton.icon(
                             onPressed: () {},
                             icon: Icon(Icons.delete_outline, color: textColor),
-                            label: Text("Delete Account", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+                            label: Text("Delete Account", style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: textColor),
@@ -267,7 +267,7 @@ class ProfilePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                  Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor)),
                   const SizedBox(height: 4),
                   Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 ],

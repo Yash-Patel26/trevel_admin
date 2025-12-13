@@ -6,8 +6,7 @@ class ApiConstants {
   static const String verifyOtp = '/mobile/auth/verify-otp';
 
   // Trips & Bookings
-  static const String miniTripEstimate = '/mobile/mini-trip/estimate';
-  static const String miniTripBook = '/mobile/mini-trip/bookings';
+
   static const String myBookings = '/mobile/bookings'; 
   
   static String bookingDetails(String id) => '/mobile/bookings/$id';
@@ -21,6 +20,7 @@ class ApiConstants {
   static const String clearAirports = '/mobile/airport/airports'; // Assuming this is correct based on missing member
   static const String AirportEstimate = '/mobile/airport/estimate'; 
   static const String locationAutocomplete = '/mobile/location/autocomplete';
+  static const String reverseGeocode = '/mobile/location/reverse-geocode';
 
   // Mini Trip
   static const String miniTripInfo = '/mobile/mini-trip/info';

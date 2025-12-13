@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpiSelectionPage extends StatelessWidget {
   const UpiSelectionPage({super.key});
@@ -57,17 +58,19 @@ class UpiSelectionPage extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     // --- Apps List ---
-                    _buildAppItem("PhonePe", Colors.purple, isDark, textColor),
+                    _buildAppItem("PhonePe", Colors.purple, isDark, textColor, onTap: () => _launchUpiApp(context, "phonepe://")),
                     const SizedBox(height: 12),
-                    _buildAppItem("Google Pay", Colors.blue, isDark, textColor),
+                    _buildAppItem("Google Pay", Colors.blue, isDark, textColor, onTap: () => _launchUpiApp(context, "tez://upi")),
                     const SizedBox(height: 12),
-                    _buildAppItem("Paytm", Colors.lightBlue, isDark, textColor),
+                    _buildAppItem("Paytm", Colors.lightBlue, isDark, textColor, onTap: () => _launchUpiApp(context, "paytmmp://")),
                     const SizedBox(height: 12),
-                    _buildAppItem("CRED UPI", Colors.black, isDark, textColor),
+                    _buildAppItem("CRED UPI", Colors.black, isDark, textColor, onTap: () => _launchUpiApp(context, "cred://")),
                     const SizedBox(height: 12),
-                    _buildAppItem("More UPI apps", Colors.amber, isDark, textColor, icon: Icons.grid_view),
+                    _buildAppItem("More UPI apps", Colors.amber, isDark, textColor, icon: Icons.grid_view, onTap: () => _launchUpiApp(context, "upi://pay")),
                     const SizedBox(height: 12),
-                    _buildAppItem("Enter UPI ID manually", Colors.grey, isDark, textColor, icon: Icons.keyboard),
+                    _buildAppItem("Enter UPI ID manually", Colors.grey, isDark, textColor, icon: Icons.keyboard, onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Manual UPI ID entry not yet implemented")));
+                    }),
                     
                   ],
                 ),
@@ -79,7 +82,28 @@ class UpiSelectionPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAppItem(String name, Color color, bool isDark, Color textColor, {IconData? icon}) {
+  Future<void> _launchUpiApp(BuildContext context, String uriString) async {
+    try {
+      final uri = Uri.parse(uriString);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("UPI app not installed")),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error launching app: $e")),
+        );
+      }
+    }
+  }
+
+  Widget _buildAppItem(String name, Color color, bool isDark, Color textColor, {IconData? icon, VoidCallback? onTap}) {
     Color cardColor = isDark ? Colors.grey[850]! : Colors.white;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -90,7 +114,9 @@ class UpiSelectionPage extends StatelessWidget {
            BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
         ],
       ),
-      child: Row(
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
         children: [
           // Logo placeholder
           icon != null 
@@ -105,6 +131,7 @@ class UpiSelectionPage extends StatelessWidget {
           Expanded(child: Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor))),
           Icon(Icons.arrow_forward_ios, size: 16, color: isDark ? Colors.grey[600] : Colors.grey[400]),
         ],
+      ),
       ),
     );
   }

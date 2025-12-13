@@ -53,21 +53,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                        ),
                      )
                   else
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.06),
-                      border: Border.all(color: Colors.white.withOpacity(0.08)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Image.asset(
-                      'assets/images/logo_main-1.png',
-                      height: 20,
-                    ),
-                  ),
+                     Image.asset(
+                       'assets/images/logo_main-1.png',
+                       height: 24,
+                     ),
                 ],
               ),
 

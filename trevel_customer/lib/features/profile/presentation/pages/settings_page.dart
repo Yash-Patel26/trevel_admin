@@ -4,6 +4,7 @@ import '../../../../shared/widgets/app_bottom_bar.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../../trips/presentation/pages/my_bookings_page.dart';
 import 'profile_page.dart';
+import '../../../../core/services/biometric_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -21,6 +22,40 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _shareLocation = true;
   bool _biometricAuth = false;
   bool _autoLock = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBiometricSettings();
+  }
+
+  Future<void> _loadBiometricSettings() async {
+    final enabled = await BiometricService().isBiometricEnabled();
+    setState(() {
+      _biometricAuth = enabled;
+    });
+  }
+
+  Future<void> _toggleBiometrics(bool value) async {
+    final service = BiometricService();
+    if (value) {
+      final supported = await service.isDeviceSupported();
+      if (!supported) {
+        if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Biometrics not supported on this device")));
+        }
+        return;
+      }
+      final authenticated = await service.authenticate();
+      if (authenticated) {
+        await service.setBiometricEnabled(true);
+        setState(() => _biometricAuth = true);
+      }
+    } else {
+      await service.setBiometricEnabled(false);
+      setState(() => _biometricAuth = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +173,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       title: "Biometric Authentication",
                       subtitle: "Use Touch ID or Face ID to unlock.",
                       value: _biometricAuth,
-                      onChanged: (val) => setState(() => _biometricAuth = val),
+                      onChanged: (val) => _toggleBiometrics(val),
                       textColor: textColor,
                       cardColor: cardColor,
                       isDark: isDark,

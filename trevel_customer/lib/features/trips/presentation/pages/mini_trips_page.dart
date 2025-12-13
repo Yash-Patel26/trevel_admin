@@ -3,6 +3,7 @@ import '../../../../shared/widgets/booking_success_dialog.dart';
 import '../../../../shared/widgets/booking_error_dialog.dart';
 import '../../../../shared/widgets/app_bottom_bar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../core/services/location_service.dart';
 import '../../data/trips_repository.dart';
 import 'my_bookings_page.dart';
 
@@ -62,6 +63,32 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
     _dateController.dispose();
     _timeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isLoading = true);
+    try {
+      final locationService = LocationService();
+      final position = await locationService.getCurrentLocation();
+      if (position != null) {
+        final addressData = await locationService.getAddressFromCoordinates(position.latitude, position.longitude);
+        if (addressData != null && addressData['formatted_address'] != null) {
+          setState(() {
+            _pickupController.text = addressData['formatted_address'];
+          });
+        }
+      } else {
+        if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not fetch location")));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   // TODO: Implement with actual user data from AuthRepository
@@ -299,7 +326,13 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
         const SizedBox(height: 20),
         _buildLabel("Pickup Location", Icons.location_on_outlined, textColor),
         const SizedBox(height: 8),
-        _buildInputBox(controller: _pickupController, isDark: isDark, textColor: textColor),
+        _buildInputBox(
+            controller: _pickupController, 
+            isDark: isDark, 
+            textColor: textColor,
+            icon: Icons.my_location,
+            onIconTap: _getCurrentLocation
+        ),
 
         const SizedBox(height: 20),
         _buildLabel("Destination", Icons.location_on_outlined, textColor),
@@ -732,7 +765,7 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
     );
   }
 
-  Widget _buildInputBox({String? hint, TextEditingController? controller, IconData? icon, Color? iconColor, required bool isDark, required Color textColor, bool readOnly = false, VoidCallback? onTap}) {
+  Widget _buildInputBox({String? hint, TextEditingController? controller, IconData? icon, Color? iconColor, required bool isDark, required Color textColor, bool readOnly = false, VoidCallback? onTap, VoidCallback? onIconTap}) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
     return GestureDetector(
       onTap: onTap,
@@ -749,7 +782,11 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
           decoration: InputDecoration(
             border: InputBorder.none,
             hintText: hint,
-            suffixIcon: icon != null ? Icon(icon, size: 20, color: iconColor ?? (isDark ? Colors.grey[400] : Colors.black54)) : null,
+            suffixIcon: icon != null 
+                ? (onIconTap != null 
+                    ? IconButton(icon: Icon(icon, size: 20, color: iconColor ?? (isDark ? Colors.grey[400] : Colors.black54)), onPressed: onIconTap)
+                    : Icon(icon, size: 20, color: iconColor ?? (isDark ? Colors.grey[400] : Colors.black54)))
+                : null,
             hintStyle: const TextStyle(color: Colors.grey),
             isDense: true, 
             contentPadding: const EdgeInsets.symmetric(vertical: 12),

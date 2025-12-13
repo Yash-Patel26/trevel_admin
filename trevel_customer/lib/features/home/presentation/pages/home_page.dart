@@ -105,16 +105,16 @@ class HomePage extends StatelessWidget {
                       crossAxisSpacing: 16,
                       childAspectRatio: 1.1,
                       children: [
-                        _buildRideCard(context, "Airport Transfers", 'assets/images/air.png', () {
+                        _buildRideCard(context, "Airport Transfers", isDark ? 'assets/images/ride-airport-black.png' : 'assets/images/air.png', () {
                           Navigator.push(context, MaterialPageRoute(builder: (context) => const AirportTransfersPage()));
                         }),
-                        _buildRideCard(context, "Hourly Rentals", 'assets/images/mini.png', () {
+                        _buildRideCard(context, "Hourly Rentals", isDark ? 'assets/images/mini-black.png' : 'assets/images/mini.png', () {
                           Navigator.push(context, MaterialPageRoute(builder: (context) => const HourlyRentalsPage()));
                         }),
-                        _buildRideCard(context, "Mini Trips", 'assets/images/hourly.png', () {
+                        _buildRideCard(context, "Mini Trips",isDark ? 'assets/images/mini-black.png' : 'assets/images/mini.png', () {
                           Navigator.push(context, MaterialPageRoute(builder: (context) => const MiniTripsPage()));
                         }),
-                        _buildRideCard(context, "Outstation Rides", 'assets/images/outsation.png', () {
+                        _buildRideCard(context, "Outstation Rides",isDark ? 'assets/images/ride-outstation-black.png' : 'assets/images/outsation.png', () {
                            Navigator.push(context, MaterialPageRoute(builder: (context) => const ComingSoonPage()));
                         }),
                       ],

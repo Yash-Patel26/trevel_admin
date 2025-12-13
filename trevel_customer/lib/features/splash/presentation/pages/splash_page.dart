@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../features/auth/presentation/pages/login_page.dart';
+import '../../../../core/services/biometric_service.dart';
+import '../../../../features/home/presentation/pages/home_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -48,11 +50,26 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Timer(const Duration(seconds: 1), () {
+        Timer(const Duration(seconds: 1), () async {
           if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const LoginPage()),
-            );
+            final biometricService = BiometricService();
+            final enabled = await biometricService.isBiometricEnabled();
+            
+            if (enabled) {
+              final authenticated = await biometricService.authenticate();
+              if (authenticated && mounted) {
+                 Navigator.of(context).pushReplacement(
+                   MaterialPageRoute(builder: (context) => const HomePage()), // Go to Home directly if auth success
+                 );
+                 return;
+              }
+            }
+
+            if (mounted) {
+                Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+            }
           }
         });
       }

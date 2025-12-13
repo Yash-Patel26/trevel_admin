@@ -44,7 +44,7 @@ class TripsRepository {
   Future<bool> createBooking(Map<String, dynamic> bookingData) async {
     try {
       final response = await _apiClient.dio.post(
-        ApiConstants.miniTripBook,
+        ApiConstants.miniTripBooking,
         data: bookingData,
       );
 

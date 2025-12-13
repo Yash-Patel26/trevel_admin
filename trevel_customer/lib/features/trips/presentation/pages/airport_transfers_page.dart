@@ -9,6 +9,7 @@ import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import '../../data/airport_repository.dart';
 import '../../data/trips_repository.dart';
+import '../../../../core/services/location_service.dart';
 
 class AirportTransfersPage extends StatefulWidget {
   const AirportTransfersPage({super.key});
@@ -36,6 +37,8 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
 
   List<Map<String, dynamic>> _vehicles = [];
   bool _isLoadingEstimates = false;
+  // ignore: unused_field
+  bool _isLoadingLocation = false; // Add loading state for location
 
   @override
   void initState() {
@@ -166,6 +169,32 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
   void _clearUserData() {
     _nameController.clear();
     _phoneController.clear();
+  }
+
+  Future<void> _getCurrentLocation(TextEditingController controller) async {
+    setState(() => _isLoadingLocation = true);
+    try {
+      final locationService = LocationService();
+      final position = await locationService.getCurrentLocation();
+      if (position != null) {
+        final addressData = await locationService.getAddressFromCoordinates(position.latitude, position.longitude);
+        if (addressData != null && addressData['formatted_address'] != null) {
+          setState(() {
+            controller.text = addressData['formatted_address'];
+          });
+        }
+      } else {
+        if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not fetch location")));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingLocation = false);
+    }
   }
 
   @override
@@ -1047,7 +1076,10 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
                 border: InputBorder.none,
                 hintText: hint,
                 hintStyle: const TextStyle(color: Colors.grey),
-                suffixIcon: const Icon(Icons.location_on, color: Colors.green),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.my_location, color: isDark ? Colors.grey[400] : Colors.black54),
+                  onPressed: () => _getCurrentLocation(controller),
+                ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               onChanged: (val) {
