@@ -31,7 +31,7 @@ dashboardsRouter.get(
   "/dashboards/vehicle/:id",
   requirePermissions(["dashboard:view"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const vehicle = await prisma.vehicle.findUnique({ where: { id } });
     if (!vehicle) return res.status(404).json({ message: "Not found" });
     const rides = await prisma.rideSummary.findMany({ where: { vehicleId: id } });
@@ -52,7 +52,7 @@ dashboardsRouter.get(
   "/dashboards/driver/:id",
   requirePermissions(["dashboard:view"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const driver = await prisma.driver.findUnique({ where: { id } });
     if (!driver) return res.status(404).json({ message: "Not found" });
     const logs = await prisma.driverLog.findMany({ where: { driverId: id }, orderBy: { createdAt: "desc" } });

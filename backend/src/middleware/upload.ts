@@ -42,25 +42,20 @@ export const uploadSingle = upload.single("image");
 export const uploadMultiple = upload.array("images", 10);
 
 // Helper function to upload buffer to S3 with entity-based folder organization
-// Structure: {entityType}/{entityId}/{documentType}/file.ext
-// Example: drivers/9876543210/PAN_Card/pan_image.jpg
 export async function uploadToS3(
   buffer: Buffer,
   filename: string,
   mimetype: string,
-  entityType?: string,    // e.g., "drivers", "vehicles"
-  entityId?: string,      // e.g., mobile number or vehicle ID
-  documentType?: string   // e.g., "PAN_Card", "Aadhar_Card", "Driving_License", "Police_Verification"
+  entityType?: string,  // e.g., "drivers", "vehicles"
+  entityId?: string     // e.g., driver ID or vehicle ID
 ): Promise<{ location: string; key: string; signedUrl: string }> {
   const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
   const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
 
-  // Organize files by entity type, ID, and document type if provided
-  // Example: drivers/9876543210/PAN_Card/1234567890-pan.jpg
+  // Organize files by entity type and ID if provided
+  // Example: drivers/123/1234567890-profile.jpg
   let key: string;
-  if (entityType && entityId && documentType) {
-    key = `${entityType}/${entityId}/${documentType}/${uniqueSuffix}-${safeName}`;
-  } else if (entityType && entityId) {
+  if (entityType && entityId) {
     key = `${entityType}/${entityId}/${uniqueSuffix}-${safeName}`;
   } else {
     key = `uploads/${uniqueSuffix}-${safeName}`;
@@ -89,18 +84,6 @@ export async function uploadToS3(
   return { location, key, signedUrl };
 }
 
-/**
- * Delete a file from S3
- */
-export async function deleteFromS3(key: string): Promise<void> {
-  const { DeleteObjectCommand } = await import("@aws-sdk/client-s3");
-
-  await s3Client.send(new DeleteObjectCommand({
-    Bucket: env.aws.bucketName,
-    Key: key,
-  }));
-}
-
 // Helper to create a signed URL for an existing key
 export async function getSignedUrlForKey(key: string, expiresInSeconds = 900): Promise<string> {
   return getSignedUrl(
@@ -111,4 +94,13 @@ export async function getSignedUrlForKey(key: string, expiresInSeconds = 900): P
     }),
     { expiresIn: expiresInSeconds }
   );
+}
+
+// Helper function to delete a file from S3
+export async function deleteFromS3(key: string): Promise<void> {
+  const { DeleteObjectCommand } = await import("@aws-sdk/client-s3");
+  await s3Client.send(new DeleteObjectCommand({
+    Bucket: env.aws.bucketName,
+    Key: key,
+  }));
 }

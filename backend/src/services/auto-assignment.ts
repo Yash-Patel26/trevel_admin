@@ -112,7 +112,7 @@ export async function autoAssignBooking(bookingId: number): Promise<boolean> {
 /**
  * Find the best available driver and vehicle for a booking
  */
-async function findBestAssignment(criteria: AssignmentCriteria): Promise<{ driverId: number; vehicleId: number } | null> {
+async function findBestAssignment(criteria: AssignmentCriteria): Promise<{ driverId: string; vehicleId: string } | null> {
     const { vehicleModel, pickupTime } = criteria;
 
     // Get all approved/active vehicles
@@ -212,7 +212,7 @@ async function findBestAssignment(criteria: AssignmentCriteria): Promise<{ drive
 /**
  * Check if a driver is available at a specific time
  */
-async function isDriverAvailable(driverId: number, pickupTime: Date): Promise<boolean> {
+async function isDriverAvailable(driverId: string, pickupTime: Date): Promise<boolean> {
     // Check for overlapping bookings
     // Assume a booking takes 2 hours (pickup + ride + buffer)
     const startTime = new Date(pickupTime.getTime() - 2 * 60 * 60 * 1000);

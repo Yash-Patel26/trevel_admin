@@ -14,12 +14,17 @@ import { ridesRouter } from "./rides";
 import { uploadRouter } from "./upload";
 import deleteRouter from "./delete";
 import s3Router from "./s3";
+import { mobileRouter } from "./mobile";
+import bookingsRouter from "./bookings";
 
 export const apiRouter = Router();
+
+apiRouter.use("/api/mobile", mobileRouter);
 
 apiRouter.use(healthRouter);
 apiRouter.use(authRouter);
 apiRouter.use(uploadRouter);
+apiRouter.use("/api/bookings", bookingsRouter);
 apiRouter.use(vehiclesRouter);
 apiRouter.use(driversRouter);
 apiRouter.use(ticketsRouter);

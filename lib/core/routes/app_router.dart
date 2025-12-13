@@ -370,7 +370,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 name: 'customer-detail',
                 pageBuilder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return MaterialPage(child: CustomerDetailPage(customerId: id));
                 },
                 routes: [
@@ -378,7 +378,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'rides/:rideId',
                     name: 'customer-ride-detail',
                     pageBuilder: (context, state) {
-                      final customerId = int.parse(state.pathParameters['id']!);
+                      final customerId = state.pathParameters['id']!;
                       final rideId = int.parse(state.pathParameters['rideId']!);
                       return MaterialPage(
                         child: CustomerRideDetailPage(

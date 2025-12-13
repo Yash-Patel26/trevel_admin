@@ -13,7 +13,7 @@ final customerRideDetailProvider = FutureProvider.autoDispose
 });
 
 class CustomerRideDetailPage extends ConsumerWidget {
-  final int customerId;
+  final String customerId;
   final int rideId;
 
   const CustomerRideDetailPage({

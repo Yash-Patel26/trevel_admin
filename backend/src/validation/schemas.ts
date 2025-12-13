@@ -70,7 +70,7 @@ export const driverApproveSchema = z.object({
 });
 
 export const assignVehicleSchema = z.object({
-  vehicleId: z.number(),
+  vehicleId: z.string(),
 });
 
 export const ticketCreateSchema = z.object({
@@ -94,13 +94,15 @@ export const ticketUpdateSchema = z.object({
     TicketStatus.RESOLVED,
     TicketStatus.CLOSED,
   ]).optional(),
-  assignedTo: z.number().optional(),
+  assignedTo: z.number().optional(), // User ID is still Int? No, we might change User ID later but for now Schema doesn't mention User ID change. 
+  // Wait, User has relation to Driver/Vehicle creator (Int). But Prisma schema validation failed earlier?
+  // Let's stick to Driver/Vehicle/Customer IDs which are DEFINITELY UUID now. User is arguably still Int in my schema edit earlier.
   resolutionNotes: z.string().optional(),
 });
 
 export const bookingAssignSchema = z.object({
-  vehicleId: z.number(),
-  driverId: z.number().optional(),
+  vehicleId: z.string(),
+  driverId: z.string().optional(),
 });
 
 export const bookingOtpValidateSchema = z.object({
@@ -117,7 +119,10 @@ export const bookingsListSchema = z.object({
 });
 
 export const bookingDetailParamSchema = z.object({
-  id: z.coerce.number(),
+  id: z.coerce.number(), // Booking ID is STILL Int in schema.prisma! 
+  // Wait, I updated Booking model references to Driver/Customer UUIDs, but did I change Booking ID itself?
+  // Checking schema... Booking model: id Int @id @default(autoincrement())
+  // So booking ID is still Int. I should NOT change this to string.
 });
 
 export const bookingListSchema = z.object({

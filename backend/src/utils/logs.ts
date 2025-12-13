@@ -1,7 +1,7 @@
 import prisma from "../prisma/client";
 
 export async function logVehicleAction(params: {
-  vehicleId: number;
+  vehicleId: string;
   actorId?: number;
   action: string;
   payload?: unknown;
@@ -18,7 +18,7 @@ export async function logVehicleAction(params: {
 }
 
 export async function logDriverAction(params: {
-  driverId: number;
+  driverId: string;
   actorId?: number;
   action: string;
   payload?: unknown;
@@ -33,4 +33,3 @@ export async function logDriverAction(params: {
     },
   });
 }
-

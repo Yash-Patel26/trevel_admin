@@ -208,7 +208,7 @@ vehiclesRouter.post(
   },
   validateBody(vehicleReviewSchema),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { status, comments } = req.body;
 
     const vehicle = await prisma.vehicle.findUnique({ where: { id } });
@@ -244,7 +244,7 @@ vehiclesRouter.post(
   "/vehicles/:id/assign-driver",
   requirePermissions(["vehicle:assign"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { driverId } = req.body;
     const vehicle = await prisma.vehicle.findUnique({ where: { id } });
     if (!vehicle) return res.status(404).json({ message: "Not found" });
@@ -277,7 +277,7 @@ vehiclesRouter.get(
   "/vehicles/:id/logs",
   requirePermissions(["vehicle:logs"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const logs = await prisma.vehicleLog.findMany({ where: { vehicleId: id }, orderBy: { createdAt: "desc" } });
     return res.json(logs);
   }
@@ -287,7 +287,7 @@ vehiclesRouter.get(
   "/vehicles/:id/metrics",
   requirePermissions(["vehicle:view"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const rides = await prisma.rideSummary.aggregate({
       where: { vehicleId: id },
       _count: { id: true },
@@ -305,7 +305,7 @@ vehiclesRouter.post(
   "/vehicles/:id/reassign",
   requirePermissions(["vehicle:assign"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { driverId } = req.body;
 
     if (!driverId) {
@@ -417,7 +417,7 @@ vehiclesRouter.get(
   "/vehicles/:id/assignment-logs",
   requirePermissions(["vehicle:view"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
 
     try {
       // Get all assignment-related logs from VehicleLog

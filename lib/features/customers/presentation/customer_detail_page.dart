@@ -9,19 +9,19 @@ import '../data/ride_model.dart';
 
 // Providers
 final customerDetailProvider = FutureProvider.autoDispose
-    .family<Customer, int>((ref, customerId) async {
+    .family<Customer, String>((ref, customerId) async {
   final repo = ref.watch(customersRepositoryProvider);
   return await repo.getCustomer(customerId);
 });
 
 final customerRidesProvider = FutureProvider.autoDispose
-    .family<List<Ride>, int>((ref, customerId) async {
+    .family<List<Ride>, String>((ref, customerId) async {
   final repo = ref.watch(customersRepositoryProvider);
   return await repo.getCustomerRides(customerId, limit: 5);
 });
 
 class CustomerDetailPage extends ConsumerStatefulWidget {
-  final int customerId;
+  final String customerId;
 
   const CustomerDetailPage({
     super.key,

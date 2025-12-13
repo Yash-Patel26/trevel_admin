@@ -39,12 +39,12 @@ class CustomersRepository {
         .toList();
   }
 
-  Future<Customer> getCustomer(int id) async {
+  Future<Customer> getCustomer(String id) async {
     final response = await _dio.get('/customers/$id');
     return Customer.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<List<Ride>> getCustomerRides(int customerId, {int limit = 5}) async {
+  Future<List<Ride>> getCustomerRides(String customerId, {int limit = 5}) async {
     final response = await _dio.get(
       '/customers/$customerId/rides',
       queryParameters: {'limit': limit},

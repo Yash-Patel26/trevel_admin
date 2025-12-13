@@ -477,7 +477,7 @@ customersRouter.get(
   "/customers/:id",
   requirePermissions(["customer:view", "dashboard:view"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id; // UUID is string
     const customer = await prisma.customer.findUnique({ where: { id } });
     if (!customer) return res.status(404).json({ message: "Not found" });
 
@@ -661,7 +661,7 @@ customersRouter.get(
   requirePermissions(["customer:view"]),
   async (req, res) => {
     try {
-      const customerId = Number(req.params.id);
+      const customerId = req.params.id; // UUID is string
       const limit = req.query.limit ? Number(req.query.limit) : 5;
 
       const bookings = await prisma.booking.findMany({

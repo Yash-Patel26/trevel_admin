@@ -212,7 +212,7 @@ driversRouter.post(
   requirePermissions(["driver:verify"]),
   validateBody(driverBackgroundSchema),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { status, notes } = req.body;
     const driver = await prisma.driver.findUnique({ where: { id } });
     if (!driver) return res.status(404).json({ message: "Not found" });
@@ -250,7 +250,7 @@ driversRouter.post(
   requirePermissions(["driver:train"]),
   validateBody(driverTrainingSchema),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { module, status } = req.body;
     const driver = await prisma.driver.findUnique({ where: { id } });
     if (!driver) return res.status(404).json({ message: "Not found" });
@@ -329,7 +329,7 @@ driversRouter.post(
   requirePermissions(["driver:approve"]),
   validateBody(driverApproveSchema),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { decision } = req.body;
     const driver = await prisma.driver.findUnique({ where: { id } });
     if (!driver) return res.status(404).json({ message: "Not found" });
@@ -376,7 +376,7 @@ driversRouter.get(
   "/drivers/:id/audit-trail",
   requirePermissions(["driver:view"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const driver = await prisma.driver.findUnique({ where: { id } });
     if (!driver) return res.status(404).json({ message: "Not found" });
 
@@ -633,7 +633,7 @@ driversRouter.post(
   requirePermissions(["driver:assign", "vehicle:assign"]),
   validateBody(assignVehicleSchema),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { vehicleId } = req.body;
     const driver = await prisma.driver.findUnique({ where: { id } });
     if (!driver) return res.status(404).json({ message: "Not found" });
@@ -670,7 +670,7 @@ driversRouter.post(
 );
 
 driversRouter.get("/drivers/:id/logs", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id;
   const driver = await prisma.driver.findUnique({ where: { id } });
   if (!driver) return res.status(404).json({ message: "Driver not found" });
 
@@ -693,7 +693,7 @@ driversRouter.get("/drivers/:id/logs", async (req, res) => {
 
 // Get driver documents
 driversRouter.get("/drivers/:id/documents", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id;
   const driver = await prisma.driver.findUnique({ where: { id } });
   if (!driver) return res.status(404).json({ message: "Driver not found" });
 
@@ -728,7 +728,7 @@ driversRouter.post(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const id = Number(req.params.id);
+      const id = req.params.id;
       const { type } = req.body;
 
       if (!type) {
@@ -794,7 +794,7 @@ driversRouter.delete(
   "/drivers/:id/documents/:documentId",
   requirePermissions(["driver:edit", "driver:delete"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const documentId = Number(req.params.documentId);
 
     try {
@@ -863,7 +863,7 @@ driversRouter.post(
   "/drivers/:id/documents/:documentId/verify",
   requirePermissions(["driver:verify"]),
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const documentId = Number(req.params.documentId);
     const { status } = req.body;
 
@@ -913,7 +913,7 @@ driversRouter.delete(
   "/drivers/:id",
   authMiddleware, // Only requires authentication, no specific permissions
   async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
 
     try {
       // Check if driver exists
