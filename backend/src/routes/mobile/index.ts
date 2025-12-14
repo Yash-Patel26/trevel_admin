@@ -6,6 +6,7 @@ import { authRouter } from "./auth";
 import { userRouter } from "./user";
 import { locationRouter } from "./location";
 import { bookingsRouter } from "./bookings";
+import directionsRouter from "./directions";
 
 export const mobileRouter = Router();
 
@@ -15,4 +16,5 @@ mobileRouter.use("/airport", airportRouter);
 mobileRouter.use("/auth", authRouter);
 mobileRouter.use("/user", userRouter);
 mobileRouter.use("/location", locationRouter);
+mobileRouter.use("/directions", directionsRouter);
 mobileRouter.use("/", bookingsRouter); // Bookings routes at root level

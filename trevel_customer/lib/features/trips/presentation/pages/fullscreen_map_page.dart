@@ -6,12 +6,14 @@ class FullscreenMapPage extends StatelessWidget {
   final LatLng initialPosition;
   final Set<Marker> markers;
   final Set<Polyline> polylines;
+  final List<LatLng> routeCoordinates;
 
   const FullscreenMapPage({
     super.key,
     required this.initialPosition,
     required this.markers,
     this.polylines = const {},
+    this.routeCoordinates = const [],
   });
 
   @override

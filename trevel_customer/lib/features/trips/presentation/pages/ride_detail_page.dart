@@ -6,6 +6,7 @@ import '../../../profile/presentation/pages/profile_page.dart';
 import '../../data/bookings_repository.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'fullscreen_map_page.dart';
+import '../../../../core/services/directions_service.dart';
 
 class RideDetailPage extends StatefulWidget {
   final String bookingId; // Changed from bookingDetails to bookingId
@@ -23,6 +24,10 @@ class _RideDetailPageState extends State<RideDetailPage> {
   String? _error;
 
   final BookingsRepository _bookingsRepo = BookingsRepository();
+  final DirectionsService _directionsService = DirectionsService();
+  
+  List<LatLng> _routeCoordinates = [];
+  bool _isLoadingRoute = false;
 
   @override
   void initState() {
@@ -44,6 +49,8 @@ class _RideDetailPageState extends State<RideDetailPage> {
           _bookingDetails = _formatBookingDetails(details);
           _isLoading = false;
         });
+        // Fetch route after booking details are loaded
+        _fetchRoute();
       } else {
         setState(() {
           _error = "Booking not found";
@@ -55,6 +62,32 @@ class _RideDetailPageState extends State<RideDetailPage> {
         _error = "Failed to load booking details";
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _fetchRoute() async {
+    if (_bookingDetails == null) return;
+    
+    final pickup = _bookingDetails!['pickupLocation'];
+    final dropoff = _bookingDetails!['destinationLocation'];
+    
+    if (pickup == null || dropoff == null) return;
+    
+    setState(() => _isLoadingRoute = true);
+    
+    try {
+      final route = await _directionsService.getRoute(pickup, dropoff);
+      if (mounted) {
+        setState(() {
+          _routeCoordinates = route;
+          _isLoadingRoute = false;
+        });
+      }
+    } catch (e) {
+      print('Route fetch error: $e');
+      if (mounted) {
+        setState(() => _isLoadingRoute = false);
+      }
     }
   }
 
@@ -450,9 +483,13 @@ class _RideDetailPageState extends State<RideDetailPage> {
   Widget _buildMapContent(BuildContext context) {
     Color textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
     
-    // Define pickup and drop locations (using default coordinates for now)
-    const LatLng pickupLatLng = LatLng(28.6139, 77.2090); // Default pickup
-    const LatLng dropLatLng = LatLng(28.6500, 77.2300); // Default drop (slightly offset)
+    // Use route coordinates if available, otherwise use default
+    final LatLng pickupLatLng = _routeCoordinates.isNotEmpty 
+        ? _routeCoordinates.first 
+        : const LatLng(28.6139, 77.2090);
+    final LatLng dropLatLng = _routeCoordinates.isNotEmpty 
+        ? _routeCoordinates.last 
+        : const LatLng(28.6500, 77.2300);
     
     // Create markers for pickup and drop
     final Set<Marker> markers = {
@@ -470,14 +507,15 @@ class _RideDetailPageState extends State<RideDetailPage> {
       ),
     };
     
-    // Create polyline for route
+    // Create polyline for route - use actual route if available
     final Set<Polyline> polylines = {
       Polyline(
         polylineId: const PolylineId('route'),
-        points: [pickupLatLng, dropLatLng],
+        points: _routeCoordinates.isNotEmpty ? _routeCoordinates : [pickupLatLng, dropLatLng],
         color: Colors.blue,
         width: 4,
-        patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+        // Remove dashed pattern for actual routes to show solid line
+        patterns: _routeCoordinates.isEmpty ? [PatternItem.dash(20), PatternItem.gap(10)] : [],
       ),
     };
     
@@ -520,6 +558,7 @@ class _RideDetailPageState extends State<RideDetailPage> {
                             initialPosition: const LatLng(28.6320, 77.2195),
                             markers: markers,
                             polylines: polylines,
+                            routeCoordinates: _routeCoordinates,
                           ),
                         ),
                       );

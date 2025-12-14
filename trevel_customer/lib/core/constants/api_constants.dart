@@ -27,4 +27,7 @@ class ApiConstants {
   static const String miniTripInfo = '/mobile/mini-trip/info';
   static const String miniTripEstimate = '/mobile/mini-trip/estimate-trip';
   static const String miniTripBooking = '/mobile/mini-trip/bookings';
+  
+  // Directions
+  static const String directions = '/mobile/directions/directions';
 }
