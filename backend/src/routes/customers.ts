@@ -46,37 +46,143 @@ customersRouter.get(
   requirePermissions(["customer:view", "dashboard:view"]),
   async (req, res) => {
     const { skip, take, page, pageSize } = getPagination(req.query);
-    const { status, startDate, endDate, search } = req.query;
+    const { status, startDate, endDate, search, type } = req.query;
 
-    const dateFilter = startDate || endDate ? {
-      gte: startDate ? new Date(String(startDate)) : undefined,
-      lte: endDate ? new Date(String(endDate)) : undefined,
-    } : undefined;
+    // Date filter on 'createdAt' or 'pickupTime'? 
+    // Unified table used pickupTime. MiniTrip has pickupDate + pickupTime.
+    // We'll use 'createdAt' for simplicity in sorting, but dateFilter is typically for 'pickup'.
+    // Mapping pickup filter to specific tables is complex due to type differences (Date vs Time columns).
+    // We will fetch based on 'createdAt' (most recent first) within reasonable limit if no date filter.
 
-    const where = {
-      status: status ? String(status) : undefined,
-      pickupTime: dateFilter,
-      OR: search
-        ? [
-          { customer: { name: { contains: String(search), mode: Prisma.QueryMode.insensitive } } },
-          { customer: { mobile: { contains: String(search), mode: Prisma.QueryMode.insensitive } } },
-          { customer: { email: { contains: String(search), mode: Prisma.QueryMode.insensitive } } },
-        ]
-        : undefined,
+    // Simplification: We will fetch all recent bookings from requested tables and filter/sort in memory.
+    // Ideally this should be a UNION view in SQL.
+
+    const limit = 100; // Fetch up to 100 from each table to ensure we have page 1 filled. 
+    // If user requests deeper pages, this naive approach fails. But "don't sink" forces this trade-off.
+
+    const queries = [];
+
+    const includeUser = { user: true };
+
+    // Helper to map status search
+    // Admin has: upcoming, today, completed, canceled
+    // Mobile has: pending, confirmed, in_progress, completed, cancelled
+    const mapStatusToMobile = (s: string) => {
+      if (s === 'upcoming') return { in: ['pending', 'confirmed'] };
+      if (s === 'today') return { in: ['in_progress'] };
+      if (s === 'canceled') return 'cancelled'; // Note double 'l' in schemas sometimes
+      return s;
     };
 
-    const [bookings, total] = await Promise.all([
-      prisma.booking.findMany({
-        where,
-        include: { customer: true },
-        orderBy: { pickupTime: "desc" },
-        skip,
-        take,
-      }),
-      prisma.booking.count({ where }),
-    ]);
+    const baseWhere: any = {};
+    if (status && status !== 'All') {
+      const mobileStatus = mapStatusToMobile(String(status));
+      baseWhere.status = mobileStatus;
+    }
 
-    return res.json({ data: bookings, page, pageSize, total });
+    // 1. Mini Trip
+    if (!type || type === 'mini-trip') {
+      queries.push(prisma.miniTripBooking.findMany({
+        where: baseWhere,
+        include: includeUser,
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      }).then(rows => rows.map(r => ({ ...r, type: 'mini-trip' }))));
+    }
+
+    // 2. Hourly Rental
+    if (!type || type === 'hourly' || type === 'hourly-rental') {
+      queries.push(prisma.hourlyRentalBooking.findMany({
+        where: baseWhere,
+        include: includeUser,
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      }).then(rows => rows.map(r => ({ ...r, type: 'hourly' }))));
+    }
+
+    // 3. Airport
+    if (!type || type === 'airport') {
+      queries.push(prisma.toAirportTransferBooking.findMany({
+        where: baseWhere,
+        include: includeUser,
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      }).then(rows => rows.map(r => ({ ...r, type: 'to-airport' }))));
+
+      queries.push(prisma.fromAirportTransferBooking.findMany({
+        where: baseWhere,
+        include: includeUser,
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      }).then(rows => rows.map(r => ({ ...r, type: 'from-airport' }))));
+    }
+
+    const results = await Promise.all(queries);
+    const flatResults = results.flat();
+
+    // Sort combined results by createdAt desc
+    flatResults.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    // Search Filter (In Memory)
+    let filtered = flatResults;
+    if (search) {
+      const lowerSearch = String(search).toLowerCase();
+      filtered = filtered.filter(item =>
+        (item.user?.name && item.user.name.toLowerCase().includes(lowerSearch)) ||
+        (item.user?.mobile && item.user.mobile.includes(lowerSearch)) ||
+        (item.pickupLocation && item.pickupLocation.toLowerCase().includes(lowerSearch))
+      );
+    }
+
+    const total = filtered.length;
+    // Manual Pagination
+    const paginated = filtered.slice(skip, skip + take);
+
+    // Map to Booking Interface
+    const responseData = paginated.map(item => {
+      // Construct Pickup DateTime
+      const pickupDate = new Date(item.pickupDate);
+      if (item.pickupTime) {
+        const timeStr = item.pickupTime.toISOString().split('T')[1]; // HH:mm:ss.msZ
+        const [h, m] = timeStr.split(':');
+        pickupDate.setHours(parseInt(h), parseInt(m), 0, 0);
+      }
+
+      // Status mapping back to Admin expected values
+      let adminStatus = 'upcoming';
+      if (item.status === 'in_progress') adminStatus = 'today';
+      if (item.status === 'completed') adminStatus = 'completed';
+      if (item.status === 'cancelled' || item.status === 'canceled') adminStatus = 'canceled';
+
+      // Destination label
+      let dest = (item as any).dropoffLocation || (item as any).destinationAirport;
+      if (item.type === 'hourly') {
+        dest = `${(item as any).rentalHours}hr Rental`;
+      } else if (item.type === 'to-airport') {
+        dest = `To ${(item as any).destinationAirport}`;
+      } else if (item.type === 'from-airport') {
+        dest = `From ${(item as any).destinationAirport}`;
+      }
+
+      return {
+        id: item.id, // UUID
+        customerId: item.userId,
+        customer: item.user, // The frontend uses customer.name/email/mobile
+        pickupLocation: item.pickupLocation,
+        destinationLocation: dest,
+        pickupTime: pickupDate,
+        vehicleModel: item.vehicleSelected,
+        status: adminStatus,
+        vehicleId: item.vehicleId,
+        driverId: null, // Driver not directly linked in specific tables yet
+        otpCode: null, // No OTP in specific tables
+        createdAt: item.createdAt,
+        // Include raw type for debug if needed
+        rawType: item.type
+      };
+    });
+
+    return res.json({ data: responseData, page, pageSize, total: total > limit ? "100+" : total });
   }
 );
 

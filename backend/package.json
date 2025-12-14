@@ -34,6 +34,7 @@
     "pino": "^9.4.0",
     "prisma": "^5.20.0",
     "redis": "^4.6.13",
+    "twilio": "^5.10.7",
     "zod": "^4.1.13"
   },
   "devDependencies": {

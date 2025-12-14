@@ -6,6 +6,7 @@ import { validateBody } from "../../validation/validate";
 import { pricingService } from "../../services/pricing";
 import { googleMapsService } from "../../services/googleMaps";
 import { syncMiniTripToBooking } from "../../services/bookingSync";
+import { calculateEstimatedTimeMinutes, minutesToTimeObject, parseTimeToMinutes } from "../../utils/timeUtils";
 
 const miniTripRouter = Router();
 
@@ -42,7 +43,7 @@ const estimateTripSchema = z.object({
 
 const estimateMiniTripSchema = z.object({
     distance_km: z.coerce.number(),
-    pickup_time: z.string(), 
+    pickup_time: z.string(),
 });
 
 // GET /info - Returns available vehicles for Mini Trip
@@ -157,6 +158,12 @@ miniTripRouter.post("/bookings", validateBody(createMiniTripSchema), async (req,
         const isoTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
         const pickupTimeObj = new Date(`1970-01-01T${isoTime}Z`);
 
+        // Calculate estimated time based on distance
+        const estimatedMinutes = calculateEstimatedTimeMinutes(
+            data.estimated_distance_km,
+            pricingService.isPeakHours(data.pickup_time, 'miniTravel')
+        );
+
         const booking = await prisma.miniTripBooking.create({
             data: {
                 userId: customer.id,
@@ -174,7 +181,7 @@ miniTripRouter.post("/bookings", validateBody(createMiniTripSchema), async (req,
                 passengerPhone: data.passenger_phone || customer.mobile || "",
                 passengerEmail: (data.passenger_email || customer.email) ?? null,
                 estimatedDistanceKm: data.estimated_distance_km,
-                estimatedTimeMin: new Date(`1970-01-01T00:00:00Z`), // TODO: Parse duration properly if needed
+                estimatedTimeMin: minutesToTimeObject(estimatedMinutes),
                 basePrice: data.base_price,
                 gstAmount: data.gst_amount || 0,
                 finalPrice: data.final_price,

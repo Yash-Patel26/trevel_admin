@@ -25,6 +25,7 @@ class BookingsRepository {
     DateTime? startDate,
     DateTime? endDate,
     String? search,
+    String? type,
   }) async {
     final queryParams = <String, dynamic>{};
     if (page != null) queryParams['page'] = page;
@@ -35,6 +36,7 @@ class BookingsRepository {
     }
     if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
     if (search != null) queryParams['search'] = search;
+    if (type != null) queryParams['type'] = type;
 
     final response =
         await _dio.get('/customers/bookings', queryParameters: queryParams);

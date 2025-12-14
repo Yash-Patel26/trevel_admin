@@ -16,6 +16,12 @@ export async function syncMiniTripToBooking(miniTripId: string) {
             throw new Error(`MiniTripBooking ${miniTripId} not found`);
         }
 
+        // SYNC DISABLED: We now query specific tables directly in the admin panel.
+        console.log(`ℹ️ Sync disabled for MiniTripBooking ${miniTripId}`);
+        return null;
+
+        /* 
+        // Sync logic retained for reference but disabled
         // Combine date and time into a single DateTime
         const pickupDateTime = new Date(miniTrip.pickupDate);
         const timeComponents = miniTrip.pickupTime.toISOString().split('T')[1];
@@ -48,7 +54,8 @@ export async function syncMiniTripToBooking(miniTripId: string) {
 
         console.log(`✅ Synced MiniTripBooking ${miniTripId} to Booking ${booking.id}`);
 
-        return booking;
+        return booking; 
+        */
     } catch (error) {
         console.error(`❌ Failed to sync MiniTripBooking ${miniTripId}:`, error);
         throw error;
@@ -69,6 +76,11 @@ export async function syncHourlyRentalToBooking(rentalId: string) {
             throw new Error(`HourlyRentalBooking ${rentalId} not found`);
         }
 
+        // SYNC DISABLED
+        console.log(`ℹ️ Sync disabled for HourlyRentalBooking ${rentalId}`);
+        return null;
+
+        /*
         const pickupDateTime = new Date(rental.pickupDate);
         const timeComponents = rental.pickupTime.toISOString().split('T')[1];
         const [hours, minutes] = timeComponents.split(':');
@@ -99,6 +111,7 @@ export async function syncHourlyRentalToBooking(rentalId: string) {
         console.log(`✅ Synced HourlyRentalBooking ${rentalId} to Booking ${booking.id}`);
 
         return booking;
+        */
     } catch (error) {
         console.error(`❌ Failed to sync HourlyRentalBooking ${rentalId}:`, error);
         throw error;
@@ -124,6 +137,11 @@ export async function syncAirportTransferToBooking(transferId: string, isToAirpo
             throw new Error(`Airport transfer ${transferId} not found`);
         }
 
+        // SYNC DISABLED
+        console.log(`ℹ️ Sync disabled for AirportTransfer ${transferId}`);
+        return null;
+
+        /*
         const pickupDateTime = new Date(transfer.pickupDate);
         const timeComponents = transfer.pickupTime.toISOString().split('T')[1];
         const [hours, minutes] = timeComponents.split(':');
@@ -154,6 +172,7 @@ export async function syncAirportTransferToBooking(transferId: string, isToAirpo
         console.log(`✅ Synced Airport Transfer ${transferId} to Booking ${booking.id}`);
 
         return booking;
+        */
     } catch (error) {
         console.error(`❌ Failed to sync Airport Transfer ${transferId}:`, error);
         throw error;

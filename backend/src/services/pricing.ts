@@ -65,20 +65,36 @@ export const HOURLY_RENTAL_PRICING: Record<number, { basePrice: number; totalPri
 
 // Functions
 
-export function isPeakHours(time: string | Date, serviceType: "miniTravel" | "airport" = 'miniTravel'): boolean {
-    let hour: number;
+/**
+ * Get hour in IST (Indian Standard Time) for peak hour calculation
+ * @param time - Date object (assumed to be in UTC) or time string (HH:mm)
+ * @returns Hour in IST (0-23)
+ */
+function getISTHour(time: Date | string): number {
     if (typeof time === 'string') {
         const timeMatch = time.match(/^(\d{2}):(\d{2})/);
-        if (!timeMatch) return false;
-        hour = parseInt(timeMatch[1], 10);
+        if (!timeMatch) return -1;
+        return parseInt(timeMatch[1], 10);
     } else if (time instanceof Date) {
-        hour = time.getUTCHours(); // Use UTC or Local? Mobile backend was using getHours() which depends on env timezone. Usually UTC in cloud.
-        // TODO: Verify timezone handling. Assuming UTC for now if Date object.
-    } else {
-        return false;
+        // IST is UTC+5:30
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istTime = new Date(time.getTime() + istOffset);
+        return istTime.getUTCHours();
     }
+    return -1;
+}
+
+/**
+ * Check if the given time falls within peak hours
+ * @param time - Time as Date object (UTC) or string (HH:mm in IST)
+ * @param serviceType - Type of service (miniTravel or airport)
+ * @returns true if within peak hours, false otherwise
+ */
+export function isPeakHours(time: string | Date, serviceType: "miniTravel" | "airport" = 'miniTravel'): boolean {
+    const hour = getISTHour(time);
 
     if (hour < 0 || hour > 23) return false;
+
     const peakHoursRanges = PEAK_HOURS[serviceType] || PEAK_HOURS.miniTravel;
     return peakHoursRanges.some(range => {
         return (range.start <= range.end)

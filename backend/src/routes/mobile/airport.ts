@@ -4,6 +4,7 @@ import prisma from "../../prisma/client";
 import { mobileAuthMiddleware } from "../../middleware/mobileAuth";
 import { validateBody } from "../../validation/validate";
 import { pricingService } from "../../services/pricing";
+import { calculateEstimatedTimeMinutes, minutesToTimeObject } from "../../utils/timeUtils";
 
 const airportRouter = Router();
 
@@ -143,6 +144,12 @@ airportRouter.post("/to-airport/transfer-bookings", mobileAuthMiddleware, valida
         const pickupDateObj = new Date(data.pickup_date);
         const pickupTimeObj = new Date(`1970-01-01T${data.pickup_time.length === 5 ? data.pickup_time + ':00' : data.pickup_time}Z`);
 
+        // Calculate estimated time based on distance
+        const estimatedMinutes = calculateEstimatedTimeMinutes(
+            data.estimated_distance_km,
+            pricingService.isPeakHours(data.pickup_time, 'airport')
+        );
+
         const booking = await prisma.toAirportTransferBooking.create({
             data: {
                 userId: customer.id,
@@ -157,7 +164,7 @@ airportRouter.post("/to-airport/transfer-bookings", mobileAuthMiddleware, valida
                 passengerPhone: data.passenger_phone || customer.mobile || "",
                 passengerEmail: data.passenger_email || customer.email,
                 estimatedDistanceKm: data.estimated_distance_km,
-                estimatedTimeMin: new Date(`1970-01-01T00:00:00Z`), // TODO Parse time
+                estimatedTimeMin: minutesToTimeObject(estimatedMinutes),
                 basePrice: data.base_price,
                 gstAmount: data.gst_amount || 0,
                 finalPrice: data.final_price,
@@ -182,6 +189,12 @@ airportRouter.post("/from-airport/transfer-bookings", mobileAuthMiddleware, vali
         const pickupDateObj = new Date(data.pickup_date);
         const pickupTimeObj = new Date(`1970-01-01T${data.pickup_time.length === 5 ? data.pickup_time + ':00' : data.pickup_time}Z`);
 
+        // Calculate estimated time based on distance
+        const estimatedMinutes = calculateEstimatedTimeMinutes(
+            data.estimated_distance_km,
+            pricingService.isPeakHours(data.pickup_time, 'airport')
+        );
+
         const booking = await prisma.fromAirportTransferBooking.create({
             data: {
                 userId: customer.id,
@@ -195,7 +208,7 @@ airportRouter.post("/from-airport/transfer-bookings", mobileAuthMiddleware, vali
                 passengerPhone: data.passenger_phone || customer.mobile || "",
                 passengerEmail: data.passenger_email || customer.email,
                 estimatedDistanceKm: data.estimated_distance_km,
-                estimatedTimeMin: new Date(`1970-01-01T00:00:00Z`), // TODO Parse time
+                estimatedTimeMin: minutesToTimeObject(estimatedMinutes),
                 basePrice: data.base_price,
                 gstAmount: data.gst_amount || 0,
                 finalPrice: data.final_price,

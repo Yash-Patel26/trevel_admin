@@ -69,6 +69,10 @@ model AuditLog {
   before     Json?
   after      Json?
   createdAt  DateTime @default(now())
+  
+  @@index([actorId, createdAt]) // User's actions chronologically
+  @@index([entityType, entityId]) // Entity history
+  @@index([createdAt]) // Recent activity
 }
 
 model Vehicle {
@@ -96,6 +100,9 @@ model Vehicle {
   toAirportTrips        ToAirportTransferBooking[]
   fromAirportTrips      FromAirportTransferBooking[]
   bookings              Booking[]
+  
+  @@index([status]) // Filter by status
+  @@index([status, createdAt]) // Status with recency
 }
 
 model VehicleReview {
@@ -152,6 +159,9 @@ model Driver {
   assignments         VehicleAssignment[]
   rideSummaries       RideSummary[]
   bookings            Booking[]
+  
+  @@index([status]) // Filter by status
+  @@index([status, rating]) // Available drivers by rating
 }
 
 model DriverDocument {
@@ -209,6 +219,10 @@ model Ticket {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   updates       TicketUpdate[]
+  
+  @@index([status, priority]) // Filter and sort tickets
+  @@index([assignedTo, status]) // Assignee's tickets
+  @@index([createdAt]) // Recent tickets
 }
 
 model TicketUpdate {
@@ -286,6 +300,9 @@ model Booking {
   @@index([customerId])
   @@index([status])
   @@index([pickupTime])
+  @@index([customerId, status]) // Customer's bookings by status
+  @@index([status, pickupTime]) // All bookings by status and time
+  @@index([customerId, pickupTime]) // Customer's bookings chronologically
 }
 
 // Mobile App Booking Models
@@ -323,6 +340,9 @@ model MiniTripBooking {
   @@index([userId])
   @@index([status])
   @@index([pickupDate])
+  @@index([userId, status, pickupDate]) // User's bookings filtered and sorted
+  @@index([status, pickupDate]) // All bookings by status and date
+  @@index([createdAt]) // Recent bookings
   @@map("mini_trip_bookings")
 }
 
