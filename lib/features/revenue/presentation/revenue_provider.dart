@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'revenue_repository.dart';
-import 'pricing_config.dart';
+import '../data/revenue_repository.dart';
+import '../data/pricing_config.dart';
 
 final pricingConfigsProvider = FutureProvider<List<PricingConfig>>((ref) async {
   final repo = ref.read(revenueRepositoryProvider);

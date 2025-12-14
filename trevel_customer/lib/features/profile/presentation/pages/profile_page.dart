@@ -8,6 +8,8 @@ import 'help_support_page.dart';
 import 'settings_page.dart';
 import '../../../../core/theme/theme_manager.dart';
 import 'payments_page.dart';
+import '../../../../features/auth/data/auth_repository.dart';
+import '../../../../features/splash/presentation/pages/splash_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -181,7 +183,16 @@ class ProfilePage extends StatelessWidget {
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () {},
+                            onPressed: () async {
+                              await AuthRepository().logout();
+                              if (context.mounted) {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SplashPage()),
+                                  (route) => false,
+                                );
+                              }
+                            },
                             icon: const Icon(Icons.logout, color: Colors.red),
                             label: const Text("Logout", style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
                             style: ElevatedButton.styleFrom(

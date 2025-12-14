@@ -81,4 +81,19 @@ class AuthRepository {
     await _storage.delete(key: 'auth_token');
     return true;
   }
+
+  Future<bool> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _apiClient.dio.put(
+        ApiConstants.updateProfile,
+        data: data,
+      );
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }

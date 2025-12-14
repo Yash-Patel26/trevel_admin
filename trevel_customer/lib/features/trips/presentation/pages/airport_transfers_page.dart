@@ -26,7 +26,7 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _pickupController = TextEditingController(text: "Enter your pickup location");
+  final TextEditingController _pickupController = TextEditingController();
   final TextEditingController _terminalController = TextEditingController(); 
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
@@ -45,7 +45,7 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
     super.initState();
     _fillUserData();
     _fillUserData();
-    _fetchAirports();
+    // _fetchAirports(); // Removed as per user request
     _fetchEstimates();
   }
 
@@ -152,14 +152,8 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
     }
   }
 
-  Future<void> _fetchAirports() async {
-    setState(() => _isLoadingAirports = true);
-    final airports = await AirportRepository().getAirports();
-    setState(() {
-      _airports = airports;
-      _isLoadingAirports = false;
-    });
-  }
+  // Airport fetch removed
+  // Future<void> _fetchAirports() async { ... }
 
   void _fillUserData() {
     _nameController.text = "Yash Patel";
@@ -205,7 +199,7 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           const CustomAppBar(showBackButton: false),
@@ -352,7 +346,6 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         const SizedBox(height: 20),
         
         // Conditional Fields based on Toggle
-        // Conditional Fields based on Toggle
         if (_isToAirport) ...[
           _buildLabel("Pickup Location", Icons.location_on_outlined, textColor),
           const SizedBox(height: 8),
@@ -363,9 +356,9 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
           const SizedBox(height: 8),
           _buildTerminalDropdown(isDark, textColor),
         ] else ...[
-          _buildLabel("Pickup Airport", Icons.location_on_outlined, textColor),
+          _buildLabel("Pickup Terminal", Icons.flight_takeoff, textColor),
           const SizedBox(height: 8),
-          _buildAirportDropdown(isDark, textColor), // Changed from TerminalDropdown to AirportDropdown
+          _buildTerminalDropdown(isDark, textColor),
           
           const SizedBox(height: 20),
           _buildLabel("Destination", Icons.flight_land, textColor),
@@ -478,6 +471,10 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
           height: 50,
           child: ElevatedButton(
             onPressed: () {
+               if (_dateController.text.isEmpty || _timeController.text.isEmpty) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select Date and Time")));
+                 return;
+               }
                setState(() {
                  if (_travelerType == 0) {
                    // If 'Myself', skip to Step 3 (Preview)
@@ -710,15 +707,24 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
           height: 50,
           child: ElevatedButton(
             onPressed: () async {
+               // Validate location fields
+               if (_pickupController.text.isEmpty || _terminalController.text.isEmpty) {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(content: Text("Please enter pickup location and select terminal"))
+                 );
+                 return;
+               }
+               
                // Prepare Booking Data (Mocking some values for now)
                final v = _vehicles[_selectedVehicleIndex];
                // Clean price string "₹799" -> 799.0
                final price = double.tryParse(v['price'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
                
                final bookingData = {
-                 "pickup_location": _pickupController.text, // "Enter your pickup location" if default
-                 // Use airport/terminal for dropoff if needed, or vice versa based on direction
-                 "dropoff_location": _isToAirport ? "Airport: ${_terminalController.text}" : _pickupController.text, 
+                 // For "To Airport": pickup is the address, dropoff is terminal
+                 // For "From Airport": pickup is terminal, dropoff is the address
+                 "pickup_location": _isToAirport ? _pickupController.text : _terminalController.text,
+                 "dropoff_location": _isToAirport ? _terminalController.text : _pickupController.text, 
                  "pickup_date": "2025-12-03", // TODO: Real date parsing
                  "pickup_time": _timeController.text,
                  "vehicle_selected": v['name'],
@@ -939,7 +945,8 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
   }
   Widget _buildTerminalDropdown(bool isDark, Color textColor) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
-    List<String> terminals = _selectedAirport?.terminals ?? [];
+    // User requested simplified terminal list "up to 3" without airport names
+    List<String> terminals = ["Terminal 1", "Terminal 2", "Terminal 3"];
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -952,90 +959,41 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         value: _terminalController.text.isNotEmpty && terminals.contains(_terminalController.text)
             ? _terminalController.text 
             : null,
-        hint: Text(terminals.isEmpty ? "Select Airport First" : "Select your terminal", style: const TextStyle(color: Colors.grey)),
+        hint: const Text("Select your terminal", style: TextStyle(color: Colors.grey)),
         decoration: const InputDecoration(
           border: InputBorder.none,
           isDense: true,
         ),
+        isExpanded: true, // Fix overflow
         dropdownColor: innerCardColor,
         icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.grey[400] : Colors.black54),
         style: TextStyle(color: textColor, fontSize: 16),
         items: terminals.map((String value) {
           return DropdownMenuItem<String>(
             value: value,
-            child: Text(value),
+            child: Text(
+              value, 
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           );
         }).toList(),
         onChanged: terminals.isEmpty ? null : (newValue) {
           setState(() {
             _terminalController.text = newValue!;
           });
+          // Trigger fetch if "To Airport" (Drop is Terminal)
+          if (_isToAirport) {
+             _fetchEstimates();
+          }
         },
       ),
     );
   }
 
-  Widget _buildAirportDropdown(bool isDark, Color textColor) {
-    Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
-    
-    if (_isLoadingAirports) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(8),
-          color: innerCardColor,
-        ),
-        child: const Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amber))),
-      );
-    }
+  // Airport Dropdown Widget Removed
 
-    if (_airports.isEmpty) {
-       return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(8),
-          color: innerCardColor,
-        ),
-        child: Text("No airports available", style: TextStyle(color: textColor)),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(8),
-        color: innerCardColor,
-      ),
-      child: DropdownButtonFormField<String>(
-        value: _selectedAirport?.airportName,
-        hint: const Text("Select your airport", style: TextStyle(color: Colors.grey)),
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          isDense: true,
-        ),
-        dropdownColor: innerCardColor,
-        icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.grey[400] : Colors.black54),
-        style: TextStyle(color: textColor, fontSize: 16),
-        items: _airports.map((AirportData airport) {
-          return DropdownMenuItem<String>(
-            value: airport.airportName,
-            child: Text(airport.airportName),
-          );
-        }).toList(),
-        onChanged: (newValue) {
-          setState(() {
-             _selectedAirport = _airports.firstWhere((a) => a.airportName == newValue);
-             _terminalController.text = ""; // Reset terminal selection
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildPlacesAutoComplete(TextEditingController controller, String hint, bool isDark, Color textColor) {
+  Widget _buildPlacesAutoComplete(TextEditingController controller, String hint, bool isDark, Color textColor, {VoidCallback? onSelectionChanged}) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
     return Container(
        padding: const EdgeInsets.symmetric(horizontal: 2), 
@@ -1057,6 +1015,9 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         onSelected: (String selection) {
           controller.text = selection;
           setState(() {});
+          if (onSelectionChanged != null) {
+            onSelectionChanged();
+          }
         },
         fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
             // Keep the initial value in sync if controller has text

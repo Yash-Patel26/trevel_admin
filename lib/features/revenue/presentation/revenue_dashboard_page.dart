@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_colors.dart';
 import 'revenue_provider.dart';
 import 'widgets/mini_travel_pricing_form.dart';
 import 'widgets/hourly_rental_pricing_form.dart';
@@ -82,7 +82,7 @@ class _RevenueDashboardPageState extends ConsumerState<RevenueDashboardPage> wit
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );

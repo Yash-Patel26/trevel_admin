@@ -4,6 +4,8 @@ import '../../../../shared/widgets/app_bottom_bar.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../data/bookings_repository.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'fullscreen_map_page.dart';
 
 class RideDetailPage extends StatefulWidget {
   final String bookingId; // Changed from bookingDetails to bookingId
@@ -73,9 +75,11 @@ class _RideDetailPageState extends State<RideDetailPage> {
       'distance': apiData['estimatedDistanceKm'] != null 
           ? '${apiData['estimatedDistanceKm']} km' 
           : null,
-      'eta': apiData['estimatedTimeMin']?.toString(),
+      'eta': _formatTime(apiData['pickupTime']),
+      'estimatedTime': apiData['estimatedTimeMin']?.toString(),
       'price': '₹${apiData['finalPrice']}',
       'date': _formatDate(apiData['pickupDate']),
+      'pickupTime': _formatTime(apiData['pickupTime']),
       'otp': '----', // OTP would come from a separate field if implemented
     };
   }
@@ -96,11 +100,29 @@ class _RideDetailPageState extends State<RideDetailPage> {
     return months[month - 1];
   }
 
+  String _formatTime(dynamic time) {
+    if (time == null) return 'N/A';
+    try {
+      // If it's an ISO time string like "1970-01-01T23:53:00.000Z"
+      if (time.toString().contains('T')) {
+        final dt = DateTime.parse(time.toString());
+        final hour = dt.hour;
+        final minute = dt.minute.toString().padLeft(2, '0');
+        final period = hour >= 12 ? 'PM' : 'AM';
+        final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+        return '$displayHour:$minute $period';
+      }
+      return time.toString();
+    } catch (e) {
+      return time.toString();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Column(
           children: [
             const CustomAppBar(showBackButton: false),
@@ -116,7 +138,7 @@ class _RideDetailPageState extends State<RideDetailPage> {
 
     if (_error != null || _bookingDetails == null) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Column(
           children: [
             const CustomAppBar(showBackButton: false),
@@ -128,7 +150,7 @@ class _RideDetailPageState extends State<RideDetailPage> {
                     Icon(Icons.error_outline, size: 64, color: Colors.red),
                     SizedBox(height: 16),
                     Text(_error ?? "Failed to load booking", 
-                         style: TextStyle(color: Colors.white)),
+                         style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black)),
                     SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _fetchBookingDetails,
@@ -149,7 +171,7 @@ class _RideDetailPageState extends State<RideDetailPage> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           const CustomAppBar(showBackButton: false), 
@@ -276,66 +298,69 @@ class _RideDetailPageState extends State<RideDetailPage> {
              const SizedBox(height: 24),
           ],
 
-          // --- Driver Information ---
-          Text("Driver Information", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-              borderRadius: BorderRadius.circular(16),
-              color: innerCardColor,
-              boxShadow: [
-                 BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 4, offset:const Offset(0, 2))
-              ]
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Colors.blue.shade100,
-                      backgroundImage: const AssetImage('assets/images/user_avatar.jpeg'),
-                      child: const Icon(Icons.person, size: 30, color: Colors.white), 
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(_bookingDetails!['driverName'] ?? "Driver", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
-                              const SizedBox(width: 6),
-                              const Icon(Icons.star, color: Colors.amber, size: 16),
-                              Text(" (${_bookingDetails!['driverRating'] ?? 'N/A'})", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(_bookingDetails!['driverPhone'] ?? "Not available", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                        ],
+
+          // --- Driver Information (only show if not PENDING) ---
+          if (_bookingDetails!['status']?.toString().toUpperCase() != 'PENDING') ...[
+            Text("Driver Information", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                borderRadius: BorderRadius.circular(16),
+                color: innerCardColor,
+                boxShadow: [
+                   BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 4, offset:const Offset(0, 2))
+                ]
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.blue.shade100,
+                        backgroundImage: const AssetImage('assets/images/user_avatar.jpeg'),
+                        child: const Icon(Icons.person, size: 30, color: Colors.white), 
                       ),
-                    ),
-                    CircleAvatar(radius: 18, backgroundColor: Colors.amber, child: const Icon(Icons.call, size: 18, color: Colors.black)),
-                    const SizedBox(width: 12),
-                    CircleAvatar(radius: 18, backgroundColor: Colors.black, child: const Icon(Icons.chat_bubble_outline, size: 18, color: Colors.white)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Ride OTP", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor)),
-                    Text(_bookingDetails!['otp'] ?? "----", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-                  ],
-                )
-              ],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(_bookingDetails!['driverName'] ?? "Driver", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.star, color: Colors.amber, size: 16),
+                                Text(" (${_bookingDetails!['driverRating'] ?? 'N/A'})", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(_bookingDetails!['driverPhone'] ?? "Not available", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                      CircleAvatar(radius: 18, backgroundColor: Colors.amber, child: const Icon(Icons.call, size: 18, color: Colors.black)),
+                      const SizedBox(width: 12),
+                      CircleAvatar(radius: 18, backgroundColor: Colors.black, child: const Icon(Icons.chat_bubble_outline, size: 18, color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Ride OTP", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textColor)),
+                      Text(_bookingDetails!['otp'] ?? "----", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                    ],
+                  )
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
+          ],
 
           // --- Ride Status & Details ---
           Text("Ride Status & Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
@@ -367,7 +392,7 @@ class _RideDetailPageState extends State<RideDetailPage> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        isInProgress ? "IN_PROGRESS" : "ASSIGNED", 
+                        _bookingDetails!['status']?.toString().toUpperCase() ?? "PENDING", 
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)
                       ),
                     )
@@ -424,39 +449,93 @@ class _RideDetailPageState extends State<RideDetailPage> {
 
   Widget _buildMapContent(BuildContext context) {
     Color textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
+    
+    // Define pickup and drop locations (using default coordinates for now)
+    const LatLng pickupLatLng = LatLng(28.6139, 77.2090); // Default pickup
+    const LatLng dropLatLng = LatLng(28.6500, 77.2300); // Default drop (slightly offset)
+    
+    // Create markers for pickup and drop
+    final Set<Marker> markers = {
+      Marker(
+        markerId: const MarkerId('pickup'),
+        position: pickupLatLng,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        infoWindow: const InfoWindow(title: 'Pickup Location'),
+      ),
+      Marker(
+        markerId: const MarkerId('drop'),
+        position: dropLatLng,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: const InfoWindow(title: 'Drop Location'),
+      ),
+    };
+    
+    // Create polyline for route
+    final Set<Polyline> polylines = {
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: [pickupLatLng, dropLatLng],
+        color: Colors.blue,
+        width: 4,
+        patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+      ),
+    };
+    
     return Column(
       children: [
         Container(
-          height: 220,
+          height: 300,
           margin: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.green.shade50,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.withOpacity(0.3)),
-            image: const DecorationImage(
-              image: AssetImage('assets/images/map_placeholder.png'),
-              fit: BoxFit.cover,
-            )
           ),
           child: Stack(
             children: [
-              if (true) ...[
-                 const Center(child: Icon(Icons.map, size: 60, color: Colors.black12)),
-                 const Positioned(
-                   top: 60, right: 80,
-                   child: Icon(Icons.location_on, color: Colors.green, size: 40),
-                 ),
-                 Positioned(
-                   top: 50, right: 80,
-                   child: SizedBox(
-                     width: 100,
-                     height: 100,
-                     child: CustomPaint(
-                       painter: RoutePainter(),
-                     ),
-                   )
-                 ),
-              ]
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: GoogleMap(
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(28.6320, 77.2195), // Center between pickup and drop
+                    zoom: 12,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                ),
+              ),
+              // Zoom/Fullscreen button
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  elevation: 4,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullscreenMapPage(
+                            initialPosition: const LatLng(28.6320, 77.2195),
+                            markers: markers,
+                            polylines: polylines,
+                          ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(
+                        Icons.fullscreen,
+                        color: Colors.black87,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -469,14 +548,21 @@ class _RideDetailPageState extends State<RideDetailPage> {
                 children: [
                   const Icon(Icons.location_on_outlined, color: Colors.amber, size: 22),
                   const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_bookingDetails!['pickupLocation'] ?? "Pickup location", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
-                      const SizedBox(height: 4),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _bookingDetails!['pickupLocation'] ?? "Pickup location", 
+                          style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   Text(_bookingDetails!['distance'] ?? "Calculating...", style: TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
@@ -572,25 +658,25 @@ class _RideDetailPageState extends State<RideDetailPage> {
               children: [
                  Column(
                    crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     Row(
-                       children: [
-                         const Icon(Icons.calendar_today_outlined, size: 16, color: Colors.grey),
-                         const SizedBox(width: 8),
-                         Text(_bookingDetails!['date'] ?? "Friday, Dec 05,2025", style: TextStyle(color: textColor)),
-                       ],
-                     ),
-                     const SizedBox(height: 8),
-                     Row(
-                       children: [
-                         const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                         const SizedBox(width: 8),
-                         Text("10:23 AM", style: TextStyle(color: textColor)),
-                       ],
-                     ),
-                   ],
-                 ),
-                 Text(_bookingDetails!['price'] ?? "₹320", style: const TextStyle(color: Colors.green, fontSize: 24, fontWeight: FontWeight.bold)),
+                     children: [
+                       Row(
+                         children: [
+                           const Icon(Icons.calendar_today_outlined, size: 16, color: Colors.grey),
+                           const SizedBox(width: 8),
+                           Text(_bookingDetails!['date'] ?? "N/A", style: TextStyle(color: textColor)),
+                         ],
+                       ),
+                       const SizedBox(height: 8),
+                       Row(
+                         children: [
+                           const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                           const SizedBox(width: 8),
+                           Text(_bookingDetails!['eta'] ?? "N/A", style: TextStyle(color: textColor)), // Using ETA as proxy for time if not available
+                         ],
+                       ),
+                     ],
+                   ),
+                   Text(_bookingDetails!['price'] ?? "₹0", style: const TextStyle(color: Colors.green, fontSize: 24, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -669,11 +755,11 @@ class _RideDetailPageState extends State<RideDetailPage> {
             ),
             child: Column(
               children: [
-                _buildFareRow("Base Fare", "₹320", textColor),
+                _buildFareRow("Base Fare", _bookingDetails!['price'] ?? "₹0", textColor),
                 _buildFareRow("Tax & Fees", "₹0", textColor),
                 _buildFareRow("Tip", "₹0", textColor),
                 Divider(height: 24, color: Colors.grey.shade200),
-                _buildFareRow("Total", "₹320", textColor, isTotal: true),
+                _buildFareRow("Total", _bookingDetails!['price'] ?? "₹0", textColor, isTotal: true),
               ],
             ),
           ),

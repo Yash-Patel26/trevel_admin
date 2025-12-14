@@ -4,6 +4,7 @@ import '../../../../shared/widgets/app_bottom_bar.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../../trips/presentation/pages/my_bookings_page.dart';
 import 'saved_addresses_page.dart';
+import '../../../../features/auth/data/auth_repository.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -133,25 +134,53 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ],
       ),
-      bottomNavigationBar: AppBottomBar(
-        currentIndex: 2, 
-        onTap: (index) {
-          if (index == 0) {
-             Navigator.pushAndRemoveUntil(
-                context, 
-                MaterialPageRoute(builder: (context) => const HomePage()), 
-                (route) => false
-              );
-          } else if (index == 1) {
-             Navigator.pushAndRemoveUntil(
-                context, 
-                MaterialPageRoute(builder: (context) => const MyBookingsPage()), 
-                (route) => false
-              );
-          } else if (index == 2) {
-             Navigator.pop(context);
-          }
-        },
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () async {
+              // Basic Validation
+              if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Name and Email are required")));
+                 return;
+              }
+
+              // Create update payload
+              final data = {
+                "name": _nameController.text,
+                "email": _emailController.text,
+                "mobile": _phoneController.text, // Optional if backend supports updating phone
+              };
+
+              // Import AuthRepository if not already
+              // We'll trust imports are handled or add them
+              // Calling AuthRepository().updateProfile(data)
+              // Assuming AuthRepository is available. Importing it at top of file in next step if needed.
+              
+              showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator(color: Colors.amber)));
+
+              final success = await AuthRepository().updateProfile(data); // Needs import
+
+              if (context.mounted) {
+                Navigator.pop(context); // Close loader
+                if (success) {
+                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profile updated successfully")));
+                   Navigator.pop(context); // Go back to ProfilePage
+                } else {
+                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to update profile")));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("Save Changes", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
+        ),
       ),
     );
   }

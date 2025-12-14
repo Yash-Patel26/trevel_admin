@@ -430,18 +430,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 },
               ),
             ],
-          ),
-            ],
-          ),
-          GoRoute(
-            path: '/revenue',
-            name: 'revenue',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: RevenueDashboardPage()),
-          ),
-        ],
-      ),
-    ],
+            ),
+            GoRoute(
+              path: '/revenue',
+              name: 'revenue',
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: RevenueDashboardPage()),
+            ),
+          ],
+        ),
+      ],
   );
 });
 

@@ -73,5 +73,9 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 
 
+# Copy startup script
+COPY scripts/start.sh ./start.sh
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
+
 # Start the application
-CMD ["sh", "-c", "npm start"]
+CMD ["./start.sh", "npm", "start"]

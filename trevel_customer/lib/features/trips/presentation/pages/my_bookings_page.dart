@@ -200,8 +200,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     else if (status == "SEARCHING" || status == "PENDING" || status == "CONFIRMED") statusColor = Colors.lightBlueAccent;
 
     // Parse Date & Time
-    String dateStr = booking['pickup_date'] ?? "";
-    String timeStr = booking['pickup_time'] ?? "";
+    String dateStr = booking['pickupDate'] ?? "";
+    String timeStr = booking['pickupTime'] ?? "";
     
     // Attempt basic formatting if date resembles ISO
     if (dateStr.contains('T')) {
@@ -231,11 +231,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       child: RideBookingCard(
        date: displayDate,
        time: "", 
-       price: "₹${booking['final_price'] ?? booking['base_price'] ?? 0}",
+       price: "₹${booking['finalPrice'] ?? booking['basePrice'] ?? 0}",
        status: status,
        statusColor: statusColor, 
-       pickupLocation: booking['pickup_location'] ?? booking['pickup_city'] ?? "Unknown",
-       dropLocation: booking['dropoff_location'] ?? booking['destination_location'] ?? booking['destination_city'] ?? "Unknown",
+       pickupLocation: booking['pickupLocation'] ?? booking['pickupCity'] ?? "Unknown",
+       dropLocation: booking['dropoffLocation'] ?? booking['destinationLocation'] ?? booking['destinationCity'] ?? "Unknown",
        otp: booking['otp'] ?? "", 
        vehicleImage: "", 
       ),

@@ -1,9 +1,10 @@
 class ApiConstants {
-  static const String baseUrl = 'http://13.233.48.227:4000/api';
+  static const String baseUrl = 'http://localhost:4000/api';
   
   // Auth
   static const String login = '/mobile/auth/login-otp';
   static const String verifyOtp = '/mobile/auth/verify-otp';
+  static const String updateProfile = '/mobile/user/me';
 
   // Trips & Bookings
 
@@ -17,7 +18,7 @@ class ApiConstants {
   
   // Missing constants
   static const String sendOtp = '/mobile/auth/send-otp';
-  static const String clearAirports = '/mobile/airport/airports'; // Assuming this is correct based on missing member
+  static const String clearAirports = '/mobile/airport'; // Corrected endpoint
   static const String AirportEstimate = '/mobile/airport/estimate'; 
   static const String locationAutocomplete = '/mobile/location/autocomplete';
   static const String reverseGeocode = '/mobile/location/reverse-geocode';
