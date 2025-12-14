@@ -484,10 +484,11 @@ class _RideDetailPageState extends State<RideDetailPage> {
     Color textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
     
     // Use route coordinates if available, otherwise use default
-    final LatLng pickupLatLng = _routeCoordinates.isNotEmpty 
+    final bool hasRoute = _routeCoordinates != null && _routeCoordinates.isNotEmpty;
+    final LatLng pickupLatLng = hasRoute
         ? _routeCoordinates.first 
         : const LatLng(28.6139, 77.2090);
-    final LatLng dropLatLng = _routeCoordinates.isNotEmpty 
+    final LatLng dropLatLng = hasRoute
         ? _routeCoordinates.last 
         : const LatLng(28.6500, 77.2300);
     
@@ -511,11 +512,11 @@ class _RideDetailPageState extends State<RideDetailPage> {
     final Set<Polyline> polylines = {
       Polyline(
         polylineId: const PolylineId('route'),
-        points: _routeCoordinates.isNotEmpty ? _routeCoordinates : [pickupLatLng, dropLatLng],
+        points: hasRoute ? _routeCoordinates : [pickupLatLng, dropLatLng],
         color: Colors.blue,
         width: 4,
         // Remove dashed pattern for actual routes to show solid line
-        patterns: _routeCoordinates.isEmpty ? [PatternItem.dash(20), PatternItem.gap(10)] : [],
+        patterns: hasRoute ? [] : [PatternItem.dash(20), PatternItem.gap(10)],
       ),
     };
     
