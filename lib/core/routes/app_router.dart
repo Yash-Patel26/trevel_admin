@@ -26,6 +26,7 @@ import '../../features/drivers/presentation/onboarding/step5_training_page.dart'
 import '../../features/drivers/presentation/onboarding/step6_review_page.dart';
 import '../../features/rides/presentation/ride_detail_page.dart';
 import '../../features/rides/presentation/rides_page.dart';
+import '../../features/revenue/presentation/revenue_dashboard_page.dart';
 import '../../features/tickets/presentation/ticket_detail_page.dart';
 import '../../features/tickets/presentation/tickets_page.dart';
 import '../../features/users/presentation/user_detail_page.dart';
@@ -429,6 +430,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 },
               ),
             ],
+          ),
+            ],
+          ),
+          GoRoute(
+            path: '/revenue',
+            name: 'revenue',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: RevenueDashboardPage()),
           ),
         ],
       ),

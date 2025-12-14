@@ -477,3 +477,14 @@ model SavedLocation {
 
   @@map("saved_locations")
 }
+
+model PricingConfig {
+  id          String   @id @default(uuid())
+  serviceType String   @unique @map("service_type") // 'mini-travel', 'hourly-rental', 'airport-drop', 'airport-pickup'
+  config      Json     // Stores the pricing structure (tiers, rates, etc.)
+  isActive    Boolean  @default(true) @map("is_active")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   Int?     @map("updated_by") // Admin User ID
+
+  @@map("pricing_configs")
+}

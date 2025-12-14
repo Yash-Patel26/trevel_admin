@@ -198,6 +198,12 @@ class AppShell extends ConsumerWidget {
         Icons.route_outlined,
         checkAccess: () => PermissionChecker.canAccessRides(user),
       ),
+      _NavItem(
+        '/revenue',
+        'Revenue',
+        Icons.attach_money_outlined,
+        requiredPermission: 'dashboard:view', // Ideally revenue:manage
+      ),
     ];
 
     // Filter locations based on permissions

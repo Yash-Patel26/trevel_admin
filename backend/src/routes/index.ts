@@ -17,6 +17,8 @@ import s3Router from "./s3";
 import { mobileRouter } from "./mobile";
 import bookingsRouter from "./bookings";
 
+import { revenueRouter } from "./revenue";
+
 export const apiRouter = Router();
 
 apiRouter.use("/api/mobile", mobileRouter);
@@ -36,3 +38,4 @@ apiRouter.use(rolesRouter);
 apiRouter.use(ridesRouter);
 apiRouter.use(deleteRouter);
 apiRouter.use(s3Router);
+apiRouter.use(revenueRouter);

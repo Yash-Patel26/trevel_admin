@@ -1,15 +1,10 @@
+import prisma from "../prisma/client";
+import redisClient from "../config/redis";
 
-// Constants
+// --- Constants (Fallbacks) ---
 export const GST_RATE = 0.05;
 
-interface PricingTier {
-    minKm: number;
-    maxKm: number;
-    peakBasePrice: number;
-    nonPeakBasePrice: number;
-}
-
-const MINI_TRAVEL_PRICING: PricingTier[] = [
+const MINI_TRAVEL_PRICING_DEFAULT = [
     { minKm: 0.1, maxKm: 5, peakBasePrice: 189.52, nonPeakBasePrice: 189.52 },
     { minKm: 5.1, maxKm: 8, peakBasePrice: 284.76, nonPeakBasePrice: 237.14 },
     { minKm: 8.1, maxKm: 12, peakBasePrice: 380.00, nonPeakBasePrice: 284.76 },
@@ -20,12 +15,12 @@ const MINI_TRAVEL_PRICING: PricingTier[] = [
     { minKm: 25.5, maxKm: 30, peakBasePrice: 856.19, nonPeakBasePrice: 760.95 }
 ];
 
-const MINI_TRAVEL_BEYOND_30KM = {
+const MINI_TRAVEL_BEYOND_30KM_DEFAULT = {
     peak: { perKmRate: 25, baseCharge: 299 },
     nonPeak: { perKmRate: 20, baseCharge: 299 }
 };
 
-const PEAK_HOURS = {
+const PEAK_HOURS_DEFAULT = {
     miniTravel: [
         { start: 8, end: 11 },
         { start: 17, end: 21 }
@@ -36,20 +31,12 @@ const PEAK_HOURS = {
     ]
 };
 
-export const TOLERANCE_THRESHOLDS: Record<string, { tolerancePercent: number; mandatory: boolean; reason: string }> = {
-    fastest: { tolerancePercent: 30, mandatory: true, reason: 'Protects customers from traffic variations' },
-    shortest: { tolerancePercent: 20, mandatory: true, reason: 'Shorter routes are more predictable' },
-    balanced: { tolerancePercent: 15, mandatory: true, reason: 'Most strict for balanced routes' }
-};
-
-export const MAX_PRICE_INCREASE_CAP = 0.50;
-
-const AIRPORT_PRICING = {
+const AIRPORT_PRICING_DEFAULT = {
     drop: { basePrice: 951.43, totalPrice: 999 },
     pickup: { basePrice: 1189.52, totalPrice: 1249 }
 };
 
-export const HOURLY_RENTAL_PRICING: Record<number, { basePrice: number; totalPrice: number }> = {
+const HOURLY_RENTAL_PRICING_DEFAULT: Record<number, { basePrice: number; totalPrice: number }> = {
     2: { basePrice: 951.43, totalPrice: 999 },
     3: { basePrice: 1427.62, totalPrice: 1499 },
     4: { basePrice: 1903.81, totalPrice: 1999 },
@@ -63,13 +50,54 @@ export const HOURLY_RENTAL_PRICING: Record<number, { basePrice: number; totalPri
     12: { basePrice: 5713.33, totalPrice: 5999 }
 };
 
-// Functions
+export const TOLERANCE_THRESHOLDS: Record<string, { tolerancePercent: number; mandatory: boolean; reason: string }> = {
+    fastest: { tolerancePercent: 30, mandatory: true, reason: 'Protects customers from traffic variations' },
+    shortest: { tolerancePercent: 20, mandatory: true, reason: 'Shorter routes are more predictable' },
+    balanced: { tolerancePercent: 15, mandatory: true, reason: 'Most strict for balanced routes' }
+};
 
-/**
- * Get hour in IST (Indian Standard Time) for peak hour calculation
- * @param time - Date object (assumed to be in UTC) or time string (HH:mm)
- * @returns Hour in IST (0-23)
- */
+export const MAX_PRICE_INCREASE_CAP = 0.50;
+
+// --- Helper Functions ---
+
+async function getServicePricing(serviceType: string): Promise<any> {
+    const cacheKey = `pricing:${serviceType}`;
+    try {
+        const cached = await redisClient.get(cacheKey);
+        if (cached) return JSON.parse(cached);
+    } catch (e) {
+        // Redis error, proceed to DB
+    }
+
+    try {
+        const configRecord = await prisma.pricingConfig.findUnique({
+            where: { serviceType }
+        });
+
+        if (configRecord && configRecord.config) {
+            const config = configRecord.config;
+            // Cache for 10 minutes
+            try { await redisClient.setEx(cacheKey, 600, JSON.stringify(config)); } catch { }
+            return config;
+        }
+    } catch (e) {
+        console.error(`DB Error fetching pricing for ${serviceType}`, e);
+    }
+
+    // Fallbacks
+    if (serviceType === 'mini-travel') return {
+        tiers: MINI_TRAVEL_PRICING_DEFAULT,
+        beyond30Km: MINI_TRAVEL_BEYOND_30KM_DEFAULT,
+        gstRate: GST_RATE,
+        peakHours: PEAK_HOURS_DEFAULT.miniTravel
+    };
+    if (serviceType === 'airport-drop') return { pricing: AIRPORT_PRICING_DEFAULT.drop, gstRate: GST_RATE, peakHours: PEAK_HOURS_DEFAULT.airport };
+    if (serviceType === 'airport-pickup') return { pricing: AIRPORT_PRICING_DEFAULT.pickup, gstRate: GST_RATE, peakHours: PEAK_HOURS_DEFAULT.airport };
+    if (serviceType === 'hourly-rental') return { packages: HOURLY_RENTAL_PRICING_DEFAULT, gstRate: GST_RATE };
+
+    return null;
+}
+
 function getISTHour(time: Date | string): number {
     if (typeof time === 'string') {
         const timeMatch = time.match(/^(\d{2}):(\d{2})/);
@@ -84,49 +112,71 @@ function getISTHour(time: Date | string): number {
     return -1;
 }
 
-/**
- * Check if the given time falls within peak hours
- * @param time - Time as Date object (UTC) or string (HH:mm in IST)
- * @param serviceType - Type of service (miniTravel or airport)
- * @returns true if within peak hours, false otherwise
- */
-export function isPeakHours(time: string | Date, serviceType: "miniTravel" | "airport" = 'miniTravel'): boolean {
-    const hour = getISTHour(time);
-
-    if (hour < 0 || hour > 23) return false;
-
-    const peakHoursRanges = PEAK_HOURS[serviceType] || PEAK_HOURS.miniTravel;
-    return peakHoursRanges.some(range => {
+function isPeak(hour: number, ranges: any[]): boolean {
+    if (!ranges) return false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return ranges.some((range: any) => {
         return (range.start <= range.end)
             ? (hour >= range.start && hour < range.end)
             : (hour >= range.start || hour < range.end);
     });
 }
 
-function calculateGST(basePrice: number): number {
-    return Math.round((basePrice * GST_RATE) * 100) / 100;
+/**
+ * Check if the given time is within peak hours.
+ * Uses cached config from DB.
+ */
+export async function isPeakHours(time: string | Date, serviceType: "miniTravel" | "airport" = 'miniTravel'): Promise<boolean> {
+    // Map serviceType to simplified keys used in DB config
+    const dbKey = serviceType === 'airport' ? 'airport-drop' : 'mini-travel';
+    // Note: airport-drop/pickup share peak hours in our default seed, so airport-drop is fine.
+
+    const config = await getServicePricing(dbKey);
+    const peakRanges = config.peakHours || (serviceType === 'airport' ? PEAK_HOURS_DEFAULT.airport : PEAK_HOURS_DEFAULT.miniTravel);
+
+    const hour = getISTHour(time);
+    return isPeak(hour, peakRanges);
 }
 
-export function calculateMiniTravelPrice(distanceKm: number, pickupTime: Date | string) {
+function calculateGST(basePrice: number, rate: number = GST_RATE): number {
+    return Math.round((basePrice * rate) * 100) / 100;
+}
+
+// --- Main Pricing Functions (ASYNC) ---
+
+export async function calculateMiniTravelPrice(distanceKm: number, pickupTime: Date | string) {
     if (!distanceKm || distanceKm <= 0) throw new Error('Distance must be greater than 0');
 
-    const isPeak = isPeakHours(pickupTime, 'miniTravel');
+    const config = await getServicePricing('mini-travel');
+    const tiers = config.tiers || MINI_TRAVEL_PRICING_DEFAULT;
+    const beyond30 = config.beyond30Km || MINI_TRAVEL_BEYOND_30KM_DEFAULT;
+    const peakRanges = config.peakHours || PEAK_HOURS_DEFAULT.miniTravel;
+    const gstRate = config.gstRate ?? GST_RATE;
+
+    const hour = getISTHour(pickupTime);
+    const isPeakTime = isPeak(hour, peakRanges);
+
     let basePrice = 0;
     let gstAmount = 0;
     let finalPrice = 0;
 
     if (distanceKm <= 30) {
-        const pricingTier = MINI_TRAVEL_PRICING.find(tier => distanceKm >= tier.minKm && distanceKm <= tier.maxKm);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pricingTier = tiers.find((tier: any) => distanceKm >= tier.minKm && distanceKm <= tier.maxKm);
         if (!pricingTier) throw new Error(`No pricing tier found for distance: ${distanceKm} km`);
 
-        basePrice = isPeak ? pricingTier.peakBasePrice : pricingTier.nonPeakBasePrice;
-        gstAmount = calculateGST(basePrice);
+        basePrice = isPeakTime ? pricingTier.peakBasePrice : pricingTier.nonPeakBasePrice;
+        gstAmount = calculateGST(basePrice, gstRate);
         finalPrice = Math.round(basePrice + gstAmount);
     } else {
-        const config = isPeak ? MINI_TRAVEL_BEYOND_30KM.peak : MINI_TRAVEL_BEYOND_30KM.nonPeak;
+        const settings = isPeakTime ? beyond30.peak : beyond30.nonPeak;
         const billableKm = Math.ceil(distanceKm);
-        const finalBeforeTax = billableKm * config.perKmRate + config.baseCharge;
-        const baseRaw = finalBeforeTax / (1 + GST_RATE);
+
+        const rate = settings.perKmRate;
+        const charge = settings.baseCharge;
+
+        const finalBeforeTax = billableKm * rate + charge;
+        const baseRaw = finalBeforeTax / (1 + gstRate);
         basePrice = Math.round(baseRaw * 100) / 100;
         gstAmount = Math.round((finalBeforeTax - basePrice) * 100) / 100;
         finalPrice = Math.round(finalBeforeTax);
@@ -136,60 +186,78 @@ export function calculateMiniTravelPrice(distanceKm: number, pickupTime: Date | 
         basePrice,
         gstAmount,
         finalPrice,
-        isPeakHours: isPeak,
+        isPeakHours: isPeakTime,
         distanceKm: Math.round(distanceKm * 100) / 100
     };
 }
 
-// ... Additional exports for Airport/Hourly if needed ...
-export function calculateAirportDropPrice(pickupTime: Date | string) {
-    const isPeak = isPeakHours(pickupTime, 'airport');
-    // Mobile backend apparently used flat rates for airport but we have structure.
-    // Based on AIRPORT_PRICING constant:
-    const { basePrice, totalPrice } = AIRPORT_PRICING.drop;
-    const gstAmount = Math.round((totalPrice - basePrice) * 100) / 100;
+export async function calculateAirportDropPrice(pickupTime: Date | string) {
+    const config = await getServicePricing('airport-drop');
+    const pricing = config.pricing || AIRPORT_PRICING_DEFAULT.drop;
+    const peakRanges = config.peakHours || PEAK_HOURS_DEFAULT.airport;
+    const gstRate = config.gstRate ?? GST_RATE;
+
+    // Fallback logic if DB config is partial
+    // assuming pricing has basePrice/totalPrice
+
+    const hour = getISTHour(pickupTime);
+    const isPeakTime = isPeak(hour, peakRanges);
+
+    const { basePrice, totalPrice } = pricing;
+    const calculatedGst = Math.round((totalPrice - basePrice) * 100) / 100;
 
     return {
         basePrice,
-        gstAmount,
+        gstAmount: calculatedGst,
         finalPrice: totalPrice,
-        isPeakHours: isPeak
+        isPeakHours: isPeakTime
     };
 }
 
-export function calculateAirportPickupPrice(pickupTime: Date | string) {
-    const isPeak = isPeakHours(pickupTime, 'airport');
-    const { basePrice, totalPrice } = AIRPORT_PRICING.pickup;
-    const gstAmount = Math.round((totalPrice - basePrice) * 100) / 100;
+export async function calculateAirportPickupPrice(pickupTime: Date | string) {
+    const config = await getServicePricing('airport-pickup');
+    const pricing = config.pricing || AIRPORT_PRICING_DEFAULT.pickup;
+    const peakRanges = config.peakHours || PEAK_HOURS_DEFAULT.airport;
+
+    const hour = getISTHour(pickupTime);
+    const isPeakTime = isPeak(hour, peakRanges);
+
+    const { basePrice, totalPrice } = pricing;
+    const calculatedGst = Math.round((totalPrice - basePrice) * 100) / 100;
 
     return {
         basePrice,
-        gstAmount,
+        gstAmount: calculatedGst,
         finalPrice: totalPrice,
-        isPeakHours: isPeak
+        isPeakHours: isPeakTime
     };
 }
 
-export function calculateHourlyRentalPrice(hours: number) {
-    // Round up to nearest hour or handle half hours? Mobile backend key is explicit integer.
+export async function calculateHourlyRentalPrice(hours: number) {
+    const config = await getServicePricing('hourly-rental');
+    const packages = config.packages || HOURLY_RENTAL_PRICING_DEFAULT;
+
+    // Round up to nearest hour
     const hourKey = Math.ceil(hours);
-    const pricing = HOURLY_RENTAL_PRICING[hourKey]; // What if > 12?
+    const pricing = packages[hourKey]; // packages is Record<string, ...> in JSON
 
     if (!pricing) {
-        // Fallback or error? Logic from mobile backend implies explicit keys.
-        // If not found, maybe max out or throw. 
-        // For now, defaulting to max or throwing.
         throw new Error(`Pricing not available for ${hours} hours`);
     }
 
     const { basePrice, totalPrice } = pricing;
-    const gstAmount = Math.round((totalPrice - basePrice) * 100) / 100;
+    const calculatedGst = Math.round((totalPrice - basePrice) * 100) / 100;
 
     return {
         basePrice,
-        gstAmount,
+        gstAmount: calculatedGst,
         finalPrice: totalPrice
     };
+}
+
+export async function getHourlyRentalPackages() {
+    const config = await getServicePricing('hourly-rental');
+    return config.packages || HOURLY_RENTAL_PRICING_DEFAULT;
 }
 
 export const pricingService = {
@@ -197,6 +265,8 @@ export const pricingService = {
     calculateAirportDropPrice,
     calculateAirportPickupPrice,
     calculateHourlyRentalPrice,
+    isPeakHours,
+    getHourlyRentalPackages,
     TOLERANCE_THRESHOLDS,
     MAX_PRICE_INCREASE_CAP
 };

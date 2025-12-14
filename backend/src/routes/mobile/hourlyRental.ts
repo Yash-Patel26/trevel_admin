@@ -3,13 +3,13 @@ import { z } from "zod";
 import prisma from "../../prisma/client";
 import { mobileAuthMiddleware } from "../../middleware/mobileAuth";
 import { validateBody } from "../../validation/validate";
-import { pricingService, HOURLY_RENTAL_PRICING } from "../../services/pricing";
+import { pricingService } from "../../services/pricing";
 import { syncHourlyRentalToBooking } from "../../services/bookingSync";
 
 const hourlyRentalRouter = Router();
 
 // Public route for info (vehicles & pricing)
-hourlyRentalRouter.get("/info", (req, res) => {
+hourlyRentalRouter.get("/info", async (req, res) => {
     // Mock vehicles similar to airport.ts but for hourly rentals
     // Ideally this should be in DB, but for now complying with request to Fetch from Backend via constant.
     const vehicles = [
@@ -43,11 +43,13 @@ hourlyRentalRouter.get("/info", (req, res) => {
         },
     ];
 
+    const pricing = await pricingService.getHourlyRentalPackages();
+
     res.json({
         success: true,
         data: {
             vehicles,
-            pricing: HOURLY_RENTAL_PRICING
+            pricing
         }
     });
 });

@@ -83,7 +83,7 @@ miniTripRouter.post("/estimate-trip", validateBody(estimateTripSchema), async (r
         );
 
         // 2. Calculate BASE Price (for Sedan/Standard)
-        const priceDetails = pricingService.calculateMiniTravelPrice(
+        const priceDetails = await pricingService.calculateMiniTravelPrice(
             routeInfo.distance_km,
             pickup_time || new Date()
         );
@@ -112,7 +112,7 @@ miniTripRouter.post("/estimate-trip", validateBody(estimateTripSchema), async (r
 miniTripRouter.post("/estimate", validateBody(estimateMiniTripSchema), async (req, res) => {
     try {
         const { distance_km, pickup_time } = req.body;
-        const priceDetails = pricingService.calculateMiniTravelPrice(distance_km, pickup_time);
+        const priceDetails = await pricingService.calculateMiniTravelPrice(distance_km, pickup_time);
         res.json({
             success: true,
             data: priceDetails
@@ -159,9 +159,10 @@ miniTripRouter.post("/bookings", validateBody(createMiniTripSchema), async (req,
         const pickupTimeObj = new Date(`1970-01-01T${isoTime}Z`);
 
         // Calculate estimated time based on distance
+        const isPeak = await pricingService.isPeakHours(data.pickup_time, 'miniTravel');
         const estimatedMinutes = calculateEstimatedTimeMinutes(
             data.estimated_distance_km,
-            pricingService.isPeakHours(data.pickup_time, 'miniTravel')
+            isPeak
         );
 
         const booking = await prisma.miniTripBooking.create({

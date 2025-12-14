@@ -61,8 +61,8 @@ airportRouter.post("/estimate", async (req, res) => {
         // Default to drop if not specified or invalid
         const isPickup = type === 'pickup';
         const pricing = isPickup
-            ? pricingService.calculateAirportPickupPrice(pickup_time || new Date())
-            : pricingService.calculateAirportDropPrice(pickup_time || new Date());
+            ? await pricingService.calculateAirportPickupPrice(pickup_time || new Date())
+            : await pricingService.calculateAirportDropPrice(pickup_time || new Date());
 
         const basePrice = pricing.finalPrice; // Using totalPrice as base for display
 
@@ -145,9 +145,10 @@ airportRouter.post("/to-airport/transfer-bookings", mobileAuthMiddleware, valida
         const pickupTimeObj = new Date(`1970-01-01T${data.pickup_time.length === 5 ? data.pickup_time + ':00' : data.pickup_time}Z`);
 
         // Calculate estimated time based on distance
+        const isPeak = await pricingService.isPeakHours(data.pickup_time, 'airport');
         const estimatedMinutes = calculateEstimatedTimeMinutes(
             data.estimated_distance_km,
-            pricingService.isPeakHours(data.pickup_time, 'airport')
+            isPeak
         );
 
         const booking = await prisma.toAirportTransferBooking.create({
@@ -190,9 +191,10 @@ airportRouter.post("/from-airport/transfer-bookings", mobileAuthMiddleware, vali
         const pickupTimeObj = new Date(`1970-01-01T${data.pickup_time.length === 5 ? data.pickup_time + ':00' : data.pickup_time}Z`);
 
         // Calculate estimated time based on distance
+        const isPeak = await pricingService.isPeakHours(data.pickup_time, 'airport');
         const estimatedMinutes = calculateEstimatedTimeMinutes(
             data.estimated_distance_km,
-            pricingService.isPeakHours(data.pickup_time, 'airport')
+            isPeak
         );
 
         const booking = await prisma.fromAirportTransferBooking.create({
