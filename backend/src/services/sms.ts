@@ -14,7 +14,7 @@ if (accountSid && authToken) {
 export const smsService = {
     sendOtpMessage: async ({ phone, name, otp }: { phone: string; name?: string; otp: string }) => {
         const message = `Your OTP for Trevel is ${otp}. Valid for 5 minutes.`;
-        
+
         // Development mode: Log to console
         console.log("\n" + "=".repeat(70));
         console.log("📱 OTP MESSAGE");
@@ -30,12 +30,19 @@ export const smsService = {
             try {
                 // Format phone number for international format
                 const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-                
-                // Use Twilio Verify API to send OTP
-                const verification = await twilioClient.verify.v2
+
+                // Use Twilio Verify API to send OTP with timeout
+                const sendPromise = twilioClient.verify.v2
                     .services(verifyServiceSid)
                     .verifications
                     .create({ to: formattedPhone, channel: 'sms' });
+
+                // Timeout after 5 seconds
+                const timeoutPromise = new Promise<any>((_, reject) =>
+                    setTimeout(() => reject(new Error('Twilio request timed out')), 5000)
+                );
+
+                const verification = await Promise.race([sendPromise, timeoutPromise]);
 
                 console.log(`✅ OTP sent successfully via Twilio Verify. Status: ${verification.status}`);
                 return { success: true, mode: 'production', status: verification.status };
@@ -64,7 +71,7 @@ export const smsService = {
         if (twilioClient) {
             try {
                 const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-                
+
                 // Note: You need a Twilio phone number for this
                 // For now, just log in development mode
                 console.log('ℹ️  Text message sending requires TWILIO_PHONE_NUMBER in .env');

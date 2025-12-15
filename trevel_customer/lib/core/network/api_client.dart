@@ -65,32 +65,7 @@ class ApiClient {
   }
 
   static String _getBaseUrl() {
-    // Production API URL (EC2 instance)
-    const String productionUrl = 'http://13.233.48.227:4000';
-
-    // For development, you can switch between production and local
-    const bool useProduction = false; // Set to false for local development
-
-    if (useProduction) {
-      return productionUrl;
-    }
-
-    if (kIsWeb) return 'http://localhost:4000/api';
-    
-    // Check for Desktop platforms (macOS, Windows, Linux)
-    if (defaultTargetPlatform == TargetPlatform.macOS || 
-        defaultTargetPlatform == TargetPlatform.windows || 
-        defaultTargetPlatform == TargetPlatform.linux) {
-      return 'http://localhost:4000/api';
-    }
-
-    // Android Emulator
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:4000/api';
-    }
-    
-    // iOS Simulator / Fallback
-    return 'http://localhost:4000/api';
+    return ApiConstants.baseUrl;
   }
 
   Dio get dio => _dio;
