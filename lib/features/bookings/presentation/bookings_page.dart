@@ -223,7 +223,7 @@ class BookingsPage extends ConsumerWidget {
                                           showDialog(
                                             context: context,
                                             builder: (context) => AssignBookingDialog(
-                                              bookingId: booking['id'] as int,
+                                              bookingId: booking['id'].toString(),
                                               onSuccess: () {
                                                 ref.invalidate(bookingsProvider);
                                               },

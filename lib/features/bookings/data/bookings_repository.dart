@@ -44,13 +44,13 @@ class BookingsRepository {
     return data.cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> getBooking(int bookingId) async {
+  Future<Map<String, dynamic>> getBooking(String bookingId) async {
     final response = await _dio.get('/bookings/$bookingId');
     return response.data as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> assignBooking({
-    required int bookingId,
+    required String bookingId,
     required String vehicleId,
     String? driverId,
   }) async {
@@ -62,7 +62,7 @@ class BookingsRepository {
   }
 
   Future<Map<String, dynamic>> validateOtp({
-    required int bookingId,
+    required String bookingId,
     required String otpCode,
   }) async {
     final response =
@@ -73,7 +73,7 @@ class BookingsRepository {
   }
 
   Future<Map<String, dynamic>> updateBookingStatus({
-    required int bookingId,
+    required String bookingId,
     required String status,
     DateTime? destinationTime,
     double? distanceKm,
@@ -88,7 +88,7 @@ class BookingsRepository {
   }
 
   Future<Map<String, dynamic>> completeBooking({
-    required int bookingId,
+    required String bookingId,
     DateTime? destinationTime,
     double? distanceKm,
   }) async {
@@ -101,7 +101,7 @@ class BookingsRepository {
   }
 
   Future<Map<String, dynamic>> cancelBooking({
-    required int bookingId,
+    required String bookingId,
     String? reason,
   }) async {
     final response = await _dio.post('/bookings/$bookingId/cancel', data: {
@@ -111,7 +111,7 @@ class BookingsRepository {
   }
 
   Future<Map<String, dynamic>> updateBookingLocations({
-    required int bookingId,
+    required String bookingId,
     String? pickupLocation,
     String? destinationLocation,
     double? pickupLatitude,

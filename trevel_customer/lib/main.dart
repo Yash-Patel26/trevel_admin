@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:trevel_customer/features/splash/presentation/pages/splash_page.dart';
 import 'core/theme/theme_manager.dart';
+import 'core/services/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().initialize();
   runApp(const TrevelCustomerApp());
 }
 

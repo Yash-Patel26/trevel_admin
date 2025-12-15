@@ -337,7 +337,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 name: 'booking-detail',
                 pageBuilder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return MaterialPage(child: BookingDetailPage(bookingId: id));
                 },
                 routes: [
@@ -345,7 +345,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'edit-location',
                     name: 'booking-edit-location',
                     pageBuilder: (context, state) {
-                      final id = int.parse(state.pathParameters['id']!);
+                      final id = state.pathParameters['id']!;
                       return MaterialPage(
                         child: EditBookingLocationPage(bookingId: id),
                       );

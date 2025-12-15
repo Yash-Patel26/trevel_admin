@@ -5,6 +5,8 @@ import '../../../../shared/widgets/app_bottom_bar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../core/services/location_service.dart';
 import '../../data/trips_repository.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/services/directions_service.dart';
 import 'my_bookings_page.dart';
 
 class MiniTripsPage extends StatefulWidget {
@@ -25,6 +27,13 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
   final TextEditingController _destinationController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
+
+  // Map State
+  GoogleMapController? _mapController;
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
+  LatLng _initialPosition = const LatLng(12.9716, 77.5946); // Default Bangalore
+  final DirectionsService _directionsService = DirectionsService();
 
   // Vehicle options - fetched from backend
   List<Map<String, dynamic>> _vehicles = [];
@@ -71,6 +80,9 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
       final locationService = LocationService();
       final position = await locationService.getCurrentLocation();
       if (position != null) {
+        // Update Map
+        await _updateMapLocation(position.latitude, position.longitude);
+        
         final addressData = await locationService.getAddressFromCoordinates(position.latitude, position.longitude);
         if (addressData != null && addressData['formatted_address'] != null) {
           setState(() {
@@ -103,12 +115,67 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
     _phoneController.clear();
   }
 
+  Future<void> _updateMapLocation(double lat, double lng) async {
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(lat, lng), 15));
+    setState(() {
+      _markers.add(Marker(
+        markerId: const MarkerId('current_loc'),
+        position: LatLng(lat, lng),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      ));
+    });
+  }
+
+  Future<void> _drawRoute(String pickup, String dropoff) async {
+    try {
+        final coordinates = await _directionsService.getRoute(pickup, dropoff);
+        if (coordinates.isNotEmpty) {
+            setState(() {
+                _polylines.add(Polyline(
+                    polylineId: const PolylineId('route'),
+                    points: coordinates,
+                    color: Colors.blue,
+                    width: 5,
+                ));
+                // Add markers for pickup and dropoff
+                _markers.add(Marker(markerId: const MarkerId('pickup'), position: coordinates.first, icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen)));
+                _markers.add(Marker(markerId: const MarkerId('dropoff'), position: coordinates.last));
+            });
+            
+            // Zoom to fit
+            LatLngBounds bounds = _boundsFromLatLngList(coordinates);
+            _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+        }
+    } catch (e) {
+        print("Error drawing route: $e");
+    }
+  }
+  
+  LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
+    double? x0, x1, y0, y1;
+    for (LatLng latLng in list) {
+      if (x0 == null) {
+        x0 = x1 = latLng.latitude;
+        y0 = y1 = latLng.longitude;
+      } else {
+        if (latLng.latitude > x1!) x1 = latLng.latitude;
+        if (latLng.latitude < x0) x0 = latLng.latitude;
+        if (latLng.longitude > y1!) y1 = latLng.longitude;
+        if (latLng.longitude < y0!) y0 = latLng.longitude;
+      }
+    }
+    return LatLngBounds(northeast: LatLng(x1!, y1!), southwest: LatLng(x0!, y0!));
+  }
+
   Future<bool> _estimateTrip() async {
+    // Draw route first for visual feedback
+    _drawRoute(_pickupController.text, _destinationController.text);
+
     final data = await TripsRepository().estimateMiniTrip(
         _pickupController.text, 
         _destinationController.text
     );
-
+    
     if (data != null) {
         final distKm = (data['distance_km'] as num).toDouble();
         final durationMin = (data['duration_min'] as num).toInt();
@@ -292,6 +359,26 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // --- Map View ---
+        Container(
+          height: 200,
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.amber.withOpacity(0.5)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(target: _initialPosition, zoom: 12),
+              onMapCreated: (controller) => _mapController = controller,
+              markers: _markers,
+              polylines: _polylines,
+              myLocationEnabled: true,
+              zoomControlsEnabled: true,
+            ),
+          ),
+        ),
         // --- Pickup Date & Time ---
         Row(
           children: [

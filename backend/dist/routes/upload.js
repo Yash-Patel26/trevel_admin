@@ -58,14 +58,7 @@ async (req, res) => {
         try {
             // Upload to S3 manually
             const { uploadToS3 } = await Promise.resolve().then(() => __importStar(require("../middleware/upload")));
-            // Get optional entity information from request body
-            const entityType = req.body.entityType;
-            const entityId = req.body.entityId;
-            const documentType = req.body.documentType;
-            const { location, key, signedUrl } = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype, entityType, // Pass entity type (e.g., "drivers")
-            entityId, // Pass entity ID (e.g., mobile number)
-            documentType // Pass document type (e.g., "PAN_Card")
-            );
+            const { location, key, signedUrl } = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
             return res.json({
                 message: "File uploaded successfully",
                 file: {
@@ -73,9 +66,9 @@ async (req, res) => {
                     originalName: req.file.originalname,
                     mimetype: req.file.mimetype,
                     size: req.file.size,
-                    url: location, // Direct S3 URL (publicly accessible since bucket is public)
+                    url: signedUrl, // short-lived signed URL for client access
                     path: key,
-                    location, // raw S3 URL
+                    location, // raw S3 URL (not publicly accessible if bucket is private)
                 },
             });
         }
@@ -112,7 +105,7 @@ async (req, res) => {
                     originalName: f.originalname,
                     mimetype: f.mimetype,
                     size: f.size,
-                    url: location, // Direct S3 URL (publicly accessible since bucket is public)
+                    url: signedUrl, // short-lived signed URL for client access
                     path: key,
                     location,
                 };

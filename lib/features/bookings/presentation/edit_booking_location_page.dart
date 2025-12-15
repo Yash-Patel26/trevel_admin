@@ -10,7 +10,7 @@ class EditBookingLocationPage extends ConsumerStatefulWidget {
     required this.bookingId,
   });
 
-  final int bookingId;
+  final String bookingId;
 
   @override
   ConsumerState<EditBookingLocationPage> createState() =>

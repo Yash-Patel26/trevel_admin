@@ -38,8 +38,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadMultiple = exports.uploadSingle = exports.upload = exports.s3Client = void 0;
 exports.uploadToS3 = uploadToS3;
-exports.deleteFromS3 = deleteFromS3;
 exports.getSignedUrlForKey = getSignedUrlForKey;
+exports.deleteFromS3 = deleteFromS3;
 const multer_1 = __importDefault(require("multer"));
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
@@ -77,21 +77,15 @@ exports.uploadSingle = exports.upload.single("image");
 // Multiple files upload middleware
 exports.uploadMultiple = exports.upload.array("images", 10);
 // Helper function to upload buffer to S3 with entity-based folder organization
-// Structure: {entityType}/{entityId}/{documentType}/file.ext
-// Example: drivers/9876543210/PAN_Card/pan_image.jpg
 async function uploadToS3(buffer, filename, mimetype, entityType, // e.g., "drivers", "vehicles"
-entityId, // e.g., mobile number or vehicle ID
-documentType // e.g., "PAN_Card", "Aadhar_Card", "Driving_License", "Police_Verification"
+entityId // e.g., driver ID or vehicle ID
 ) {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
-    // Organize files by entity type, ID, and document type if provided
-    // Example: drivers/9876543210/PAN_Card/1234567890-pan.jpg
+    // Organize files by entity type and ID if provided
+    // Example: drivers/123/1234567890-profile.jpg
     let key;
-    if (entityType && entityId && documentType) {
-        key = `${entityType}/${entityId}/${documentType}/${uniqueSuffix}-${safeName}`;
-    }
-    else if (entityType && entityId) {
+    if (entityType && entityId) {
         key = `${entityType}/${entityId}/${uniqueSuffix}-${safeName}`;
     }
     else {
@@ -113,20 +107,18 @@ documentType // e.g., "PAN_Card", "Aadhar_Card", "Driving_License", "Police_Veri
     );
     return { location, key, signedUrl };
 }
-/**
- * Delete a file from S3
- */
-async function deleteFromS3(key) {
-    const { DeleteObjectCommand } = await Promise.resolve().then(() => __importStar(require("@aws-sdk/client-s3")));
-    await exports.s3Client.send(new DeleteObjectCommand({
-        Bucket: env_1.env.aws.bucketName,
-        Key: key,
-    }));
-}
 // Helper to create a signed URL for an existing key
 async function getSignedUrlForKey(key, expiresInSeconds = 900) {
     return (0, s3_request_presigner_1.getSignedUrl)(exports.s3Client, new client_s3_1.GetObjectCommand({
         Bucket: env_1.env.aws.bucketName,
         Key: key,
     }), { expiresIn: expiresInSeconds });
+}
+// Helper function to delete a file from S3
+async function deleteFromS3(key) {
+    const { DeleteObjectCommand } = await Promise.resolve().then(() => __importStar(require("@aws-sdk/client-s3")));
+    await exports.s3Client.send(new DeleteObjectCommand({
+        Bucket: env_1.env.aws.bucketName,
+        Key: key,
+    }));
 }

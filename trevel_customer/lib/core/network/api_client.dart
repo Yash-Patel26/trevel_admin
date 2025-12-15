@@ -1,12 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   late Dio _dio;
-  final _storage = const FlutterSecureStorage();
 
   factory ApiClient() {
     return _instance;
@@ -39,7 +38,8 @@ class ApiClient {
           }
 
           // Add Auth Token if available
-          final token = await _storage.read(key: 'auth_token');
+          final prefs = await SharedPreferences.getInstance();
+          final token = prefs.getString('auth_token');
           if (token != null) {
             print("🔑 Adding Auth Token: Bearer ${token.substring(0, 10)}...");
             options.headers['Authorization'] = 'Bearer $token';

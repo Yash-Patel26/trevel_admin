@@ -1,10 +1,9 @@
 import 'package:local_auth/local_auth.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 
 class BiometricService {
   final LocalAuthentication _auth = LocalAuthentication();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   static const String _biometricEnabledKey = 'biometric_enabled';
 
   Future<bool> isDeviceSupported() async {
@@ -35,11 +34,12 @@ class BiometricService {
   }
 
   Future<void> setBiometricEnabled(bool enabled) async {
-    await _storage.write(key: _biometricEnabledKey, value: enabled.toString());
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_biometricEnabledKey, enabled);
   }
 
   Future<bool> isBiometricEnabled() async {
-    final String? val = await _storage.read(key: _biometricEnabledKey);
-    return val == 'true';
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_biometricEnabledKey) ?? false;
   }
 }

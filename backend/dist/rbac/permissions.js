@@ -25,6 +25,7 @@ exports.PERMISSIONS = [
     "reports:view",
     "audit:view",
     "customer:view",
+    "customer:create",
     "booking:create",
     "booking:view",
     "booking:assign",

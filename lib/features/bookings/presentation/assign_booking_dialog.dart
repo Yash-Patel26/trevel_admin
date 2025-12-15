@@ -5,7 +5,7 @@ import '../../vehicles/data/vehicles_repository.dart';
 import '../data/bookings_repository.dart';
 
 class AssignBookingDialog extends ConsumerStatefulWidget {
-  final int bookingId;
+  final String bookingId;
   final VoidCallback onSuccess;
 
   const AssignBookingDialog({

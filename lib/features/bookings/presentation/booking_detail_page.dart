@@ -5,13 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../data/bookings_repository.dart';
 
 final bookingDetailProvider = FutureProvider.autoDispose
-    .family<Map<String, dynamic>, int>((ref, bookingId) async {
+    .family<Map<String, dynamic>, String>((ref, bookingId) async {
   final repo = ref.watch(bookingsRepositoryProvider);
   return await repo.getBooking(bookingId);
 });
 
 class BookingDetailPage extends ConsumerWidget {
-  final int bookingId;
+  final String bookingId;
 
   const BookingDetailPage({super.key, required this.bookingId});
 

@@ -31,18 +31,18 @@ class ApiClient {
     }
 
     // Local development URLs
-    if (kIsWeb) return 'http://localhost:4000/api';
+    if (kIsWeb) return 'http://localhost:4000/';
     
     // Check for Desktop platforms (macOS, Windows, Linux)
     if (defaultTargetPlatform == TargetPlatform.macOS || 
         defaultTargetPlatform == TargetPlatform.windows || 
         defaultTargetPlatform == TargetPlatform.linux) {
-      return 'http://localhost:4000/api';
+      return 'http://localhost:4000/';
     }
 
     // Android Emulator
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:4000/api';
+      return 'http://10.0.2.2:4000/';
     }
     
     // iOS Simulator / Fallback

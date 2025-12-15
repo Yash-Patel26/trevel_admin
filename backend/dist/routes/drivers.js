@@ -212,7 +212,7 @@ exports.driversRouter.get("/drivers/check-mobile", (0, permissions_1.requirePerm
     return res.json({ exists: !!existingDriver, driver: existingDriver });
 });
 exports.driversRouter.post("/drivers/:id/background", (0, permissions_1.requirePermissions)(["driver:verify"]), (0, validate_1.validateBody)(schemas_1.driverBackgroundSchema), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { status, notes } = req.body;
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
@@ -245,7 +245,7 @@ exports.driversRouter.post("/drivers/:id/background", (0, permissions_1.requireP
     return res.json(bg);
 });
 exports.driversRouter.post("/drivers/:id/training", (0, permissions_1.requirePermissions)(["driver:train"]), (0, validate_1.validateBody)(schemas_1.driverTrainingSchema), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { module, status } = req.body;
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
@@ -313,7 +313,7 @@ exports.driversRouter.post("/drivers/:id/training", (0, permissions_1.requirePer
     return res.json({ ...training, driver: updatedDriver, allCompleted });
 });
 exports.driversRouter.post("/drivers/:id/approve", (0, permissions_1.requirePermissions)(["driver:approve"]), (0, validate_1.validateBody)(schemas_1.driverApproveSchema), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { decision } = req.body;
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
@@ -354,7 +354,7 @@ exports.driversRouter.post("/drivers/:id/approve", (0, permissions_1.requirePerm
 });
 // Get comprehensive audit trail for a driver
 exports.driversRouter.get("/drivers/:id/audit-trail", (0, permissions_1.requirePermissions)(["driver:view"]), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
         return res.status(404).json({ message: "Not found" });
@@ -585,7 +585,7 @@ exports.driversRouter.get("/drivers/:id/audit-trail", (0, permissions_1.requireP
     });
 });
 exports.driversRouter.post("/drivers/:id/assign-vehicle", (0, permissions_1.requirePermissions)(["driver:assign", "vehicle:assign"]), (0, validate_1.validateBody)(schemas_1.assignVehicleSchema), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { vehicleId } = req.body;
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
@@ -619,7 +619,7 @@ exports.driversRouter.post("/drivers/:id/assign-vehicle", (0, permissions_1.requ
     return res.json({ ...assignment, driver: updatedDriver });
 });
 exports.driversRouter.get("/drivers/:id/logs", async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
         return res.status(404).json({ message: "Driver not found" });
@@ -638,7 +638,7 @@ exports.driversRouter.get("/drivers/:id/logs", async (req, res) => {
 });
 // Get driver documents
 exports.driversRouter.get("/drivers/:id/documents", async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const driver = await client_2.default.driver.findUnique({ where: { id } });
     if (!driver)
         return res.status(404).json({ message: "Driver not found" });
@@ -664,7 +664,7 @@ exports.driversRouter.post("/drivers/:id/documents", (0, permissions_1.requirePe
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
-        const id = Number(req.params.id);
+        const id = req.params.id;
         const { type } = req.body;
         if (!type) {
             return res.status(400).json({ message: "Document type is required" });
@@ -712,7 +712,7 @@ exports.driversRouter.post("/drivers/:id/documents", (0, permissions_1.requirePe
 });
 // Delete driver document
 exports.driversRouter.delete("/drivers/:id/documents/:documentId", (0, permissions_1.requirePermissions)(["driver:edit", "driver:delete"]), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const documentId = Number(req.params.documentId);
     try {
         const driver = await client_2.default.driver.findUnique({ where: { id } });
@@ -768,7 +768,7 @@ exports.driversRouter.delete("/drivers/:id/documents/:documentId", (0, permissio
 });
 // Verify driver document
 exports.driversRouter.post("/drivers/:id/documents/:documentId/verify", (0, permissions_1.requirePermissions)(["driver:verify"]), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const documentId = Number(req.params.documentId);
     const { status } = req.body;
     try {
@@ -809,7 +809,7 @@ exports.driversRouter.post("/drivers/:id/documents/:documentId/verify", (0, perm
 // Delete driver - permanently removes driver and all associated data
 exports.driversRouter.delete("/drivers/:id", auth_1.authMiddleware, // Only requires authentication, no specific permissions
 async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     try {
         // Check if driver exists
         const driver = await client_2.default.driver.findUnique({

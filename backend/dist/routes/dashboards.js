@@ -26,7 +26,7 @@ exports.dashboardsRouter.get("/dashboards/fleet", (0, permissions_1.requirePermi
     });
 });
 exports.dashboardsRouter.get("/dashboards/vehicle/:id", (0, permissions_1.requirePermissions)(["dashboard:view"]), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const vehicle = await client_1.default.vehicle.findUnique({ where: { id } });
     if (!vehicle)
         return res.status(404).json({ message: "Not found" });
@@ -38,7 +38,7 @@ exports.dashboardsRouter.get("/dashboards/drivers", (0, permissions_1.requirePer
     return res.json({ drivers });
 });
 exports.dashboardsRouter.get("/dashboards/driver/:id", (0, permissions_1.requirePermissions)(["dashboard:view"]), async (req, res) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const driver = await client_1.default.driver.findUnique({ where: { id } });
     if (!driver)
         return res.status(404).json({ message: "Not found" });

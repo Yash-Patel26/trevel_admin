@@ -37,13 +37,13 @@ dependencies:
   google_maps_flutter: ^2.14.0
   google_places_flutter: ^2.1.1
   dio: ^5.4.0
-  flutter_secure_storage: ^9.0.0
   shared_preferences: ^2.3.2
   provider: ^6.1.1
   flutter_svg: ^2.0.10
   local_auth: ^2.1.6
   geolocator: ^10.1.0
   url_launcher: ^6.3.2
+  flutter_local_notifications: ^19.5.0
 
 dev_dependencies:
   flutter_test:

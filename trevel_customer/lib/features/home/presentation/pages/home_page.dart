@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../shared/widgets/app_bottom_bar.dart';
@@ -8,9 +9,91 @@ import '../../../trips/presentation/pages/my_bookings_page.dart';
 import '../../../trips/presentation/pages/coming_soon_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../../features/trips/data/trips_repository.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Timer? _pollTimer;
+  List<dynamic> _previousBookings = [];
+  int _bookingCount = 0;
+  final TripsRepository _tripsRepo = TripsRepository();
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _startPolling();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    // Initial fetch
+    _checkBookings();
+    
+    // Poll every 15 seconds
+    _pollTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      _checkBookings();
+    });
+  }
+
+  Future<void> _checkBookings() async {
+    final bookings = await _tripsRepo.getBookings();
+    
+    // Calculate badge count (active bookings)
+    final activeCount = bookings.where((b) {
+      final status = b['status'].toString().toLowerCase();
+      return status != 'completed' && status != 'canceled' && status != 'cancelled';
+    }).length;
+
+    // Check for status changes
+    for (var booking in bookings) {
+      final id = booking['id'];
+      final currentStatus = booking['status'].toString().toLowerCase();
+      
+      // Find previous status
+      final previous = _previousBookings.firstWhere(
+        (b) => b['id'] == id, 
+        orElse: () => null
+      );
+
+      if (previous != null) {
+        final prevStatus = previous['status'].toString().toLowerCase();
+        if (prevStatus == 'pending' && currentStatus == 'assigned') { // Adjusted based on user request ('assign')
+           _notificationService.showNotification(
+             id: id is int ? id : id.hashCode,
+             title: 'Booking Update',
+             body: 'Your booking status has changed to Assigned!',
+           );
+        } else if (prevStatus != currentStatus && currentStatus == 'assigned') {
+            // Catch-all for other transitions to assigned
+             _notificationService.showNotification(
+             id: id is int ? id : id.hashCode,
+             title: 'Driver Assigned',
+             body: 'A driver has been assigned to your booking.',
+           );
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _previousBookings = bookings;
+        _bookingCount = activeCount;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,6 +313,7 @@ class HomePage extends StatelessWidget {
       ),
       bottomNavigationBar: AppBottomBar(
         currentIndex: 0, 
+        bookingCount: _bookingCount,
         onTap: (index) {
           if (index == 1) {
             Navigator.pushAndRemoveUntil(

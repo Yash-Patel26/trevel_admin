@@ -1,11 +1,10 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/api_constants.dart';
 
 class AuthRepository {
   final ApiClient _apiClient = ApiClient();
-  final _storage = const FlutterSecureStorage();
 
   /// Normalizes phone number by adding +91 prefix if not present
   String _normalizePhone(String phone) {
@@ -29,7 +28,8 @@ class AuthRepository {
   /// Creates a local demo session so users can explore without a backend OTP.
   Future<Map<String, dynamic>> loginAsDemo() async {
     const demoToken = 'demo_user_all_access';
-    await _storage.write(key: 'auth_token', value: demoToken);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', demoToken);
     return {
       'id': 'demo-user',
       'name': 'Demo Rider',
@@ -68,7 +68,8 @@ class AuthRepository {
         final data = response.data['data'];
         final token = data['token'];
         if (token != null) {
-          await _storage.write(key: 'auth_token', value: token);
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', token);
         }
         return data; // Return user data & token info
       }
@@ -80,7 +81,8 @@ class AuthRepository {
   }
 
   Future<bool> logout() async {
-    await _storage.delete(key: 'auth_token');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
     return true;
   }
 
