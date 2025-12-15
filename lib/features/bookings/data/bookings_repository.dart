@@ -45,7 +45,7 @@ class BookingsRepository {
   }
 
   Future<Map<String, dynamic>> getBooking(String bookingId) async {
-    final response = await _dio.get('/bookings/$bookingId');
+    final response = await _dio.get('/api/bookings/$bookingId');
     return response.data as Map<String, dynamic>;
   }
 
@@ -54,7 +54,7 @@ class BookingsRepository {
     required String vehicleId,
     String? driverId,
   }) async {
-    final response = await _dio.post('/bookings/$bookingId/assign', data: {
+    final response = await _dio.post('/api/bookings/$bookingId/assign', data: {
       'vehicleId': vehicleId,
       if (driverId != null) 'driverId': driverId,
     });
@@ -66,7 +66,7 @@ class BookingsRepository {
     required String otpCode,
   }) async {
     final response =
-        await _dio.post('/bookings/$bookingId/validate-otp', data: {
+        await _dio.post('/api/bookings/$bookingId/validate-otp', data: {
       'otpCode': otpCode,
     });
     return response.data as Map<String, dynamic>;
@@ -78,7 +78,7 @@ class BookingsRepository {
     DateTime? destinationTime,
     double? distanceKm,
   }) async {
-    final response = await _dio.patch('/bookings/$bookingId/status', data: {
+    final response = await _dio.patch('/api/bookings/$bookingId/status', data: {
       'status': status,
       if (destinationTime != null)
         'destinationTime': destinationTime.toIso8601String(),
@@ -92,7 +92,7 @@ class BookingsRepository {
     DateTime? destinationTime,
     double? distanceKm,
   }) async {
-    final response = await _dio.post('/bookings/$bookingId/complete', data: {
+    final response = await _dio.post('/api/bookings/$bookingId/complete', data: {
       if (destinationTime != null)
         'destinationTime': destinationTime.toIso8601String(),
       if (distanceKm != null) 'distanceKm': distanceKm,
@@ -104,7 +104,7 @@ class BookingsRepository {
     required String bookingId,
     String? reason,
   }) async {
-    final response = await _dio.post('/bookings/$bookingId/cancel', data: {
+    final response = await _dio.post('/api/bookings/$bookingId/cancel', data: {
       if (reason != null) 'reason': reason,
     });
     return response.data as Map<String, dynamic>;
@@ -119,7 +119,7 @@ class BookingsRepository {
     double? destinationLatitude,
     double? destinationLongitude,
   }) async {
-    final response = await _dio.patch('/bookings/$bookingId/locations', data: {
+    final response = await _dio.patch('/api/bookings/$bookingId/locations', data: {
       if (pickupLocation != null) 'pickupLocation': pickupLocation,
       if (destinationLocation != null)
         'destinationLocation': destinationLocation,

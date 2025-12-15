@@ -21,10 +21,6 @@ class BiometricService {
     try {
       final bool didAuthenticate = await _auth.authenticate(
         localizedReason: 'Please authenticate to access the app',
-        options: const AuthenticationOptions(
-          biometricOnly: false, 
-          stickyAuth: true,
-        ),
       );
       return didAuthenticate;
     } on PlatformException catch (e) {

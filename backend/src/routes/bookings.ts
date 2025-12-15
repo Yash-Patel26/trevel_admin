@@ -207,37 +207,96 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // Assign driver and vehicle to booking
 router.post('/:id/assign', authMiddleware, async (req, res) => {
     try {
+        const idParam = req.params.id;
         const { vehicleId, driverId } = req.body;
 
         if (!vehicleId && !driverId) {
             return res.status(400).json({ success: false, message: 'VehicleId or DriverId is required' });
         }
 
-        const updateData: any = {
-            status: 'assigned' // Auto update status to assigned
+        // Legacy bookings support both vehicleId and driverId
+        const legacyUpdateData: any = {
+            status: 'assigned'
         };
+        if (vehicleId) legacyUpdateData.vehicleId = vehicleId;
+        if (driverId) legacyUpdateData.driverId = driverId;
 
-        if (vehicleId) updateData.vehicleId = vehicleId;
-        if (driverId) updateData.driverId = driverId;
+        // Mobile bookings only support vehicleId (no driverId field in schema)
+        const mobileUpdateData: any = {
+            status: 'assigned'
+        };
+        if (vehicleId) mobileUpdateData.vehicleId = vehicleId;
+        // Note: Mobile booking tables don't have driverId field
 
-        const booking = await prisma.booking.update({
-            where: { id: parseInt(req.params.id) },
-            data: updateData,
-            include: {
-                customer: {
-                    select: {
-                        id: true,
-                        name: true,
-                        mobile: true,
-                        email: true
+        // Try Legacy Booking (Int ID) first
+        if (/^\d+$/.test(idParam)) {
+            try {
+                const booking = await prisma.booking.update({
+                    where: { id: parseInt(idParam) },
+                    data: legacyUpdateData,
+                    include: {
+                        customer: {
+                            select: {
+                                id: true,
+                                name: true,
+                                mobile: true,
+                                email: true
+                            }
+                        },
+                        vehicle: true,
+                        driver: true
                     }
-                },
-                vehicle: true,
-                driver: true
+                });
+                return res.json({ success: true, data: booking });
+            } catch (error) {
+                // If not found in legacy bookings, continue to try mobile bookings
+                console.log('Not found in legacy bookings, trying mobile bookings...');
             }
-        });
+        }
 
-        res.json({ success: true, data: booking });
+        // Try Mobile App Bookings (UUID) - check all booking types
+        const [mini, hourly, toAir, fromAir] = await Promise.all([
+            prisma.miniTripBooking.findUnique({ where: { id: idParam } }),
+            prisma.hourlyRentalBooking.findUnique({ where: { id: idParam } }),
+            prisma.toAirportTransferBooking.findUnique({ where: { id: idParam } }),
+            prisma.fromAirportTransferBooking.findUnique({ where: { id: idParam } })
+        ]);
+
+        const booking = mini || hourly || toAir || fromAir;
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+
+        // Determine which table to update (use mobileUpdateData without driverId)
+        let updatedBooking;
+        if (mini) {
+            updatedBooking = await prisma.miniTripBooking.update({
+                where: { id: idParam },
+                data: mobileUpdateData,
+                include: { user: true, vehicle: true }
+            });
+        } else if (hourly) {
+            updatedBooking = await prisma.hourlyRentalBooking.update({
+                where: { id: idParam },
+                data: mobileUpdateData,
+                include: { user: true, vehicle: true }
+            });
+        } else if (toAir) {
+            updatedBooking = await prisma.toAirportTransferBooking.update({
+                where: { id: idParam },
+                data: mobileUpdateData,
+                include: { user: true, vehicle: true }
+            });
+        } else if (fromAir) {
+            updatedBooking = await prisma.fromAirportTransferBooking.update({
+                where: { id: idParam },
+                data: mobileUpdateData,
+                include: { user: true, vehicle: true }
+            });
+        }
+
+        res.json({ success: true, data: updatedBooking });
     } catch (error) {
         console.error('Error assigning booking:', error);
         res.status(500).json({ success: false, message: 'Failed to assign booking' });

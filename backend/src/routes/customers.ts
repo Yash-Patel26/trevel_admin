@@ -27,11 +27,53 @@ customersRouter.get(
     const endOfToday = new Date(now);
     endOfToday.setHours(23, 59, 59, 999);
 
-    const [totalBookings, todaysBookings, upcomingBookings] = await Promise.all([
+    // Count bookings from all tables (legacy + mobile)
+    const [
+      legacyTotal,
+      legacyToday,
+      legacyUpcoming,
+      miniTotal,
+      miniToday,
+      miniUpcoming,
+      hourlyTotal,
+      hourlyToday,
+      hourlyUpcoming,
+      toAirTotal,
+      toAirToday,
+      toAirUpcoming,
+      fromAirTotal,
+      fromAirToday,
+      fromAirUpcoming
+    ] = await Promise.all([
+      // Legacy bookings
       prisma.booking.count(),
       prisma.booking.count({ where: { pickupTime: { gte: startOfToday, lte: endOfToday } } }),
       prisma.booking.count({ where: { pickupTime: { gt: now } } }),
+
+      // Mini trip bookings
+      prisma.miniTripBooking.count(),
+      prisma.miniTripBooking.count({ where: { pickupDate: { gte: startOfToday, lte: endOfToday } } }),
+      prisma.miniTripBooking.count({ where: { pickupDate: { gt: now } } }),
+
+      // Hourly rental bookings
+      prisma.hourlyRentalBooking.count(),
+      prisma.hourlyRentalBooking.count({ where: { pickupDate: { gte: startOfToday, lte: endOfToday } } }),
+      prisma.hourlyRentalBooking.count({ where: { pickupDate: { gt: now } } }),
+
+      // To airport bookings
+      prisma.toAirportTransferBooking.count(),
+      prisma.toAirportTransferBooking.count({ where: { pickupDate: { gte: startOfToday, lte: endOfToday } } }),
+      prisma.toAirportTransferBooking.count({ where: { pickupDate: { gt: now } } }),
+
+      // From airport bookings
+      prisma.fromAirportTransferBooking.count(),
+      prisma.fromAirportTransferBooking.count({ where: { pickupDate: { gte: startOfToday, lte: endOfToday } } }),
+      prisma.fromAirportTransferBooking.count({ where: { pickupDate: { gt: now } } }),
     ]);
+
+    const totalBookings = legacyTotal + miniTotal + hourlyTotal + toAirTotal + fromAirTotal;
+    const todaysBookings = legacyToday + miniToday + hourlyToday + toAirToday + fromAirToday;
+    const upcomingBookings = legacyUpcoming + miniUpcoming + hourlyUpcoming + toAirUpcoming + fromAirUpcoming;
 
     return res.json({
       totalBookings,
@@ -190,13 +232,84 @@ customersRouter.get(
   "/bookings/:id",
   requirePermissions(["customer:view", "dashboard:view"]),
   async (req, res) => {
-    const id = Number(req.params.id);
-    const booking = await prisma.booking.findUnique({
-      where: { id },
-      include: { customer: true },
-    });
-    if (!booking) return res.status(404).json({ message: "Not found" });
-    return res.json(booking);
+    const idParam = req.params.id;
+
+    try {
+      // 1. Try Legacy Booking (Int ID)
+      if (/^\d+$/.test(idParam)) {
+        const id = parseInt(idParam);
+        const booking = await prisma.booking.findUnique({
+          where: { id },
+          include: { customer: true },
+        });
+        if (booking) return res.json(booking);
+      }
+
+      // 2. Try Mobile App Bookings (UUID)
+      const [mini, hourly, toAir, fromAir] = await Promise.all([
+        prisma.miniTripBooking.findUnique({ where: { id: idParam }, include: { user: true, vehicle: true } }),
+        prisma.hourlyRentalBooking.findUnique({ where: { id: idParam }, include: { user: true, vehicle: true } }),
+        prisma.toAirportTransferBooking.findUnique({ where: { id: idParam }, include: { user: true, vehicle: true } }),
+        prisma.fromAirportTransferBooking.findUnique({ where: { id: idParam }, include: { user: true, vehicle: true } })
+      ]);
+
+      const item = mini || hourly || toAir || fromAir;
+
+      if (!item) {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      // Map to proper Booking response for Admin
+      let type = 'unknown';
+      if (mini) type = 'mini-trip';
+      else if (hourly) type = 'hourly';
+      else if (toAir) type = 'to-airport';
+      else if (fromAir) type = 'from-airport';
+
+      const resolveDateTime = (dateVal: Date, timeVal?: Date) => {
+        if (!timeVal) return dateVal;
+        const d = new Date(dateVal);
+        const t = new Date(timeVal);
+        d.setHours(t.getHours(), t.getMinutes(), t.getSeconds());
+        return d;
+      };
+
+      const pickupTime = resolveDateTime(item.pickupDate, item.pickupTime);
+
+      let destinationLocation = null;
+      if ((item as any).dropoffLocation) destinationLocation = (item as any).dropoffLocation;
+      else if ((item as any).destinationAirport) destinationLocation = (item as any).destinationAirport;
+
+      // Construct booking object matching schema for frontend
+      const booking = {
+        id: item.id,
+        customerId: item.userId,
+        customer: item.user,
+        pickupLocation: item.pickupLocation,
+        pickupLatitude: null,
+        pickupLongitude: null,
+        destinationLocation: destinationLocation,
+        destinationLatitude: null,
+        destinationLongitude: null,
+        pickupTime: pickupTime,
+        destinationTime: null,
+        vehicleModel: (item as any).vehicleSelected || item.vehicle?.model,
+        status: item.status,
+        vehicleId: item.vehicleId,
+        vehicle: item.vehicle,
+        driverId: null,
+        driver: null,
+        otpCode: null,
+        otpExpiresAt: null,
+        createdAt: item.createdAt
+      };
+
+      return res.json(booking);
+
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ message: "Internal server error" });
+    }
   }
 );
 
