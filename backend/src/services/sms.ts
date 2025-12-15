@@ -15,7 +15,7 @@ export const smsService = {
     sendOtpMessage: async ({ phone, name, otp }: { phone: string; name?: string; otp: string }) => {
         const message = `Your OTP for Trevel is ${otp}. Valid for 5 minutes.`;
 
-        // Development mode: Log to console
+        // Log to console for manual verification
         console.log("\n" + "=".repeat(70));
         console.log("📱 OTP MESSAGE");
         console.log("=".repeat(70));
@@ -25,40 +25,12 @@ export const smsService = {
         console.log(`Message: ${message}`);
         console.log("=".repeat(70) + "\n");
 
-        // Production mode: Send via Twilio Verify API
-        if (twilioClient && verifyServiceSid) {
-            try {
-                // Format phone number for international format
-                const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-
-                // Use Twilio Verify API to send OTP with timeout
-                const sendPromise = twilioClient.verify.v2
-                    .services(verifyServiceSid)
-                    .verifications
-                    .create({ to: formattedPhone, channel: 'sms' });
-
-                // Timeout after 5 seconds
-                const timeoutPromise = new Promise<any>((_, reject) =>
-                    setTimeout(() => reject(new Error('Twilio request timed out')), 5000)
-                );
-
-                const verification = await Promise.race([sendPromise, timeoutPromise]);
-
-                console.log(`✅ OTP sent successfully via Twilio Verify. Status: ${verification.status}`);
-                return { success: true, mode: 'production', status: verification.status };
-            } catch (error: any) {
-                console.error('❌ Twilio Verify Error:', error.message);
-                // Fallback to development mode on error
-                return { success: true, mode: 'development_fallback', error: error.message };
-            }
-        }
-
-        // No Twilio credentials: Development mode
-        return { success: true, mode: 'development' };
+        // Always return success immediately
+        return { success: true, mode: 'console_log' };
     },
 
     sendTextMessage: async ({ phone, message }: { phone: string; message: string }) => {
-        // Development mode: Log to console
+        // Log to console for manual verification
         console.log("\n" + "=".repeat(70));
         console.log("📱 TEXT MESSAGE");
         console.log("=".repeat(70));
@@ -66,22 +38,6 @@ export const smsService = {
         console.log(`Message: ${message}`);
         console.log("=".repeat(70) + "\n");
 
-        // For text messages, we still use the Messages API (not Verify)
-        // This is for notifications, not OTPs
-        if (twilioClient) {
-            try {
-                const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-
-                // Note: You need a Twilio phone number for this
-                // For now, just log in development mode
-                console.log('ℹ️  Text message sending requires TWILIO_PHONE_NUMBER in .env');
-                return { success: true, mode: 'development' };
-            } catch (error: any) {
-                console.error('❌ Twilio SMS Error:', error.message);
-                return { success: true, mode: 'development_fallback', error: error.message };
-            }
-        }
-
-        return { success: true, mode: 'development' };
+        return { success: true, mode: 'console_log' };
     }
 };
