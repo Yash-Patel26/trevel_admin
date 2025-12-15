@@ -49,7 +49,7 @@ class ApiClient {
     const String productionUrl = 'http://13.233.48.227:4000';
 
     // For development, you can switch between production and local
-    const bool useProduction = true; // Set to false for local development
+    const bool useProduction = false; // Set to false for local development
 
     if (useProduction) {
       return productionUrl;
@@ -63,8 +63,14 @@ class ApiClient {
         defaultTargetPlatform == TargetPlatform.linux) {
       return 'http://localhost:4000';
     }
+
+    // Android Emulator
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:4000';
+    }
     
-    return ApiConstants.baseUrl;
+    // iOS Simulator / Fallback
+    return 'http://localhost:4000';
   }
 
   Dio get dio => _dio;

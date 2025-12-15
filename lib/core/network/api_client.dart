@@ -24,7 +24,7 @@ class ApiClient {
     const String productionUrl = 'http://13.233.48.227:4000';
     
     // For development, you can switch between production and local
-    const bool useProduction = true; // Set to false for local development
+    const bool useProduction = false; // Set to false for local development
     
     if (useProduction) {
       return productionUrl;
