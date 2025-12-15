@@ -56,7 +56,7 @@ class DriversRepository {
   }
 
   Future<void> backgroundCheck({
-    required int driverId,
+    required String driverId,
     required String status,
     String? notes,
   }) async {
@@ -67,7 +67,7 @@ class DriversRepository {
   }
 
   Future<void> assignTraining({
-    required int driverId,
+    required String driverId,
     required String module,
     required String status,
   }) async {
@@ -78,7 +78,7 @@ class DriversRepository {
   }
 
   Future<void> approveDriver({
-    required int driverId,
+    required String driverId,
     required String decision,
   }) async {
     await _dio.post('/drivers/$driverId/approve', data: {
@@ -86,7 +86,7 @@ class DriversRepository {
     });
   }
 
-  Future<Map<String, dynamic>> getAuditTrail(int driverId) async {
+  Future<Map<String, dynamic>> getAuditTrail(String driverId) async {
     final response = await _dio.get('/drivers/$driverId/audit-trail');
     return response.data as Map<String, dynamic>;
   }
@@ -99,20 +99,20 @@ class DriversRepository {
   }
 
   Future<void> assignVehicle({
-    required int driverId,
-    required int vehicleId,
+    required String driverId,
+    required String vehicleId,
   }) async {
     await _dio.post('/drivers/$driverId/assign-vehicle', data: {
       'vehicleId': vehicleId,
     });
   }
 
-  Future<List<Map<String, dynamic>>> getDriverLogs(int driverId) async {
+  Future<List<Map<String, dynamic>>> getDriverLogs(String driverId) async {
     final response = await _dio.get('/drivers/$driverId/logs');
     return (response.data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  Future<List<DriverDocument>> getDriverDocuments(int driverId) async {
+  Future<List<DriverDocument>> getDriverDocuments(String driverId) async {
     final response = await _dio.get('/drivers/$driverId/documents');
     final data = response.data as List<dynamic>;
     return data.map((json) {
@@ -120,7 +120,7 @@ class DriversRepository {
       // Backend returns: id, type, url, status
       // We need to map to: id, name, type, fileUrl, uploadedAt
       return DriverDocument(
-        id: docJson['id'] as int,
+        id: docJson['id'].toString(),
         name: _formatDocumentName(docJson['type'] as String? ?? 'Document'),
         type: docJson['type'] as String? ?? '',
         fileUrl: docJson['url'] as String?, // Backend uses 'url' not 'fileUrl'
@@ -146,7 +146,7 @@ class DriversRepository {
   }
 
   Future<DriverDocument> uploadDriverDocument({
-    required int driverId,
+    required String driverId,
     required String filePath,
     required String type,
   }) async {
@@ -185,7 +185,7 @@ class DriversRepository {
     );
     final docJson = response.data as Map<String, dynamic>;
     return DriverDocument(
-      id: docJson['id'] as int,
+      id: docJson['id'].toString(),
       name: docJson['type'] as String? ?? 'Document',
       type: docJson['type'] as String? ?? '',
       fileUrl: docJson['url'] as String?,
@@ -213,21 +213,21 @@ class DriversRepository {
   }
 
   Future<void> deleteDriverDocument({
-    required int driverId,
-    required int documentId,
+    required String driverId,
+    required String documentId,
   }) async {
     await _dio.delete('/drivers/$driverId/documents/$documentId');
   }
 
-  Future<Map<String, dynamic>> deleteDriver(int driverId) async {
+  Future<Map<String, dynamic>> deleteDriver(String driverId) async {
     final response = await _dio.delete('/drivers/$driverId');
     return response.data as Map<String, dynamic>;
   }
 
 
   Future<DriverDocument> verifyDriverDocument({
-    required int driverId,
-    required int documentId,
+    required String driverId,
+    required String documentId,
     required String status,
   }) async {
     final response = await _dio.post(
@@ -236,7 +236,7 @@ class DriversRepository {
     );
     final docJson = response.data as Map<String, dynamic>;
     return DriverDocument(
-      id: docJson['id'] as int,
+      id: docJson['id'].toString(),
       name: docJson['type'] as String? ?? 'Document',
       type: docJson['type'] as String? ?? '',
       fileUrl: docJson['url'] as String?,
@@ -249,7 +249,7 @@ class DriversRepository {
   // Map backend response to Driver model
   Driver _driverFromBackendJson(Map<String, dynamic> json) {
     return Driver(
-      id: json['id'] as int,
+      id: json['id'].toString(),
       fullName: json['name'] as String? ?? json['fullName'] as String? ?? '',
       email: json['email'] as String? ?? '',
       mobile: json['mobile'] as String? ?? '',

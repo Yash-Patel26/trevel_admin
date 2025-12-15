@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/network/api_client.dart';
 import '../../../core/state/auth/auth_state.dart';
 import 'mock_auth_service.dart';

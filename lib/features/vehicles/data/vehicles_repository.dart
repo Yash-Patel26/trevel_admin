@@ -84,7 +84,7 @@ class VehiclesRepository {
   }
 
   Future<void> reviewVehicle({
-    required int vehicleId,
+    required String vehicleId,
     required String status,
     String? comments,
   }) async {
@@ -95,27 +95,27 @@ class VehiclesRepository {
   }
 
   Future<void> assignDriver({
-    required int vehicleId,
-    required int driverId,
+    required String vehicleId,
+    required String driverId,
   }) async {
     await _dio.post('/vehicles/$vehicleId/assign-driver', data: {
       'driverId': driverId,
     });
   }
 
-  Future<List<Map<String, dynamic>>> getVehicleLogs(int vehicleId) async {
+  Future<List<Map<String, dynamic>>> getVehicleLogs(String vehicleId) async {
     final response = await _dio.get('/vehicles/$vehicleId/logs');
     return (response.data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> getVehicleMetrics(int vehicleId) async {
+  Future<Map<String, dynamic>> getVehicleMetrics(String vehicleId) async {
     final response = await _dio.get('/vehicles/$vehicleId/metrics');
     return response.data as Map<String, dynamic>;
   }
 
   Future<void> reassignVehicle({
-    required int vehicleId,
-    required int newDriverId,
+    required String vehicleId,
+    required String newDriverId,
   }) async {
     await _dio.post('/vehicles/$vehicleId/reassign', data: {
       'driverId': newDriverId,
@@ -123,7 +123,7 @@ class VehiclesRepository {
   }
 
   Future<List<Map<String, dynamic>>> getVehicleAssignmentLogs(
-      int vehicleId) async {
+      String vehicleId) async {
     final response = await _dio.get('/vehicles/$vehicleId/assignment-logs');
     return (response.data as List<dynamic>).cast<Map<String, dynamic>>();
   }
@@ -133,7 +133,7 @@ class VehiclesRepository {
     // Backend uses: id, numberPlate, make, model, status, createdAt, etc.
     // Frontend model expects: id, vehicleNumber, make, model, year, color, licensePlate, status, type, etc.
     return Vehicle(
-      id: json['id'] as int,
+      id: json['id'].toString(), // Ensure String
       vehicleNumber: json['numberPlate'] as String? ??
           json['vehicleNumber'] as String? ??
           '',

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/api_constants.dart';
 
@@ -14,7 +15,7 @@ class ApiClient {
   ApiClient._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
+        baseUrl: _getBaseUrl(),
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -41,6 +42,29 @@ class ApiClient {
         },
       ),
     );
+  }
+
+  static String _getBaseUrl() {
+    // Production API URL (EC2 instance)
+    const String productionUrl = 'http://13.233.48.227:4000';
+
+    // For development, you can switch between production and local
+    const bool useProduction = true; // Set to false for local development
+
+    if (useProduction) {
+      return productionUrl;
+    }
+
+    if (kIsWeb) return 'http://localhost:4000';
+    
+    // Check for Desktop platforms (macOS, Windows, Linux)
+    if (defaultTargetPlatform == TargetPlatform.macOS || 
+        defaultTargetPlatform == TargetPlatform.windows || 
+        defaultTargetPlatform == TargetPlatform.linux) {
+      return 'http://localhost:4000';
+    }
+    
+    return ApiConstants.baseUrl;
   }
 
   Dio get dio => _dio;

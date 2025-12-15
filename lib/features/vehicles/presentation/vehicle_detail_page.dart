@@ -8,32 +8,32 @@ import '../data/vehicle_model.dart';
 import 'vehicles_page.dart';
 
 final vehicleDetailProvider =
-    FutureProvider.autoDispose.family<Vehicle, int>((ref, vehicleId) async {
+    FutureProvider.autoDispose.family<Vehicle, String>((ref, vehicleId) async {
   final repo = ref.watch(vehiclesRepositoryProvider);
   final vehicles = await repo.getVehicles();
   return vehicles.firstWhere((v) => v.id == vehicleId);
 });
 
 final vehicleLogsProvider = FutureProvider.autoDispose
-    .family<List<Map<String, dynamic>>, int>((ref, vehicleId) async {
+    .family<List<Map<String, dynamic>>, String>((ref, vehicleId) async {
   final repo = ref.watch(vehiclesRepositoryProvider);
   return await repo.getVehicleLogs(vehicleId);
 });
 
 final vehicleMetricsProvider = FutureProvider.autoDispose
-    .family<Map<String, dynamic>, int>((ref, vehicleId) async {
+    .family<Map<String, dynamic>, String>((ref, vehicleId) async {
   final repo = ref.watch(vehiclesRepositoryProvider);
   return await repo.getVehicleMetrics(vehicleId);
 });
 
 final vehicleAssignmentLogsProvider = FutureProvider.autoDispose
-    .family<List<Map<String, dynamic>>, int>((ref, vehicleId) async {
+    .family<List<Map<String, dynamic>>, String>((ref, vehicleId) async {
   final repo = ref.watch(vehiclesRepositoryProvider);
   return await repo.getVehicleAssignmentLogs(vehicleId);
 });
 
 class VehicleDetailPage extends ConsumerWidget {
-  final int vehicleId;
+  final String vehicleId;
 
   const VehicleDetailPage({super.key, required this.vehicleId});
 
@@ -549,7 +549,7 @@ class VehicleDetailPage extends ConsumerWidget {
   }
 
   void _showReviewDialog(
-      BuildContext context, WidgetRef ref, int vehicleId, String status) {
+      BuildContext context, WidgetRef ref, String vehicleId, String status) {
     final commentsController = TextEditingController();
     final isApproving = status == 'approved';
 

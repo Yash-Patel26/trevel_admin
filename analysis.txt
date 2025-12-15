@@ -1,0 +1,198 @@
+Analyzing trevel_admin...                                       
+
+warning • Dead code • lib/core/network/api_client.dart:34:5 • dead_code
+warning • The value of the local variable 'selectedType' isn't used • lib/features/bookings/presentation/bookings_page.dart:23:11 • unused_local_variable
+   info • The local variable '_parseController' starts with an underscore • lib/features/bookings/presentation/edit_booking_location_page.dart:47:15 • no_leading_underscores_for_local_identifiers
+   info • Don't use 'BuildContext's across async gaps • lib/features/bookings/presentation/edit_booking_location_page.dart:69:28 • use_build_context_synchronously
+   info • The constant name 'vehicle_assigned' isn't a lowerCamelCase identifier • lib/features/drivers/data/driver_model.dart:148:3 • constant_identifier_names
+   info • The constant name 'training_completed' isn't a lowerCamelCase identifier • lib/features/drivers/data/driver_model.dart:149:3 • constant_identifier_names
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/drivers/data/mock_driver_storage.dart:22:15 • argument_type_not_assignable
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/drivers/data/mock_driver_storage.dart:36:15 • argument_type_not_assignable
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/drivers/data/mock_driver_storage.dart:49:15 • argument_type_not_assignable
+   info • The type of the right operand ('int') isn't a subtype or a supertype of the left operand ('String') • lib/features/drivers/data/mock_driver_storage.dart:73:46 • unrelated_type_equality_checks
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/drivers/data/mock_driver_storage.dart:91:11 • argument_type_not_assignable
+   info • The type of the right operand ('int') isn't a subtype or a supertype of the left operand ('String') • lib/features/drivers/data/mock_driver_storage.dart:120:51 • unrelated_type_equality_checks
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/drivers/presentation/driver_detail_page.dart:340:37 • argument_type_not_assignable
+   info • 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre • lib/features/drivers/presentation/onboarding/step1_basic_info_page.dart:342:64 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/drivers/presentation/onboarding/step1_basic_info_page.dart:457:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/drivers/presentation/onboarding/step1_basic_info_page.dart:521:25 • deprecated_member_use
+  error • The argument type 'Object' can't be assigned to the parameter type 'String'.  • lib/features/drivers/presentation/onboarding/step2_documents_page.dart:271:13 • argument_type_not_assignable
+  error • The argument type 'Object' can't be assigned to the parameter type 'String'.  • lib/features/drivers/presentation/onboarding/step2_documents_page.dart:287:13 • argument_type_not_assignable
+  error • The argument type 'Object' can't be assigned to the parameter type 'String'.  • lib/features/drivers/presentation/onboarding/step2_documents_page.dart:308:13 • argument_type_not_assignable
+  error • The argument type 'Object' can't be assigned to the parameter type 'String'.  • lib/features/drivers/presentation/onboarding/step2_documents_page.dart:331:13 • argument_type_not_assignable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/drivers/presentation/onboarding/step2_documents_page.dart:387:32 • deprecated_member_use
+  error • The argument type 'String?' can't be assigned to the parameter type 'int?'.  • lib/features/drivers/presentation/onboarding/step5_vehicle_allocation_page.dart:93:32 • argument_type_not_assignable
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/drivers/presentation/onboarding/step6_review_page.dart:460:24 • argument_type_not_assignable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/drivers/presentation/onboarding/step6_review_page.dart:632:32 • deprecated_member_use
+   info • Function literals shouldn't be passed to 'forEach' • lib/features/revenue/presentation/widgets/mini_travel_pricing_form.dart:52:18 • avoid_function_literals_in_foreach_calls
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/users/presentation/create_user_dialog.dart:146:25 • deprecated_member_use
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/vehicles/data/mock_vehicle_storage.dart:21:15 • argument_type_not_assignable
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/vehicles/data/mock_vehicle_storage.dart:32:15 • argument_type_not_assignable
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/vehicles/data/mock_vehicle_storage.dart:43:15 • argument_type_not_assignable
+   info • The type of the right operand ('int') isn't a subtype or a supertype of the left operand ('String') • lib/features/vehicles/data/mock_vehicle_storage.dart:66:47 • unrelated_type_equality_checks
+  error • The argument type 'int' can't be assigned to the parameter type 'String'.  • lib/features/vehicles/data/mock_vehicle_storage.dart:88:11 • argument_type_not_assignable
+   info • The type of the right operand ('int') isn't a subtype or a supertype of the left operand ('String') • lib/features/vehicles/data/mock_vehicle_storage.dart:122:52 • unrelated_type_equality_checks
+warning • The value of the local variable 'auth' isn't used • lib/features/vehicles/presentation/assign_driver_to_vehicle_page.dart:38:11 • unused_local_variable
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/vehicles/presentation/assign_driver_to_vehicle_page.dart:116:25 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/vehicles/presentation/assign_driver_to_vehicle_page.dart:117:25 • deprecated_member_use
+   info • The constant name 'AirportEstimate' isn't a lowerCamelCase identifier • trevel_customer/lib/core/constants/api_constants.dart:22:23 • constant_identifier_names
+   info • Don't invoke 'print' in production code • trevel_customer/lib/core/network/api_client.dart:40:11 • avoid_print
+warning • Dead code • trevel_customer/lib/core/network/api_client.dart:58:5 • dead_code
+   info • Don't invoke 'print' in production code • trevel_customer/lib/core/services/biometric_service.dart:16:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/core/services/biometric_service.dart:32:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/core/services/directions_service.dart:25:7 • avoid_print
+   info • Angle brackets will be interpreted as HTML • trevel_customer/lib/core/services/directions_service.dart:30:54 • unintended_html_in_doc_comment
+   info • Don't invoke 'print' in production code • trevel_customer/lib/core/services/location_service.dart:51:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • trevel_customer/lib/features/auth/presentation/pages/login_page.dart:51:11 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • trevel_customer/lib/features/auth/presentation/pages/login_page.dart:54:30 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/auth/presentation/pages/login_page.dart:260:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/home/presentation/pages/home_page.dart:69:49 • deprecated_member_use
+warning • The value of the local variable 'cardColor' isn't used • trevel_customer/lib/features/home/presentation/pages/home_page.dart:254:11 • unused_local_variable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/home/presentation/pages/home_page.dart:260:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/home/presentation/pages/home_page.dart:262:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/home/presentation/pages/notifications_page.dart:75:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/home/presentation/pages/notifications_page.dart:77:59 • deprecated_member_use
+warning • The value of the local variable 'isDark' isn't used • trevel_customer/lib/features/home/presentation/pages/notifications_page.dart:142:10 • unused_local_variable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:74:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:76:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:121:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:123:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:142:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:144:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:180:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/add_address_page.dart:246:50 • deprecated_member_use
+warning • Unused import: '../../../../shared/widgets/app_bottom_bar.dart' • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:3:8 • unused_import
+warning • Unused import: '../../../home/presentation/pages/home_page.dart' • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:4:8 • unused_import
+warning • Unused import: '../../../trips/presentation/pages/my_bookings_page.dart' • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:5:8 • unused_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:26:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:115:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:117:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:203:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/edit_profile_page.dart:205:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:184:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:186:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:232:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:234:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:287:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:289:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:386:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:427:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:429:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:562:67 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:628:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/help_support_page.dart:694:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/payments_page.dart:42:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/payments_page.dart:86:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/payments_page.dart:100:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/payments_page.dart:102:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/profile_page.dart:94:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/profile_page.dart:96:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/profile_page.dart:199:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/saved_addresses_page.dart:76:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/saved_addresses_page.dart:78:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/saved_addresses_page.dart:167:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/saved_addresses_page.dart:169:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/settings_page.dart:242:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/settings_page.dart:244:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/profile/presentation/pages/upi_selection_page.dart:114:41 • deprecated_member_use
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/airport_repository.dart:45:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/airport_repository.dart:64:9 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/airport_repository.dart:82:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/bookings_repository.dart:19:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/bookings_repository.dart:39:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:25:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:39:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:56:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:73:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:87:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:108:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:125:7 • avoid_print
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/data/trips_repository.dart:139:7 • avoid_print
+warning • Unused import: 'ride_preview_page.dart' • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:4:8 • unused_import
+warning • Unused import: 'package:google_places_flutter/google_places_flutter.dart' • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:8:8 • unused_import
+warning • Unused import: 'package:google_places_flutter/model/prediction.dart' • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:9:8 • unused_import
+   info • The private field _airports could be 'final' • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:34:21 • prefer_final_fields
+warning • The value of the field '_airports' isn't used • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:34:21 • unused_field
+warning • The value of the field '_selectedAirport' isn't used • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:35:16 • unused_field
+   info • The private field _isLoadingAirports could be 'final' • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:36:8 • prefer_final_fields
+warning • The value of the field '_isLoadingAirports' isn't used • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:36:8 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:395:83 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:399:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:635:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:686:36 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:749:20 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:759:20 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:789:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:791:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:889:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:925:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:929:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:954:47 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:959:9 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:1001:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/airport_transfers_page.dart:1005:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/fullscreen_map_page.dart:46:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rental_passenger_page.dart:206:47 • deprecated_member_use
+warning • Unused import: 'package:google_places_flutter/google_places_flutter.dart' • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:8:8 • unused_import
+warning • Unused import: 'package:google_places_flutter/model/prediction.dart' • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:9:8 • unused_import
+warning • Unused import: '../../../../core/constants/api_constants.dart' • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:10:8 • unused_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:399:85 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:403:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:627:36 • deprecated_member_use
+   info • The argument type 'int' isn't related to 'String' • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:716:57 • collection_methods_unrelated_type
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:737:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:739:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:814:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:851:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/hourly_rentals_page.dart:855:43 • deprecated_member_use
+warning • The value of the field '_isLoading' isn't used • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:31:8 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:360:83 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:364:50 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:446:39 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:605:36 • deprecated_member_use
+warning • The value of the local variable 'timeStr' isn't used • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:619:22 • unused_local_variable
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:655:18 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:665:20 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:695:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:697:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:775:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:817:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/mini_trips_page.dart:821:43 • deprecated_member_use
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:33:5 • avoid_print
+warning • Dead code • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:36:33 • dead_code
+warning • The left operand can't be null, so the right operand is never executed • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:36:36 • dead_null_aware_expression
+   info • The 'if' statement could be replaced by a null-aware assignment • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:145:5 • prefer_conditional_assignment
+warning • Dead code • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:145:31 • dead_code
+   info • Statements in an if should be enclosed in a block • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:197:32 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:198:59 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:199:59 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • trevel_customer/lib/features/trips/presentation/pages/my_bookings_page.dart:200:85 • curly_braces_in_flow_control_structures
+warning • The value of the field '_isLoadingRoute' isn't used • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:30:8 • unused_field
+   info • Don't invoke 'print' in production code • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:87:7 • avoid_print
+warning • The value of the local variable 'isDark' isn't used • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:202:10 • unused_local_variable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:273:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:277:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:288:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:303:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:307:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:342:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:346:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:404:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:408:47 • deprecated_member_use
+warning • The operand can't be 'null', so the condition is always 'true' • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:487:45 • unnecessary_null_comparison
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:530:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:692:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:728:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:792:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:812:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_detail_page.dart:853:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_preview_page.dart:17:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_preview_page.dart:133:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/pages/ride_preview_page.dart:278:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/widgets/ride_booking_card.dart:42:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/widgets/ride_booking_card.dart:47:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/widgets/ride_booking_card.dart:97:76 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/features/trips/presentation/widgets/ride_booking_card.dart:121:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • trevel_customer/lib/shared/widgets/app_bottom_bar.dart:21:33 • deprecated_member_use
+warning • Unused import: 'package:flutter_svg/flutter_svg.dart' • trevel_customer/lib/shared/widgets/custom_app_bar.dart:2:8 • unused_import
+

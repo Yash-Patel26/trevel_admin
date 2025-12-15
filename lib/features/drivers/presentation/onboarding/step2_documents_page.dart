@@ -268,7 +268,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
       final existingPan =
           state.documents.where((d) => d.type == 'pan').firstOrNull;
       documents.add(DriverDocument(
-        id: existingPan?.id ?? DateTime.now().millisecondsSinceEpoch,
+        id: existingPan?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'PAN Card',
         type: 'pan',
         fileUrl: _panImageUrl ?? _panImage?.path ?? existingPan?.fileUrl,
@@ -284,7 +284,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
       final existingAadhar =
           state.documents.where((d) => d.type == 'aadhar').firstOrNull;
       documents.add(DriverDocument(
-        id: existingAadhar?.id ?? DateTime.now().millisecondsSinceEpoch + 1,
+        id: existingAadhar?.id ?? (DateTime.now().millisecondsSinceEpoch + 1).toString(),
         name: 'Aadhar Card',
         type: 'aadhar',
         fileUrl:
@@ -305,7 +305,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
       final existingLicense =
           state.documents.where((d) => d.type == 'driving_license').firstOrNull;
       documents.add(DriverDocument(
-        id: existingLicense?.id ?? DateTime.now().millisecondsSinceEpoch + 2,
+        id: existingLicense?.id ?? (DateTime.now().millisecondsSinceEpoch + 2).toString(),
         name: 'Driving License',
         type: 'driving_license',
         fileUrl:
@@ -328,7 +328,7 @@ class _Step2DocumentsPageState extends ConsumerState<Step2DocumentsPage> {
           .where((d) => d.type == 'police_verification')
           .firstOrNull;
       documents.add(DriverDocument(
-        id: existingPolice?.id ?? DateTime.now().millisecondsSinceEpoch + 3,
+        id: existingPolice?.id ?? (DateTime.now().millisecondsSinceEpoch + 3).toString(),
         name: 'Police Verification',
         type: 'police_verification',
         fileUrl: _policeVerificationImageUrl ??

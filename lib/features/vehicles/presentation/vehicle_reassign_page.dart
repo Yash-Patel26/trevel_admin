@@ -19,7 +19,7 @@ final activeDriversProvider = FutureProvider.autoDispose<List<Driver>>((ref) asy
 });
 
 class VehicleReassignPage extends ConsumerStatefulWidget {
-  final int vehicleId;
+  final String vehicleId;
   final Vehicle vehicle;
 
   const VehicleReassignPage({
@@ -33,7 +33,7 @@ class VehicleReassignPage extends ConsumerStatefulWidget {
 }
 
 class _VehicleReassignPageState extends ConsumerState<VehicleReassignPage> {
-  int? selectedDriverId;
+  String? selectedDriverId;
   bool isReassigning = false;
 
   Future<void> _handleReassignment() async {

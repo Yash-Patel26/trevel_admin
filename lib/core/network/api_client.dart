@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,13 +34,20 @@ class ApiClient {
     if (kIsWeb) {
       // Web browsers use localhost
       return 'http://localhost:4000';
-    } else {
+    }
+    
+    // Check for Desktop platforms (macOS, Windows, Linux) - they can also use localhost
+    if (defaultTargetPlatform == TargetPlatform.macOS || 
+        defaultTargetPlatform == TargetPlatform.windows || 
+        defaultTargetPlatform == TargetPlatform.linux) {
+      return 'http://localhost:4000';
+    }
       // For mobile devices:
       // - Android emulator uses 10.0.2.2 to access host machine
       // - Physical devices need the actual IP address of the computer running Docker
       const String hostIp = '10.5.54.45'; // Change this to your computer's local IP
       return 'http://$hostIp:4000';
-    }
+
   }
 
   final Dio _dio = Dio(

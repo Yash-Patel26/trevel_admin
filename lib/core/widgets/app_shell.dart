@@ -340,15 +340,27 @@ class AppShell extends ConsumerWidget {
         ),
         body: Row(
           children: [
-            NavigationRail(
-              selectedIndex: validSelectedIndex,
-              onDestinationSelected: (index) {
-                if (index >= 0 && index < locations.length) {
-                  context.go(locations[index].path);
-                }
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: NavigationRail(
+                        selectedIndex: validSelectedIndex,
+                        onDestinationSelected: (index) {
+                          if (index >= 0 && index < locations.length) {
+                            context.go(locations[index].path);
+                          }
+                        },
+                        labelType: NavigationRailLabelType.all,
+                        destinations: navigationRailDestinations,
+                      ),
+                    ),
+                  ),
+                );
               },
-              labelType: NavigationRailLabelType.all,
-              destinations: navigationRailDestinations,
             ),
             const VerticalDivider(thickness: 1, width: 1),
             Expanded(

@@ -19,7 +19,7 @@ class MockDriverStorage {
     if (_drivers.isEmpty) {
       _drivers.addAll([
         Driver(
-          id: _nextId++,
+          id: (_nextId++).toString(),
           fullName: 'John Doe',
           email: 'john.doe@example.com',
           mobile: '+1234567890',
@@ -33,7 +33,7 @@ class MockDriverStorage {
           assignedVehicleNumber: 'VH-001',
         ),
         Driver(
-          id: _nextId++,
+          id: (_nextId++).toString(),
           fullName: 'Jane Smith',
           email: 'jane.smith@example.com',
           mobile: '+1234567891',
@@ -46,7 +46,7 @@ class MockDriverStorage {
           trainingCompleted: true,
         ),
         Driver(
-          id: _nextId++,
+          id: (_nextId++).toString(),
           fullName: 'Bob Johnson',
           email: 'bob.johnson@example.com',
           mobile: '+1234567892',
@@ -67,7 +67,7 @@ class MockDriverStorage {
     return List.unmodifiable(_drivers);
   }
 
-  Future<Driver?> getDriverById(int id) async {
+  Future<Driver?> getDriverById(String id) async {
     await Future.delayed(const Duration(milliseconds: 200));
     try {
       return _drivers.firstWhere((d) => d.id == id);
@@ -88,7 +88,7 @@ class MockDriverStorage {
     await Future.delayed(const Duration(milliseconds: 500));
 
     final driver = Driver(
-      id: _nextId++,
+      id: (_nextId++).toString(),
       fullName: fullName,
       email: email,
       mobile: mobile,
@@ -115,7 +115,7 @@ class MockDriverStorage {
     return driver;
   }
 
-  Future<bool> deleteDriver(int id) async {
+  Future<bool> deleteDriver(String id) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final index = _drivers.indexWhere((d) => d.id == id);
     if (index != -1) {

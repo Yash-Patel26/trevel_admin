@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 
 import '../data/vehicles_repository.dart';
 import '../data/vehicle_makes_models.dart';
@@ -107,9 +108,28 @@ class _CreateVehiclePageState extends ConsumerState<CreateVehiclePage> {
         context.pop();
       }
     } catch (e) {
+      String errorMessage = 'Failed to create vehicle';
+      if (e is DioException) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic> && data.containsKey('message')) {
+          errorMessage = data['message'];
+          if (data.containsKey('issues')) {
+            errorMessage += ': ${(data['issues'] as List).join(', ')}';
+          }
+        } else {
+          errorMessage = e.message ?? errorMessage;
+        }
+      } else {
+        errorMessage = e.toString();
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } finally {

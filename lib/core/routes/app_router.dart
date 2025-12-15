@@ -180,7 +180,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 name: 'vehicle-detail',
                 pageBuilder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return MaterialPage(child: VehicleDetailPage(vehicleId: id));
                 },
                 routes: [
@@ -188,7 +188,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'assign-driver',
                     name: 'assign-driver-to-vehicle',
                     pageBuilder: (context, state) {
-                      final id = int.parse(state.pathParameters['id']!);
+                      final id = state.pathParameters['id']!;
                       return MaterialPage(
                         child: AssignDriverToVehiclePage(vehicleId: id),
                       );
@@ -198,7 +198,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'reassign',
                     name: 'reassign-vehicle',
                     pageBuilder: (context, state) {
-                      final id = int.parse(state.pathParameters['id']!);
+                      final id = state.pathParameters['id']!;
                       final vehicle = state.extra as Vehicle;
                       return MaterialPage(
                         child: VehicleReassignPage(
@@ -228,7 +228,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 name: 'driver-detail',
                 pageBuilder: (context, state) {
-                  final id = int.parse(state.pathParameters['id']!);
+                  final id = state.pathParameters['id']!;
                   return MaterialPage(child: DriverDetailPage(driverId: id));
                 },
                 routes: [

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Vehicle {
-  final int id;
+  final String id;
   final String vehicleNumber;
   final String make;
   final String model;
@@ -20,7 +20,7 @@ class Vehicle {
   final String? liveLocationAccessKey;
   final String? dashcamAccessKey;
   // Driver assignment
-  final int? assignedDriverId;
+  final String? assignedDriverId;
   final String? assignedDriverName;
   final String? assignedDriverStatus; // 'active', 'inactive', etc.
 
@@ -47,7 +47,7 @@ class Vehicle {
   }) : color = color ?? 'Black'; // Default to "Black" if not provided
 
   Vehicle copyWith({
-    int? id,
+    String? id,
     String? vehicleNumber,
     String? make,
     String? model,
@@ -63,7 +63,7 @@ class Vehicle {
     DateTime? insuranceExpiryDate,
     String? liveLocationAccessKey,
     String? dashcamAccessKey,
-    int? assignedDriverId,
+    String? assignedDriverId,
     String? assignedDriverName,
     String? assignedDriverStatus,
   }) {
@@ -115,13 +115,13 @@ class Vehicle {
 
   factory Vehicle.fromJson(Map<String, dynamic> json) {
     return Vehicle(
-      id: json['id'] as int,
-      vehicleNumber: json['vehicleNumber'] as String,
-      make: json['make'] as String,
-      model: json['model'] as String,
-      year: json['year'] as int,
+      id: json['id'].toString(), // Ensure String
+      vehicleNumber: json['vehicleNumber'] as String? ?? json['numberPlate'] as String? ?? '', // Fallback to numberPlate
+      make: json['make'] as String? ?? '',
+      model: json['model'] as String? ?? '',
+      year: json['year'] as int? ?? DateTime.now().year, // Handle missing year
       color: json['color'] as String? ?? 'Black', // Default to "Black"
-      licensePlate: json['licensePlate'] as String,
+      licensePlate: json['licensePlate'] as String? ?? json['numberPlate'] as String? ?? '', // Fallback
       status: VehicleStatus.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => VehicleStatus.pending,
@@ -143,7 +143,7 @@ class Vehicle {
       assignedDriverId: json['assignments'] != null &&
               (json['assignments'] as List).isNotEmpty
           ? ((json['assignments'] as List).first['driver'] != null
-              ? (json['assignments'] as List).first['driver']['id'] as int?
+              ? (json['assignments'] as List).first['driver']['id'].toString() // Ensure String
               : null)
           : null,
       assignedDriverName: json['assignments'] != null &&

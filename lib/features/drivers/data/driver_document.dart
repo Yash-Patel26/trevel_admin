@@ -1,5 +1,5 @@
 class DriverDocument {
-  final int id;
+  final String id;
   final String name;
   final String
       type; // 'pan', 'aadhar', 'driving_license', 'police_verification'
@@ -53,7 +53,7 @@ class DriverDocument {
 
   factory DriverDocument.fromJson(Map<String, dynamic> json) {
     return DriverDocument(
-      id: json['id'] as int,
+      id: json['id'].toString(), // Ensure String
       name: json['name'] as String,
       type: json['type'] as String,
       fileUrl: json['fileUrl'] as String?,
@@ -72,7 +72,7 @@ class DriverDocument {
   }
 
   DriverDocument copyWith({
-    int? id,
+    String? id,
     String? name,
     String? type,
     String? fileUrl,

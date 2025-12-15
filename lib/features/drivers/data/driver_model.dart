@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'driver_document.dart';
 
 class Driver {
-  final int id;
+  final String id;
   final String fullName;
   final String email;
   final String mobile;
@@ -38,7 +38,7 @@ class Driver {
   }) : contactPreferences = contactPreferences ?? ContactPreferences();
 
   Driver copyWith({
-    int? id,
+    String? id,
     String? fullName,
     String? email,
     String? mobile,
@@ -97,16 +97,18 @@ class Driver {
 
   factory Driver.fromJson(Map<String, dynamic> json) {
     return Driver(
-      id: json['id'] as int,
-      fullName: json['fullName'] as String,
-      email: json['email'] as String,
-      mobile: json['mobile'] as String,
+      id: json['id'].toString(), // Ensure String
+      fullName: json['fullName'] as String? ?? json['name'] as String? ?? '', // Handle name/fullName mismatch
+      email: json['email'] as String? ?? '',
+      mobile: json['mobile'] as String? ?? '',
       licenseNumber: json['licenseNumber'] as String?,
       status: DriverStatus.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => DriverStatus.pending,
       ),
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt'] as String) 
+          : DateTime.now(),
       backgroundCheckDate: json['backgroundCheckDate'] != null
           ? DateTime.parse(json['backgroundCheckDate'] as String)
           : null,

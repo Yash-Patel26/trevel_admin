@@ -18,7 +18,7 @@ class MockVehicleStorage {
     if (_vehicles.isEmpty) {
       _vehicles.addAll([
         Vehicle(
-          id: _nextId++,
+          id: (_nextId++).toString(),
           vehicleNumber: 'VH-001',
           make: 'Toyota',
           model: 'Camry',
@@ -29,7 +29,7 @@ class MockVehicleStorage {
           createdAt: DateTime.now().subtract(const Duration(days: 30)),
         ),
         Vehicle(
-          id: _nextId++,
+          id: (_nextId++).toString(),
           vehicleNumber: 'VH-002',
           make: 'Honda',
           model: 'CR-V',
@@ -40,7 +40,7 @@ class MockVehicleStorage {
           createdAt: DateTime.now().subtract(const Duration(days: 20)),
         ),
         Vehicle(
-          id: _nextId++,
+          id: (_nextId++).toString(),
           vehicleNumber: 'VH-003',
           make: 'Ford',
           model: 'Transit',
@@ -60,7 +60,7 @@ class MockVehicleStorage {
     return List.unmodifiable(_vehicles);
   }
 
-  Future<Vehicle?> getVehicleById(int id) async {
+  Future<Vehicle?> getVehicleById(String id) async {
     await Future.delayed(const Duration(milliseconds: 200));
     try {
       return _vehicles.firstWhere((v) => v.id == id);
@@ -85,7 +85,7 @@ class MockVehicleStorage {
     await Future.delayed(const Duration(milliseconds: 500));
 
     final vehicle = Vehicle(
-      id: _nextId++,
+      id: (_nextId++).toString(),
       vehicleNumber: vehicleNumber,
       make: make,
       model: model,
@@ -117,7 +117,7 @@ class MockVehicleStorage {
     return vehicle;
   }
 
-  Future<bool> deleteVehicle(int id) async {
+  Future<bool> deleteVehicle(String id) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final index = _vehicles.indexWhere((v) => v.id == id);
     if (index != -1) {

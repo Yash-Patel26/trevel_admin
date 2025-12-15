@@ -713,7 +713,7 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
     
     final hours = _rentingHours.toInt();
     // Pricing keys are strings in JSON? "2", "3"...
-    final tier = _pricing[hours.toString()] ?? _pricing[hours];
+    final tier = _pricing[hours.toString()];
     
     if (tier == null) return "0";
     

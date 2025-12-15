@@ -15,7 +15,7 @@ class DriversNotifier extends AutoDisposeAsyncNotifier<List<Driver>> {
   }
 
   // Method to immediately remove a driver from the local state
-  void removeDriverLocally(int driverId) {
+  void removeDriverLocally(String driverId) {
     final currentState = state;
     if (currentState is AsyncData<List<Driver>>) {
       final updatedDrivers = currentState.value

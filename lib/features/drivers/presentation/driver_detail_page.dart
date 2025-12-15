@@ -9,7 +9,7 @@ import '../data/driver_document.dart';
 import 'drivers_page.dart';
 
 final driverDetailProvider =
-    FutureProvider.autoDispose.family<Driver, int>((ref, driverId) async {
+    FutureProvider.autoDispose.family<Driver, String>((ref, driverId) async {
   final driversAsync = ref.watch(driversProvider);
   return driversAsync.when(
     data: (drivers) => drivers.firstWhere((d) => d.id == driverId),
@@ -19,25 +19,25 @@ final driverDetailProvider =
 });
 
 final driverLogsProvider = FutureProvider.autoDispose
-    .family<List<Map<String, dynamic>>, int>((ref, driverId) async {
+    .family<List<Map<String, dynamic>>, String>((ref, driverId) async {
   final repo = ref.watch(driversRepositoryProvider);
   return await repo.getDriverLogs(driverId);
 });
 
 final driverDocumentsProvider = FutureProvider.autoDispose
-    .family<List<DriverDocument>, int>((ref, driverId) async {
+    .family<List<DriverDocument>, String>((ref, driverId) async {
   final repo = ref.watch(driversRepositoryProvider);
   return await repo.getDriverDocuments(driverId);
 });
 
 final driverAuditTrailProvider = FutureProvider.autoDispose
-    .family<Map<String, dynamic>, int>((ref, driverId) async {
+    .family<Map<String, dynamic>, String>((ref, driverId) async {
   final repo = ref.watch(driversRepositoryProvider);
   return await repo.getAuditTrail(driverId);
 });
 
 class DriverDetailPage extends ConsumerWidget {
-  final int driverId;
+  final String driverId;
 
   const DriverDetailPage({super.key, required this.driverId});
 
@@ -337,7 +337,7 @@ class DriverDetailPage extends ConsumerWidget {
                             final doc = documents.firstWhere(
                               (d) => d.type == docType['type'],
                               orElse: () => DriverDocument(
-                                id: 0,
+                                id: '0',
                                 name: docType['label'] as String,
                                 type: docType['type'] as String,
                                 uploadedAt: DateTime.now(),

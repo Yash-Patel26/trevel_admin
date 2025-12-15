@@ -15,7 +15,7 @@ final driversForAssignmentProvider =
 });
 
 class AssignDriverToVehiclePage extends ConsumerStatefulWidget {
-  final int vehicleId;
+  final String vehicleId;
 
   const AssignDriverToVehiclePage({
     super.key,
@@ -29,7 +29,7 @@ class AssignDriverToVehiclePage extends ConsumerStatefulWidget {
 
 class _AssignDriverToVehiclePageState
     extends ConsumerState<AssignDriverToVehiclePage> {
-  int? _selectedDriverId;
+  String? _selectedDriverId;
   bool _isAssigning = false;
 
   @override
@@ -111,7 +111,7 @@ class _AssignDriverToVehiclePageState
                       color: isSelected
                           ? Theme.of(context).colorScheme.primaryContainer
                           : null,
-                      child: RadioListTile<int>(
+                      child: RadioListTile<String>(
                         value: driver.id,
                         groupValue: _selectedDriverId,
                         onChanged: (value) {

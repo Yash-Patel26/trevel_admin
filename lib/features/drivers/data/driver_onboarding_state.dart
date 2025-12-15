@@ -43,7 +43,7 @@ class DriverOnboardingState {
   final Set<String> approvedSections; // Track which sections are approved
 
   // Step 5: Vehicle Allocation
-  final int? assignedVehicleId;
+  final String? assignedVehicleId;
 
   // Step 6-7: Information only (no data needed)
 
@@ -104,7 +104,7 @@ class DriverOnboardingState {
     String? emergencyContactNumber,
     String? emergencyContactRelation,
     Set<String>? approvedSections,
-    int? assignedVehicleId,
+    String? assignedVehicleId,
     String? notes,
   }) {
     return DriverOnboardingState(
@@ -229,7 +229,7 @@ class DriverOnboardingNotifier extends StateNotifier<DriverOnboardingState> {
     state = state.copyWith(notes: notes);
   }
 
-  void updateAssignedVehicle(int? vehicleId) {
+  void updateAssignedVehicle(String? vehicleId) {
     state = state.copyWith(assignedVehicleId: vehicleId);
   }
 
