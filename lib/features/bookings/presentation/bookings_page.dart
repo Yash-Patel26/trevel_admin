@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/bookings_repository.dart';
+import 'assign_booking_dialog.dart';
 
 final bookingTypeProvider = StateProvider.autoDispose<String?>((ref) => null);
 
@@ -112,102 +113,135 @@ class BookingsPage extends ConsumerWidget {
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(12),
-                            leading: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: _getStatusColor(status).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.event_note,
-                                color: _getStatusColor(status),
-                              ),
-                            ),
-                            title: Text(
-                              customer != null
-                                  ? '${customer['name'] ?? customer['email'] ?? 'Customer'}'
-                                  : 'Booking #${booking['id']}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 8),
-                                if (booking['pickupLocation'] != null)
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.trip_origin,
-                                          size: 16, color: Colors.green),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Text(
-                                          '${booking['pickupLocation']}',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
+                          child: Column(
+                            children: [
+                              ListTile(
+                                contentPadding: const EdgeInsets.all(12),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(status).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                const SizedBox(height: 4),
-                                if (booking['destinationLocation'] != null)
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.location_on,
-                                          size: 16, color: Colors.red),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Text(
-                                          '${booking['destinationLocation']}',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Icon(
+                                    Icons.event_note,
+                                    color: _getStatusColor(status),
                                   ),
-                                const SizedBox(height: 8),
-                                Row(
+                                ),
+                                title: Text(
+                                  customer != null
+                                      ? '${customer['name'] ?? customer['email'] ?? 'Customer'}'
+                                      : 'Booking #${booking['id']}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (booking['pickupTime'] != null)
+                                    const SizedBox(height: 8),
+                                    if (booking['pickupLocation'] != null)
                                       Row(
                                         children: [
-                                          const Icon(Icons.access_time,
-                                              size: 16, color: Colors.grey),
+                                          const Icon(Icons.trip_origin,
+                                              size: 16, color: Colors.green),
                                           const SizedBox(width: 4),
-                                          Text(
-                                            _formatDateTime(booking['pickupTime']),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall,
+                                          Expanded(
+                                            child: Text(
+                                              '${booking['pickupLocation']}',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                         ],
                                       ),
-                                    const Spacer(),
-                                    Chip(
-                                      label: Text(
-                                        status.toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: _getStatusColor(status),
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    const SizedBox(height: 4),
+                                    if (booking['destinationLocation'] != null)
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.location_on,
+                                              size: 16, color: Colors.red),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              '${booking['destinationLocation']}',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      backgroundColor: _getStatusColor(status)
-                                          .withValues(alpha: 0.1),
-                                      padding: EdgeInsets.zero,
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                      visualDensity: VisualDensity.compact,
-                                      side: BorderSide.none,
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        if (booking['pickupTime'] != null)
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.access_time,
+                                                  size: 16, color: Colors.grey),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                _formatDateTime(booking['pickupTime']),
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall,
+                                              ),
+                                            ],
+                                          ),
+                                        const Spacer(),
+                                        Chip(
+                                          label: Text(
+                                            status.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: _getStatusColor(status),
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          backgroundColor: _getStatusColor(status)
+                                              .withValues(alpha: 0.1),
+                                          padding: EdgeInsets.zero,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          visualDensity: VisualDensity.compact,
+                                          side: BorderSide.none,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                            onTap: () {
-                              context.push('/bookings/${booking['id']}');
-                            },
+                                onTap: () {
+                                  context.push('/bookings/${booking['id']}');
+                                },
+                              ),
+                              if (status == 'upcoming' || status == 'pending')
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => AssignBookingDialog(
+                                              bookingId: booking['id'] as int,
+                                              onSuccess: () {
+                                                ref.invalidate(bookingsProvider);
+                                              },
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.assignment_ind, size: 18),
+                                        label: const Text('Assign'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Theme.of(context).primaryColor,
+                                          foregroundColor: Colors.white,
+                                          visualDensity: VisualDensity.compact,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         );
                       },

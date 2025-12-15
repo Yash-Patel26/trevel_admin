@@ -31,23 +31,22 @@ class ApiClient {
     }
 
     // Local development URLs
-    if (kIsWeb) {
-      // Web browsers use localhost
-      return 'http://localhost:4000';
-    }
+    if (kIsWeb) return 'http://localhost:4000/api';
     
-    // Check for Desktop platforms (macOS, Windows, Linux) - they can also use localhost
+    // Check for Desktop platforms (macOS, Windows, Linux)
     if (defaultTargetPlatform == TargetPlatform.macOS || 
         defaultTargetPlatform == TargetPlatform.windows || 
         defaultTargetPlatform == TargetPlatform.linux) {
-      return 'http://localhost:4000';
+      return 'http://localhost:4000/api';
     }
-      // For mobile devices:
-      // - Android emulator uses 10.0.2.2 to access host machine
-      // - Physical devices need the actual IP address of the computer running Docker
-      const String hostIp = '10.5.54.45'; // Change this to your computer's local IP
-      return 'http://$hostIp:4000';
 
+    // Android Emulator
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:4000/api';
+    }
+    
+    // iOS Simulator / Fallback
+    return 'http://localhost:4000/api';
   }
 
   final Dio _dio = Dio(

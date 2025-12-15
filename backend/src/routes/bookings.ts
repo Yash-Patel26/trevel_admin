@@ -85,10 +85,11 @@ router.get('/:id', authMiddleware, async (req, res) => {
 // Update booking (for admin to assign driver, update status, etc.)
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
-        const { vehicleId, status, notes } = req.body;
+        const { vehicleId, driverId, status, notes } = req.body;
 
         const updateData: any = {};
         if (vehicleId) updateData.vehicleId = vehicleId;
+        if (driverId) updateData.driverId = driverId;
         if (status) updateData.status = status;
         if (notes !== undefined) updateData.notes = notes;
 
@@ -103,7 +104,9 @@ router.put('/:id', authMiddleware, async (req, res) => {
                         mobile: true,
                         email: true
                     }
-                }
+                },
+                vehicle: true,
+                driver: true
             }
         });
 
@@ -111,6 +114,46 @@ router.put('/:id', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Error updating booking:', error);
         res.status(500).json({ success: false, message: 'Failed to update booking' });
+    }
+});
+
+// Assign driver and vehicle to booking
+router.post('/:id/assign', authMiddleware, async (req, res) => {
+    try {
+        const { vehicleId, driverId } = req.body;
+
+        if (!vehicleId && !driverId) {
+            return res.status(400).json({ success: false, message: 'VehicleId or DriverId is required' });
+        }
+
+        const updateData: any = {
+            status: 'assigned' // Auto update status to assigned
+        };
+
+        if (vehicleId) updateData.vehicleId = vehicleId;
+        if (driverId) updateData.driverId = driverId;
+
+        const booking = await prisma.booking.update({
+            where: { id: parseInt(req.params.id) },
+            data: updateData,
+            include: {
+                customer: {
+                    select: {
+                        id: true,
+                        name: true,
+                        mobile: true,
+                        email: true
+                    }
+                },
+                vehicle: true,
+                driver: true
+            }
+        });
+
+        res.json({ success: true, data: booking });
+    } catch (error) {
+        console.error('Error assigning booking:', error);
+        res.status(500).json({ success: false, message: 'Failed to assign booking' });
     }
 });
 

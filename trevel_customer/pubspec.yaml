@@ -38,6 +38,7 @@ dependencies:
   google_places_flutter: ^2.1.1
   dio: ^5.4.0
   flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.3.2
   provider: ^6.1.1
   flutter_svg: ^2.0.10
   local_auth: ^2.1.6

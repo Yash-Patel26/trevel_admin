@@ -65,9 +65,13 @@ const verifyOtpSchema = z.object({
 authRouter.post("/verify-otp", validateBody(verifyOtpSchema), async (req, res) => {
     try {
         const { phone, otp } = req.body;
+        console.log(`[Verify-OTP] Attempting verification. Phone: ${phone}, OTP: ${otp}`);
 
         const storedOtp = await getOtp(phone);
+        console.log(`[Verify-OTP] Redis stored value: ${storedOtp}`);
+
         if (!storedOtp || storedOtp !== otp) {
+            console.log(`[Verify-OTP] Validation failed. Match: ${storedOtp === otp}`);
             return res.status(401).json({ success: false, message: "Invalid or expired OTP" });
         }
 

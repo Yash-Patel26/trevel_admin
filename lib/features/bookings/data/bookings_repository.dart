@@ -51,8 +51,8 @@ class BookingsRepository {
 
   Future<Map<String, dynamic>> assignBooking({
     required int bookingId,
-    required int vehicleId,
-    int? driverId,
+    required String vehicleId,
+    String? driverId,
   }) async {
     final response = await _dio.post('/bookings/$bookingId/assign', data: {
       'vehicleId': vehicleId,

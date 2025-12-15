@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/api_constants.dart';
 
@@ -73,6 +74,7 @@ class AuthRepository {
       }
       return null;
     } catch (e) {
+      debugPrint('[AuthRepo] Verify OTP Error: $e');
       return null;
     }
   }
