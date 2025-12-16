@@ -52,4 +52,16 @@ jobs:
             echo "🧹 Cleaning up..."
             docker image prune -f
             
+            # 6. Verify Health
+            echo "🏥 Verifying Service Health..."
+            sleep 10 # Give it a moment to start
+            if curl -f http://localhost:3000/healthz; then
+              echo "✅ Health Check Passed!"
+            else
+              echo "❌ Health Check Failed!"
+              echo "📜 Container Logs:"
+              docker compose logs --tail=50
+              exit 1
+            fi
+
             echo "🚀 Deployment Successful!"
