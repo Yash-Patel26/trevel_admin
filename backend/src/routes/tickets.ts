@@ -10,7 +10,7 @@ import { getPagination } from "../utils/pagination";
 
 export const ticketsRouter = Router();
 
-ticketsRouter.use(authMiddleware);
+ticketsRouter.use("/tickets", authMiddleware);
 
 ticketsRouter.post(
   "/tickets",

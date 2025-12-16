@@ -9,7 +9,7 @@ import { getPagination } from "../utils/pagination";
 
 export const ridesRouter = Router();
 
-ridesRouter.use(authMiddleware);
+ridesRouter.use("/rides", authMiddleware);
 
 const rideCreateSchema = z.object({
   vehicleId: z.number(),

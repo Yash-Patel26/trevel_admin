@@ -11,7 +11,7 @@ import { getPagination } from "../utils/pagination";
 
 export const vehiclesRouter = Router();
 
-vehiclesRouter.use(authMiddleware);
+vehiclesRouter.use("/vehicles", authMiddleware);
 
 // Get available vehicle makes and models
 vehiclesRouter.get(

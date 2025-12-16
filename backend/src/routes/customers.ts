@@ -15,7 +15,7 @@ import redisClient from "../config/redis";
 
 export const customersRouter = Router();
 
-customersRouter.use(authMiddleware);
+customersRouter.use(["/customers", "/bookings"], authMiddleware);
 
 customersRouter.get(
   "/customers/dashboard/summary",

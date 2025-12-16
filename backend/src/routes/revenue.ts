@@ -10,7 +10,7 @@ import { logAudit } from "../utils/audit";
 
 export const revenueRouter = Router();
 
-revenueRouter.use(authMiddleware);
+revenueRouter.use("/revenue", authMiddleware);
 
 // Get all pricing configurations
 revenueRouter.get(

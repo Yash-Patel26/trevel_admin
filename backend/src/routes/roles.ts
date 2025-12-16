@@ -5,7 +5,7 @@ import { requirePermissions } from "../middleware/permissions";
 
 export const rolesRouter = Router();
 
-rolesRouter.use(authMiddleware);
+rolesRouter.use("/roles", authMiddleware);
 
 // Get all roles
 rolesRouter.get(

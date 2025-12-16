@@ -30,7 +30,7 @@ function transformDriver(driver: any) {
   };
 }
 
-driversRouter.use(authMiddleware);
+driversRouter.use("/drivers", authMiddleware);
 
 driversRouter.post(
   "/drivers",

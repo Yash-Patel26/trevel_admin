@@ -5,7 +5,7 @@ import prisma from "../prisma/client";
 
 export const dashboardsRouter = Router();
 
-dashboardsRouter.use(authMiddleware);
+dashboardsRouter.use("/dashboards", authMiddleware);
 
 dashboardsRouter.get(
   "/dashboards/fleet",

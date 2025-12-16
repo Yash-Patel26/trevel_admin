@@ -11,7 +11,7 @@ import { getPagination } from "../utils/pagination";
 
 export const usersRouter = Router();
 
-usersRouter.use(authMiddleware);
+usersRouter.use("/users", authMiddleware);
 
 const userCreateSchema = z.object({
   email: z.string().email(),

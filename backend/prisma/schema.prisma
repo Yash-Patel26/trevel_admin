@@ -259,12 +259,14 @@ model RideSummary {
 }
 
 model Customer {
-  id       String   @id @default(uuid())
-  name     String?
-  mobile   String   @unique // Mobile app creates users by phone
-  email    String?  @unique
-  profileImageUrl String? @map("profile_image_url")
-  status      String  @default("active")
+  id              String   @id @default(uuid())
+  name            String?  @map("full_name")
+  mobile          String   @unique @map("phone")
+  email           String?  @map("email")
+  profileImageUrl String?  @map("profile_image_url")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+  
   bookings Booking[]
   
   // Mobile app specific relations
@@ -273,6 +275,8 @@ model Customer {
   toAirportTrips    ToAirportTransferBooking[]
   fromAirportTrips  FromAirportTransferBooking[]
   savedLocations    SavedLocation[]
+
+  @@map("users")
 }
 
 model Booking {

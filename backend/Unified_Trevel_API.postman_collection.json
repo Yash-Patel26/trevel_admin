@@ -1,0 +1,273 @@
+{
+    "info": {
+        "_postman_id": "unified-trevel-api-v1",
+        "name": "Unified Trevel API",
+        "description": "Unified backend API collection covering both Admin Panel and Customer Mobile App endpoints.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Admin Panel API",
+            "item": [
+                {
+                    "name": "Auth",
+                    "item": [
+                        {
+                            "name": "Login",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"email\": \"admin@trevel.com\",\n    \"password\": \"password\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/auth/login",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "auth",
+                                        "login"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Bookings",
+                    "item": [
+                        {
+                            "name": "Get All Bookings",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/bookings?page=1&limit=20",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "bookings"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "page",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "20"
+                                        }
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Sync Booking (Manual Trigger)",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/bookings/sync",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "bookings",
+                                        "sync"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Customers",
+                    "item": [
+                        {
+                            "name": "Get Customers",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/customers",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "customers"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Customer Mobile API",
+            "item": [
+                {
+                    "name": "Auth",
+                    "item": [
+                        {
+                            "name": "Send OTP",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"phone\": \"+1234567890\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/auth/send-otp",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "auth",
+                                        "send-otp"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Verify OTP",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"phone\": \"+1234567890\",\n    \"otp\": \"123456\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "auth",
+                                        "verify-otp"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Bookings",
+                    "item": [
+                        {
+                            "name": "Create Mini Trip",
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"pickupLocation\": \"Location A\",\n    \"dropoffLocation\": \"Location B\",\n    \"vehicleSelected\": \"Sedan\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/mini-trips",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "mini-trips"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get My Bookings",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/my-bookings",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "my-bookings"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Misc",
+                    "item": [
+                        {
+                            "name": "Get Vehicle Makes",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/v1/make",
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "make"
+                                    ]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:4000",
+            "type": "string"
+        }
+    ]
+}

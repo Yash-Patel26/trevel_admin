@@ -6,7 +6,7 @@ import { getPagination } from "../utils/pagination";
 
 export const auditRouter = Router();
 
-auditRouter.use(authMiddleware);
+auditRouter.use("/audit-logs", authMiddleware);
 
 auditRouter.get(
   "/audit-logs",

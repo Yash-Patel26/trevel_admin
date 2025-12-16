@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const pricingController = require('../controllers/pricingController');
+router.get('/mini-travel', pricingController.estimateMiniTravelPrice);
+router.get('/airport-drop', pricingController.estimateAirportDropPrice);
+router.get('/airport-pickup', pricingController.estimateAirportPickupPrice);
+router.get('/hourly-rental', pricingController.estimateHourlyRentalPrice);
+router.post('/estimate', pricingController.estimatePrice);
+router.post('/routes', pricingController.getRouteOptions);
+router.post('/comprehensive', pricingController.getComprehensiveRoute);
+module.exports = router;

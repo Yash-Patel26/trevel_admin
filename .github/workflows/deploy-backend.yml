@@ -1,0 +1,40 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # Navigate to the project directory
+            # Verify the path matches your server setup
+            cd ~/trevel_admin/backend
+
+            # Pull the latest changes
+            echo "Pulling latest changes..."
+            git pull origin main
+
+            # Rebuild and restart the containers
+            echo "Rebuilding and restarting containers..."
+            docker compose down
+            docker compose up -d --build
+            
+            # Prune unused images to save space
+            docker image prune -f
+
+            echo "Deployment complete!"

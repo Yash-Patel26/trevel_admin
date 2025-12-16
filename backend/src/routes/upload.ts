@@ -4,7 +4,7 @@ import { uploadSingle, uploadMultiple } from "../middleware/upload";
 
 export const uploadRouter = Router();
 
-uploadRouter.use(authMiddleware);
+uploadRouter.use("/upload", authMiddleware);
 
 // Single image upload endpoint
 uploadRouter.post(
