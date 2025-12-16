@@ -21,20 +21,33 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Navigate to the project directory
-            # Verify the path matches your server setup
+            # 1. Memory Safety: Ensure Swap is enabled (Critical for t2.micro builds)
+            if ! swapon --show | grep -q "/swapfile"; then
+              echo "⚠️ No swapfile found. Creating 2GB swapfile..."
+              sudo fallocate -l 2G /swapfile
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo "✅ Swap enabled."
+            else
+              echo "✅ Swap is already enabled."
+            fi
+
+            # 2. Navigate to project
             cd ~/trevel_admin/backend
 
-            # Pull the latest changes
-            echo "Pulling latest changes..."
+            # 3. Pull latest code
+            echo "📥 Pulling latest changes..."
             git pull origin main
 
-            # Rebuild and restart the containers
-            echo "Rebuilding and restarting containers..."
+            # 4. Rebuild Containers
+            echo "🏗️ Building and Restarting..."
+            # Force rebuild to pick up code changes
             docker compose down
             docker compose up -d --build
-            
-            # Prune unused images to save space
-            docker image prune -f
 
-            echo "Deployment complete!"
+            # 5. Cleanup
+            echo "🧹 Cleaning up..."
+            docker image prune -f
+            
+            echo "🚀 Deployment Successful!"

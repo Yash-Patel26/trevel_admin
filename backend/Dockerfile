@@ -30,6 +30,7 @@ COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
 COPY . .
 
 # Build TypeScript
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
 # Production image
