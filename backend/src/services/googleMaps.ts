@@ -17,6 +17,8 @@ export const googleMapsService = {
             key: apiKey,
             mode: 'driving',
             alternatives: true,
+            departure_time: 'now', // Default to now to get traffic info
+            traffic_model: 'best_guess',
             ...options
         };
 

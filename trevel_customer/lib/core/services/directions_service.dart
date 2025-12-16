@@ -1,4 +1,5 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../features/trips/domain/entities/route_details.dart';
 import '../network/api_client.dart';
 import '../constants/api_constants.dart';
 
@@ -6,7 +7,7 @@ class DirectionsService {
   final ApiClient _apiClient = ApiClient();
 
   /// Fetch route from backend and decode polyline
-  Future<List<LatLng>> getRoute(String origin, String destination) async {
+  Future<RouteDetails?> getRoute(String origin, String destination) async {
     try {
       final response = await _apiClient.dio.get(
         ApiConstants.directions,
@@ -17,13 +18,16 @@ class DirectionsService {
       );
 
       if (response.statusCode == 200 && response.data['success'] == true) {
-        final String encodedPolyline = response.data['data']['polyline'];
-        return _decodePolyline(encodedPolyline);
+        final data = response.data['data'];
+        final String encodedPolyline = data['polyline'];
+        final points = _decodePolyline(encodedPolyline);
+        
+        return RouteDetails.fromJson(data, points);
       }
-      return [];
+      return null;
     } catch (e) {
       print('Directions error: $e');
-      return [];
+      return null;
     }
   }
 

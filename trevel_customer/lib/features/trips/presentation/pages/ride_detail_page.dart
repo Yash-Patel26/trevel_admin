@@ -7,6 +7,7 @@ import '../../data/bookings_repository.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'fullscreen_map_page.dart';
 import '../../../../core/services/directions_service.dart';
+import '../../domain/entities/route_details.dart';
 
 class RideDetailPage extends StatefulWidget {
   final String bookingId; // Changed from bookingDetails to bookingId
@@ -26,7 +27,7 @@ class _RideDetailPageState extends State<RideDetailPage> {
   final BookingsRepository _bookingsRepo = BookingsRepository();
   final DirectionsService _directionsService = DirectionsService();
   
-  List<LatLng> _routeCoordinates = [];
+  RouteDetails? _routeDetails;
   bool _isLoadingRoute = false;
 
   @override
@@ -76,10 +77,10 @@ class _RideDetailPageState extends State<RideDetailPage> {
     setState(() => _isLoadingRoute = true);
     
     try {
-      final route = await _directionsService.getRoute(pickup, dropoff);
+      final routeDetails = await _directionsService.getRoute(pickup, dropoff);
       if (mounted) {
         setState(() {
-          _routeCoordinates = route;
+          _routeDetails = routeDetails;
           _isLoadingRoute = false;
         });
       }
@@ -395,14 +396,14 @@ class _RideDetailPageState extends State<RideDetailPage> {
             const SizedBox(height: 24),
           ],
 
-          // --- Ride Status & Details ---
-          Text("Ride Status & Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+          // --- Pricing Details (Matching Screenshot) ---
+          Text("Pricing Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal, color: textColor)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.withOpacity(0.1)), // Lighter border
+              borderRadius: BorderRadius.circular(12), // Slightly less rounded than 16
               color: innerCardColor,
               boxShadow: [
                  BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 4, offset:const Offset(0, 2))
@@ -410,65 +411,55 @@ class _RideDetailPageState extends State<RideDetailPage> {
             ),
             child: Column(
               children: [
-                _buildCompactDetailRow("ETA", _bookingDetails!['eta'] ?? "Calculating...", textColor),
-                const SizedBox(height: 8),
-                _buildCompactDetailRow("Cost", _bookingDetails!['price'] ?? "₹0", textColor),
-                const SizedBox(height: 8),
+                // Row 1: Estimated Distance
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Status", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isInProgress ? Colors.lightBlueAccent : Colors.amber, 
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _bookingDetails!['status']?.toString().toUpperCase() ?? "PENDING", 
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)
-                      ),
-                    )
+                    Text("Estimated Distance", style: TextStyle(color: Colors.grey[700], fontSize: 15, fontWeight: FontWeight.normal)),
+                    Text(_bookingDetails!['distance'] != null ? "${_bookingDetails!['distance'].toString().replaceAll(" km", "")} kms" : "0 kms", // Formatting to match "20.6 kms"
+                         style: TextStyle(fontWeight: FontWeight.normal, fontSize: 15, color: textColor)),
                   ],
                 ),
-                const SizedBox(height: 20),
-                
-                SizedBox(
-                  width: double.infinity,
-                  height: 45,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.share, size: 18),
-                    label: const Text("Share Live Ride", style: TextStyle(fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 12),
-
-                // Vehicle Info
-                _buildCompactDetailRow("Vehicle", _bookingDetails!['vehicleModel'] ?? "Not assigned", textColor),
-                const SizedBox(height: 8),
-                _buildCompactDetailRow("Vehicle Number", _bookingDetails!['vehicleNumber'] ?? "Not assigned", textColor),
-                const SizedBox(height: 8),
-                _buildCompactDetailRow("Date", _bookingDetails!['date'] ?? "N/A", textColor),
-                
-                const SizedBox(height: 16),
-                const Divider(),
                 const SizedBox(height: 12),
                 
+                // Row 2: Estimated Time
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Total Amount", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
-                    Text(_bookingDetails!['price'] ?? "₹0", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                    Text("Estimated Time", style: TextStyle(color: Colors.grey[700], fontSize: 15, fontWeight: FontWeight.normal)),
+                     // Parse duration/time more robustly if needed
+                    Text(_routeDetails?.duration != null ? "${_routeDetails!.duration.replaceAll(" mins", "")} mins" : (_bookingDetails!['estimatedTime'] != null ? "${_bookingDetails!['estimatedTime']} mins" : "25 mins"), 
+                         style: TextStyle(fontWeight: FontWeight.normal, fontSize: 15, color: textColor)),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Bill Summary Header (Accordion style)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.receipt_long_outlined, color: Colors.amber, size: 20),
+                        const SizedBox(width: 8),
+                        Text("Bill Summary", style: TextStyle(fontSize: 15, color: Colors.grey[800])),
+                      ],
+                    ),
+                    const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Colors.grey),
+                 const SizedBox(height: 16),
+                
+                // Total Price
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Total Price", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                    Text(_bookingDetails!['price'] ?? "₹ 0", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
                   ],
                 )
               ],
@@ -484,12 +475,12 @@ class _RideDetailPageState extends State<RideDetailPage> {
     Color textColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
     
     // Use route coordinates if available, otherwise use default
-    final bool hasRoute = _routeCoordinates != null && _routeCoordinates.isNotEmpty;
+    final bool hasRoute = _routeDetails != null && _routeDetails!.polylinePoints.isNotEmpty;
     final LatLng pickupLatLng = hasRoute
-        ? _routeCoordinates.first 
+        ? _routeDetails!.polylinePoints.first 
         : const LatLng(28.6139, 77.2090);
     final LatLng dropLatLng = hasRoute
-        ? _routeCoordinates.last 
+        ? _routeDetails!.polylinePoints.last 
         : const LatLng(28.6500, 77.2300);
     
     // Create markers for pickup and drop
@@ -512,9 +503,9 @@ class _RideDetailPageState extends State<RideDetailPage> {
     final Set<Polyline> polylines = {
       Polyline(
         polylineId: const PolylineId('route'),
-        points: hasRoute ? _routeCoordinates : [pickupLatLng, dropLatLng],
-        color: Colors.blue,
-        width: 4,
+        points: hasRoute ? _routeDetails!.polylinePoints : [pickupLatLng, dropLatLng],
+        color: _getTrafficColor(_routeDetails?.trafficStatus),
+        width: 5,
         // Remove dashed pattern for actual routes to show solid line
         patterns: hasRoute ? [] : [PatternItem.dash(20), PatternItem.gap(10)],
       ),
@@ -559,7 +550,7 @@ class _RideDetailPageState extends State<RideDetailPage> {
                             initialPosition: const LatLng(28.6320, 77.2195),
                             markers: markers,
                             polylines: polylines,
-                            routeCoordinates: _routeCoordinates,
+                            routeCoordinates: _routeDetails?.polylinePoints ?? [],
                           ),
                         ),
                       );
@@ -579,6 +570,37 @@ class _RideDetailPageState extends State<RideDetailPage> {
             ],
           ),
         ),
+        if (_routeDetails != null)
+           Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: _getTrafficColor(_routeDetails!.trafficStatus).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _getTrafficColor(_routeDetails!.trafficStatus).withOpacity(0.3))
+              ),
+              child: Row(
+                  children: [
+                      Icon(Icons.traffic, color: _getTrafficColor(_routeDetails!.trafficStatus), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: Text(
+                              "Traffic: ${_routeDetails!.trafficStatus} (${_routeDetails!.durationInTraffic})",
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13
+                              ),
+                          ),
+                      ),
+                      if (_routeDetails!.trafficDelayMins > 0)
+                          Text(
+                              "+${_routeDetails!.trafficDelayMins} min",
+                              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
+                          )
+                  ],
+              ),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
@@ -901,6 +923,15 @@ class _RideDetailPageState extends State<RideDetailPage> {
         ],
       ),
     );
+  }
+  Color _getTrafficColor(String? status) {
+    if (status == null) return Colors.blue;
+    switch (status) {
+      case 'Heavy': return Colors.red;
+      case 'Moderate': return Colors.orange;
+      case 'Normal': 
+      default: return Colors.blue;
+    }
   }
 }
 
