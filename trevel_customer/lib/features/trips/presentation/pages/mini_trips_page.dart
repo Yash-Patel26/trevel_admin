@@ -5,6 +5,7 @@ import '../../../../shared/widgets/app_bottom_bar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../core/services/location_service.dart';
 import '../../data/trips_repository.dart';
+import '../../../booking/presentation/widgets/bill_summary_widget.dart';
 import 'my_bookings_page.dart';
 
 class MiniTripsPage extends StatefulWidget {
@@ -118,17 +119,31 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
     if (data != null) {
         final distKm = (data['distance_km'] as num).toDouble();
         final durationMin = (data['duration_min'] as num).toInt();
-        final basePrice = (data['base_price'] as num).toDouble();
+        final basePrice = (data['base_price'] as num?)?.toDouble() ?? (data['basePrice'] as num?)?.toDouble() ?? 0.0;
+        final gst = (data['gst_amount'] as num?)?.toDouble() ?? (data['gstAmount'] as num?)?.toDouble() ?? 0.0;
         
         setState(() {
             for (var v in _vehicles) {
                 double multiplier = (v['priceMultiplier'] as num?)?.toDouble() ?? 1.0;
-                double finalPrice = basePrice * multiplier;
+                double vehicleBase = basePrice * multiplier;
+                double vehicleGst = gst * multiplier; // Approximate if simplistic
+                // Or if GST is %:
+                // Let's just calculate:
+                // Final = Base * Multiplier + Tax? 
+                // Usually multiplier applies to base.
+                // let's say Final = (Base + GST) * Multiplier.
+                // v['raw_final'] = (basePrice + gst) * multiplier;
+                // v['raw_base'] = basePrice * multiplier;
+                // v['raw_tax'] = gst * multiplier;
+                
+                double finalAmount = (basePrice + gst) * multiplier;
                 
                 v['dist'] = "$distKm km";
                 v['time'] = "$durationMin min";
-                v['price'] = "₹${finalPrice.toInt()}";
-                v['raw_price'] = finalPrice; // Store for booking
+                v['price'] = "₹${finalAmount.toInt()}";
+                v['raw_price'] = finalAmount; 
+                v['raw_base'] = basePrice * multiplier;
+                v['raw_tax'] = gst * multiplier;
             }
         });
         return true;
@@ -335,18 +350,12 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
         const SizedBox(height: 20),
         _buildLabel("Pickup Location", Icons.location_on_outlined, textColor),
         const SizedBox(height: 8),
-        _buildInputBox(
-            controller: _pickupController, 
-            isDark: isDark, 
-            textColor: textColor,
-            icon: Icons.my_location,
-            onIconTap: _getCurrentLocation
-        ),
+        _buildPlacesAutoComplete(_pickupController, "Enter pickup location", isDark, textColor),
 
         const SizedBox(height: 20),
         _buildLabel("Destination", Icons.location_on_outlined, textColor),
         const SizedBox(height: 8),
-        _buildInputBox(controller: _destinationController, icon: Icons.my_location, iconColor: Colors.green, isDark: isDark, textColor: textColor),
+        _buildPlacesAutoComplete(_destinationController, "Enter destination", isDark, textColor),
 
         const SizedBox(height: 24),
         Text("Select Vehicle", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
@@ -605,14 +614,48 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
         const SizedBox(height: 24),
 
         // --- Pricing Details ---
-        Text("Pricing Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-        const SizedBox(height: 12),
-        _buildPriceRow("Estimated Distance", _vehicles[_selectedVehicleIndex]['dist'], textColor, subTextColor),
-        const SizedBox(height: 8),
-        _buildPriceRow("Estimated Time", _vehicles[_selectedVehicleIndex]['time'], textColor, subTextColor),
-        const SizedBox(height: 8),
-        Divider(color: Colors.grey.withOpacity(0.2)),
-        const SizedBox(height: 8),
+        // --- Route Details ---
+        _buildReviewCard(
+          title: "Route Details",
+          icon: Icons.map_outlined,
+          bgColor: innerCardColor,
+          textColor: textColor,
+          content: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text("Distance: ${_vehicles[_selectedVehicleIndex]['dist']}", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+               const SizedBox(height: 4),
+               Text("Time: ${_vehicles[_selectedVehicleIndex]['time']}", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+             ],
+          )
+        ),
+        const SizedBox(height: 16),
+
+        // --- Bill Summary ---
+        Builder(
+          builder: (context) {
+             final v = _vehicles[_selectedVehicleIndex];
+             // Default to 0 if not yet estimated (though button disabled if not?)
+             double base = v['raw_base'] as double? ?? 0.0;
+             double tax = v['raw_tax'] as double? ?? 0.0;
+             double total = v['raw_price'] as double? ?? 0.0;
+             
+             // Fallback if raw values missing (pre-calc)
+             if (total == 0 && v['price'] != "₹0") {
+                total = double.tryParse(v['price'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+                base = total; // No breakdown available
+             }
+
+             return BillSummaryWidget(
+               basePrice: base,
+               discount: 0,
+               coupon: 0, 
+               otherCharges: tax,
+               totalPrice: total,
+             );
+          }
+        ),
+        const SizedBox(height: 16),
         
         // --- Book Now Button ---
         SizedBox(
@@ -725,13 +768,107 @@ class _MiniTripsPageState extends State<MiniTripsPage> {
     );
   }
 
-  Widget _buildPriceRow(String label, String value, Color textColor, Color subTextColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: subTextColor)),
-        Text(value, style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
-      ],
+
+
+  Widget _buildPlacesAutoComplete(TextEditingController controller, String hint, bool isDark, Color textColor, {VoidCallback? onSelectionChanged}) {
+    Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
+    return Container(
+       decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+        color: innerCardColor,
+        boxShadow: [
+           BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+        ]
+      ),
+      child: Autocomplete<String>(
+        optionsBuilder: (TextEditingValue textEditingValue) async {
+           if (textEditingValue.text.length < 3) {
+             return const Iterable<String>.empty();
+           }
+           // Use LocationService for predictions
+           return await LocationService().getPlacePredictions(textEditingValue.text);
+        },
+        onSelected: (String selection) {
+          controller.text = selection;
+          setState(() {});
+          if (onSelectionChanged != null) {
+            onSelectionChanged();
+          }
+        },
+        fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+            // Sync specific to MiniTrips logic where location button updates controller
+            if (controller.text.isNotEmpty && fieldTextEditingController.text != controller.text) {
+                 // Check if it's vastly different? Or just blindly sync if we suspect update.
+                 // Ideally, we only want to sync if the *external* controller changed not via the internal one.
+                 // But this runs on build. 
+                 // Simple hack: if field is empty and controller isn't, sync. 
+                 if (fieldTextEditingController.text.isEmpty) {
+                   fieldTextEditingController.text = controller.text;
+                 }
+            }
+            
+            fieldTextEditingController.addListener(() {
+              if (controller.text != fieldTextEditingController.text) {
+                 controller.text = fieldTextEditingController.text;
+              }
+            });
+
+            return TextField(
+              controller: fieldTextEditingController,
+              focusNode: fieldFocusNode,
+              style: TextStyle(color: textColor, fontSize: 16),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: hint,
+                hintStyle: const TextStyle(color: Colors.grey),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.my_location, color: isDark ? Colors.grey[400] : Colors.black54),
+                  onPressed: () async {
+                      await _getCurrentLocation();
+                      // Force update internal controller
+                      fieldTextEditingController.text = controller.text;
+                  },
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+              onChanged: (val) {
+                  // Handled by listener
+              }
+            );
+        },
+        optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
+           return Align(
+             alignment: Alignment.topLeft,
+             child: Material(
+               elevation: 4.0,
+               color: innerCardColor,
+               borderRadius: BorderRadius.circular(8),
+               child: Container(
+                 width: MediaQuery.of(context).size.width - 40,
+                 constraints: const BoxConstraints(maxHeight: 200),
+                 child: ListView.builder(
+                   padding: EdgeInsets.zero,
+                   shrinkWrap: true,
+                   itemCount: options.length,
+                   itemBuilder: (BuildContext context, int index) {
+                     final String option = options.elementAt(index);
+                     return InkWell(
+                       onTap: () {
+                         onSelected(option);
+                       },
+                       child: Padding(
+                         padding: const EdgeInsets.all(16.0),
+                         child: Text(option, style: TextStyle(color: textColor)),
+                       ),
+                     );
+                   },
+                 ),
+               ),
+             ),
+           );
+        },
+      ),
     );
   }
 

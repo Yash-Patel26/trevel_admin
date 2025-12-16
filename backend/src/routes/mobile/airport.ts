@@ -55,49 +55,107 @@ airportRouter.get("/:id", async (req, res) => {
 
 airportRouter.post("/estimate", async (req, res) => {
     try {
-        console.log("Hits /estimate endpoint", req.body);
-        const { type, pickup_time } = req.body || {};
+        const { type, pickup_time, user_location, airport_id, terminal } = req.body || {};
 
         // Default to drop if not specified or invalid
         const isPickup = type === 'pickup';
+
+        // Default values
+        let distanceKm = 40;
+        let durationMin = 60;
+        let polyline = null;
+
+        // If we have location data, calculate real stats
+        if (user_location) {
+            let airportLoc = null;
+
+            if (airport_id) {
+                const airport = await prisma.airport.findUnique({ where: { id: airport_id } });
+                if (airport) airportLoc = `${airport.lat},${airport.lng}`;
+            } else if (terminal) {
+                // Fallback: Use terminal as location (e.g. "Terminal 3, IGI Airport, New Delhi")
+                // Appending "Airport" to ensure better matching if just "Terminal 1"
+                airportLoc = `${terminal}, Indira Gandhi International Airport, New Delhi`;
+            }
+
+            if (airportLoc) {
+                // For pickup: Airport -> User
+                // For drop: User -> Airport
+                const origin = isPickup ? airportLoc : user_location;
+                const destination = isPickup ? user_location : airportLoc;
+
+                try {
+                    const route = await googleMapsService.getRouteDetails(origin, destination, pickup_time);
+                    distanceKm = route.distance_km;
+                    durationMin = route.duration_minutes;
+                    polyline = route.polyline;
+                } catch (err) {
+                    console.error("Google Maps Route Error:", err);
+                    // Fallback to default
+                }
+            }
+        }
+
         const pricing = isPickup
             ? await pricingService.calculateAirportPickupPrice(pickup_time || new Date())
             : await pricingService.calculateAirportDropPrice(pickup_time || new Date());
 
-        const basePrice = pricing.finalPrice; // Using totalPrice as base for display
+        // Base price might need adjustment based on distance if pricing is distance-based? 
+        // Currently Airport pricing seems fixed in pricingService (basePrice/totalPrice). 
+        // But if it were dynamic, we'd pass distanceKm. 
+        // For now, we keep price fixed but update stats.
 
+        const basePrice = pricing.finalPrice;
+
+        // Update vehicles with real stats
         const vehicles = [
             {
                 name: "MG Windsor",
                 seats: 4,
-                time: "60 mins", // Mock time for now, or calculate if distance provided
-                dist: "40 kms", // Mock distance
+                time: `${durationMin} mins`,
+                dist: `${distanceKm.toFixed(1)} kms`,
                 price: `₹${basePrice}`,
-                image: "assets/images/taxi.png", // Ensure these match frontend assets
+                image: "assets/images/taxi.png",
+                raw_base: pricing.basePrice,
+                raw_tax: pricing.gstAmount,
+                raw_price: pricing.finalPrice,
+                polyline: polyline
             },
             {
                 name: "BYD emax",
                 seats: 6,
-                time: "60 mins",
-                dist: "40 kms",
+                time: `${durationMin} mins`,
+                dist: `${distanceKm.toFixed(1)} kms`,
                 price: `₹${basePrice}`,
                 image: "assets/images/taxi.png",
+                raw_base: pricing.basePrice,
+                raw_tax: pricing.gstAmount,
+                raw_price: pricing.finalPrice,
+                polyline: polyline
             },
             {
                 name: "Kia Carens",
                 seats: 7,
-                time: "60 mins",
-                dist: "40 kms",
+                time: `${durationMin} mins`,
+                dist: `${distanceKm.toFixed(1)} kms`,
                 price: `₹${Math.round(basePrice * 1.2)}`, // 20% premium
                 image: "assets/images/taxi.png",
+                raw_base: Math.round(pricing.basePrice * 1.2),
+                raw_tax: Math.round(pricing.gstAmount * 1.2),
+                raw_price: Math.round(basePrice * 1.2),
+                polyline: polyline
             },
             {
                 name: "BMW",
                 seats: 4,
-                time: "60 mins",
-                dist: "40 kms",
+                time: `${durationMin} mins`,
+                dist: `${distanceKm.toFixed(1)} kms`,
                 price: `₹${Math.round(basePrice * 2.0)}`, // 100% premium
                 image: "assets/images/taxi.png",
+                raw_base: Math.round(pricing.basePrice * 2.0),
+                raw_tax: Math.round(pricing.gstAmount * 2.0),
+                raw_price: Math.round(basePrice * 2.0),
+                polyline: polyline
             }
         ];
 

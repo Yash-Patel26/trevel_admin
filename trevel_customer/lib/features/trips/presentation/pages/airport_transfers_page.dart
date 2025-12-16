@@ -10,6 +10,8 @@ import 'package:google_places_flutter/model/prediction.dart';
 import '../../data/airport_repository.dart';
 import '../../data/trips_repository.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../booking/presentation/widgets/bill_summary_widget.dart';
+
 
 class AirportTransfersPage extends StatefulWidget {
   const AirportTransfersPage({super.key});
@@ -56,7 +58,9 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
     // Let's send the time string for now if just hour based, or current time.
     final est = await AirportRepository().getAirportEstimate(
       _isToAirport ? 'drop' : 'pickup',
-      _timeController.text.isNotEmpty ? _timeController.text : "12:00 PM"
+      _timeController.text.isNotEmpty ? _timeController.text : "12:00 PM",
+      userLocation: _pickupController.text,
+      terminal: _terminalController.text,
     );
     setState(() {
       _vehicles = est;
@@ -475,6 +479,9 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select Date and Time")));
                  return;
                }
+               // Fetch real estimates now that we have location
+               _fetchEstimates();
+               
                setState(() {
                  if (_travelerType == 0) {
                    // If 'Myself', skip to Step 3 (Preview)
@@ -677,14 +684,48 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
         const SizedBox(height: 24),
 
         // --- Pricing Details ---
-        Text("Pricing Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-        const SizedBox(height: 12),
-        _buildPriceRow("Estimated Distance", _vehicles[_selectedVehicleIndex]['dist'], textColor, subTextColor),
-        const SizedBox(height: 8),
-        _buildPriceRow("Estimated Time", _vehicles[_selectedVehicleIndex]['time'], textColor, subTextColor),
-        const SizedBox(height: 8),
-        Divider(color: Colors.grey.withOpacity(0.2)),
-        const SizedBox(height: 8),
+        // --- Route Details ---
+        _buildReviewCard(
+          title: "Route Details",
+          icon: Icons.map_outlined,
+          bgColor: innerCardColor,
+          textColor: textColor,
+          content: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text("Distance: ${_vehicles[_selectedVehicleIndex]['dist']}", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+               const SizedBox(height: 4),
+               Text("Time: ${_vehicles[_selectedVehicleIndex]['time']}", style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+             ],
+          )
+        ),
+        const SizedBox(height: 16),
+
+        // --- Bill Summary ---
+        Builder(
+          builder: (context) {
+             final v = _vehicles[_selectedVehicleIndex];
+             // Expecting camelCase from backend for Aiport Estimate
+             double base = (v['basePrice'] as num?)?.toDouble() ?? 0.0;
+             double tax = (v['gstAmount'] as num?)?.toDouble() ?? 0.0;
+             double total = (v['finalPrice'] as num?)?.toDouble() ?? 0.0;
+             
+             // Fallback if missing
+             if (total == 0) {
+                 total = double.tryParse(v['price'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+                 base = total; // No breakdown
+             }
+
+             return BillSummaryWidget(
+               basePrice: base,
+               discount: 0, 
+               coupon: 0,
+               otherCharges: tax,
+               totalPrice: total,
+             );
+          }
+        ),
+        const SizedBox(height: 16),
         
         // --- Bill Summary Accordion Stub ---
         Row(
@@ -810,15 +851,7 @@ class _AirportTransfersPageState extends State<AirportTransfersPage> {
     );
   }
 
-  Widget _buildPriceRow(String label, String value, Color textColor, Color subTextColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: subTextColor)),
-        Text(value, style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
-      ],
-    );
-  }
+
 
   Widget _buildToggleButton(String text, bool isSelected, bool isDark) {
     return GestureDetector(

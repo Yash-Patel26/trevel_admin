@@ -52,4 +52,21 @@ class LocationService {
       return null;
     }
   }
+  Future<List<String>> getPlacePredictions(String input) async {
+    try {
+      final response = await _apiClient.dio.get(
+        ApiConstants.locationAutocomplete,
+        queryParameters: {"input": input}
+      );
+      
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final List<dynamic> predictions = response.data['data'];
+        return predictions.map((e) => e['description'] as String).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Fetch Predictions Error: $e");
+      return []; 
+    }
+  }
 }

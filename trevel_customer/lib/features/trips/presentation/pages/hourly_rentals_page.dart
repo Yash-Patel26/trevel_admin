@@ -7,7 +7,9 @@ import 'my_bookings_page.dart';
 import '../../data/trips_repository.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
-import '../../../../core/constants/api_constants.dart'; // Ensure this path is correct or adjust
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../booking/presentation/widgets/bill_summary_widget.dart';
 
 class HourlyRentalsPage extends StatefulWidget {
   const HourlyRentalsPage({super.key});
@@ -22,7 +24,7 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
   int _travelerType = 0; // 0 = Myself, 1 = Someone else
   double _rentingHours = 2.0;
 
-  final TextEditingController _pickupController = TextEditingController(text: "Enter your pickup location");
+  final TextEditingController _pickupController = TextEditingController();
   final TextEditingController _dateController = TextEditingController(); // formatted string
   final TextEditingController _timeController = TextEditingController(); // formatted string
   final TextEditingController _nameController = TextEditingController();
@@ -42,6 +44,7 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
     super.initState();
     _fillUserData();
     _fetchData();
+    _fetchCurrentLocation();
     
     // Set default date/time (now + 2h buffer) for initial display
     final now = DateTime.now().add(const Duration(hours: 2));
@@ -169,6 +172,37 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
       _selectedTime = picked;
       _timeController.text = _formatTime(picked);
     });
+  }
+
+  Future<void> _fetchCurrentLocation() async {
+    final locationService = LocationService();
+    try {
+      final position = await locationService.getCurrentLocation();
+      if (position != null) {
+        if (mounted) {
+            // Optional: Show loading state for address
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fetching address..."), duration: Duration(milliseconds: 500)));
+        }
+        
+        final addressData = await locationService.getAddressFromCoordinates(position.latitude, position.longitude);
+        if (mounted && addressData != null) {
+          setState(() {
+            _pickupController.text = addressData['formatted_address'] ?? "${position.latitude}, ${position.longitude}";
+          });
+        } else if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not fetch address details")));
+        }
+      } else {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Location permission denied or service disabled")));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Location fetch error: $e")));
+      }
+      print("Location fetch error: $e");
+    }
   }
 
   @override
@@ -368,7 +402,18 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
         // The user request said "in the hourly rental the screen is using the dummy data make it to use real data...".
         // It didn't explicitly ask for autocomplete, but having it is better.
         // I'll stick to _buildInputBox to minimize risk, as previous state was _buildInputBox.
-        _buildInputBox(controller: _pickupController, icon: Icons.my_location, iconColor: Colors.amber, isDark: isDark, textColor: textColor, hint: "Enter your pickup location"),
+        _buildInputBox(
+          controller: _pickupController, 
+          icon: Icons.my_location, 
+          iconColor: Colors.amber, 
+          isDark: isDark, 
+          textColor: textColor, 
+          hint: "Enter your pickup location",
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.my_location, color: Colors.amber),
+            onPressed: () => _fetchCurrentLocation(),
+          )
+        ),
 
         const SizedBox(height: 20),
         Text("Select Vehicle", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
@@ -616,15 +661,41 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
         const SizedBox(height: 24),
 
         // --- Pricing Details ---
-        Text("Pricing Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-        const SizedBox(height: 12),
-        // Assume price in list is Total Price (inc tax) or Base? 
-        // Backend pricing structure: basePrice, totalPrice. 
-        // We can disassemble if needed, but for now let's show Total as Package Price.
-        _buildPriceRow("Package Price (inc. tax)", "₹$priceStr", textColor, subTextColor),
-        // _buildPriceRow("Taxes", "Included", textColor, subTextColor),
+        // Calculate breakdown
+        // _calculatePrice() returns string, let's re-derive logic to get components
+        Builder(
+          builder: (context) {
+             double basePrice = 0;
+             double totalPrice = 0;
+             double taxes = 0;
+             
+             if (_vehicles.isNotEmpty && _pricing.isNotEmpty) {
+                final v = _vehicles[_selectedVehicleIndex];
+                final hours = _rentingHours.toInt();
+                final tier = _pricing[hours.toString()];
+                
+                if (tier != null) {
+                   double tierBase = (tier['basePrice'] as num).toDouble();
+                   double tierTotal = (tier['totalPrice'] as num).toDouble();
+                   double multiplier = (v['priceMultiplier'] as num?)?.toDouble() ?? 1.0;
+                   
+                   basePrice = tierBase * multiplier;
+                   totalPrice = tierTotal * multiplier;
+                   taxes = totalPrice - basePrice;
+                }
+             }
+
+             return BillSummaryWidget(
+               basePrice: basePrice,
+               discount: 0,
+               coupon: 0, // Placeholder as backend doesn't support yet, but UI required
+               otherCharges: taxes,
+               totalPrice: totalPrice,
+             );
+          }
+        ),
         const SizedBox(height: 8),
-        Divider(color: Colors.grey.withOpacity(0.2)),
+        // Divider(color: Colors.grey.withOpacity(0.2)), // Widget has its own divider logic if needed or we keep external? Widget has it internally.
         const SizedBox(height: 8),
         
         // --- Book Now Button ---
@@ -658,18 +729,18 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
 
     final bookingData = {
       "pickup_location": _pickupController.text,
-      "pickup_city": "Unknown", // Can be derived if using Places
-      "pickup_state": "Unknown",
+      "pickup_city": "Gurugram", 
+      "pickup_state": "Haryana",
       "pickup_date": _selectedDate?.toIso8601String().split('T')[0] ?? "2025-01-01",
       "pickup_time": _selectedTime != null ? "${_selectedTime!.hour.toString().padLeft(2,'0')}:${_selectedTime!.minute.toString().padLeft(2,'0')}" : "12:00",
       "vehicle_selected": v['name'],
       "vehicle_image_url": v['image'],
-      "passenger_name": _nameController.text,
-      "passenger_phone": _phoneController.text,
-      "passenger_email": "",
+      "passenger_name": _nameController.text.isNotEmpty ? _nameController.text : "Guest",
+      "passenger_phone": _phoneController.text.isNotEmpty ? _phoneController.text : "0000000000",
+      // Email removed as no input field exists
       "rental_hours": _rentingHours,
-      "covered_distance_km": _rentingHours * 10, // Mock logic
-      "base_price": price, // storing total as base for now or calculate?
+      "covered_distance_km": _rentingHours * 10,
+      "base_price": price, 
       "final_price": price,
       "currency": "INR",
       "notes": ""
@@ -758,13 +829,93 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
     );
   }
 
-  Widget _buildPriceRow(String label, String value, Color textColor, Color subTextColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: subTextColor)),
-        Text(value, style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
-      ],
+
+
+  Widget _buildPlacesAutoComplete(TextEditingController controller, String hint, bool isDark, Color textColor, {VoidCallback? onSelectionChanged}) {
+    Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
+    return Container(
+       decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+        color: innerCardColor,
+        boxShadow: [
+           BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+        ]
+      ),
+      child: Autocomplete<String>(
+        optionsBuilder: (TextEditingValue textEditingValue) async {
+           if (textEditingValue.text.length < 3) {
+             return const Iterable<String>.empty();
+           }
+           // Use LocationService for predictions
+           return await LocationService().getPlacePredictions(textEditingValue.text);
+        },
+        onSelected: (String selection) {
+          controller.text = selection;
+          setState(() {});
+          if (onSelectionChanged != null) {
+            onSelectionChanged();
+          }
+        },
+        fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+            if (controller.text.isNotEmpty && fieldTextEditingController.text.isEmpty) {
+                fieldTextEditingController.text = controller.text;
+            }
+            fieldTextEditingController.addListener(() {
+              controller.text = fieldTextEditingController.text;
+            });
+
+            return TextField(
+              controller: fieldTextEditingController,
+              focusNode: fieldFocusNode,
+              style: TextStyle(color: textColor, fontSize: 16),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: hint,
+                hintStyle: const TextStyle(color: Colors.grey),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.my_location, color: isDark ? Colors.grey[400] : Colors.black54),
+                  onPressed: () => _fetchCurrentLocation(),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+              onChanged: (val) {
+                  controller.text = val;
+              }
+            );
+        },
+        optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
+           return Align(
+             alignment: Alignment.topLeft,
+             child: Material(
+               elevation: 4.0,
+               color: innerCardColor,
+               borderRadius: BorderRadius.circular(8),
+               child: Container(
+                 width: MediaQuery.of(context).size.width - 40,
+                 constraints: const BoxConstraints(maxHeight: 200),
+                 child: ListView.builder(
+                   padding: EdgeInsets.zero,
+                   shrinkWrap: true,
+                   itemCount: options.length,
+                   itemBuilder: (BuildContext context, int index) {
+                     final String option = options.elementAt(index);
+                     return InkWell(
+                       onTap: () {
+                         onSelected(option);
+                       },
+                       child: Padding(
+                         padding: const EdgeInsets.all(16.0),
+                         child: Text(option, style: TextStyle(color: textColor)),
+                       ),
+                     );
+                   },
+                 ),
+               ),
+             ),
+           );
+        },
+      ),
     );
   }
 
@@ -804,7 +955,7 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
     );
   }
 
-  Widget _buildInputBox({String? hint, TextEditingController? controller, IconData? icon, Color? iconColor, required bool isDark, required Color textColor, bool readOnly = false, VoidCallback? onTap}) {
+  Widget _buildInputBox({String? hint, TextEditingController? controller, IconData? icon, Color? iconColor, required bool isDark, required Color textColor, bool readOnly = false, VoidCallback? onTap, Widget? suffixIcon}) {
     Color innerCardColor = isDark ? Colors.grey[850]! : Colors.white;
     return GestureDetector(
       onTap: onTap,
@@ -822,7 +973,7 @@ class _HourlyRentalsPageState extends State<HourlyRentalsPage> {
           decoration: InputDecoration(
             border: InputBorder.none,
             hintText: hint,
-            suffixIcon: icon != null ? Icon(icon, size: 20, color: iconColor ?? (isDark ? Colors.grey[400] : Colors.black54)) : null,
+            suffixIcon: suffixIcon ?? (icon != null ? Icon(icon, size: 20, color: iconColor ?? (isDark ? Colors.grey[400] : Colors.black54)) : null),
             hintStyle: const TextStyle(color: Colors.grey),
           ),
           style: TextStyle(color: textColor),

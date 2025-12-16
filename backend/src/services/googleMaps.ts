@@ -54,6 +54,28 @@ export const googleMapsService = {
         };
     },
 
+    getRouteDetails: async (origin: string, destination: string, departureTime?: any) => {
+        // Uses Directions API for full route info + polyline
+        const data = await googleMapsService.getRoutes(origin, destination, {
+            departure_time: departureTime ? Math.floor(new Date(departureTime).getTime() / 1000) : 'now'
+        });
+
+        const route = data.routes?.[0];
+        if (!route) throw new Error("No route found");
+
+        const leg = route.legs[0];
+        const distanceKm = leg.distance.value / 1000;
+        const durationMin = Math.round((leg.duration_in_traffic?.value || leg.duration.value) / 60);
+
+        return {
+            distance_km: distanceKm,
+            duration_minutes: durationMin,
+            polyline: route.overview_polyline.points,
+            start_address: leg.start_address,
+            end_address: leg.end_address
+        };
+    },
+
     geocodeAddress: async (address: string) => {
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
         const { data } = await getClient().get('/geocode/json', {

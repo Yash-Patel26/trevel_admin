@@ -46,20 +46,29 @@ class AirportRepository {
       return [];
     }
   }
-  Future<List<Map<String, dynamic>>> getAirportEstimate(String type, String pickupTime) async {
+  Future<List<dynamic>?> getAirportEstimate({
+    required bool isPickup,
+    required String time,
+    String? userLocation,
+    String? airportId,
+    String? terminal,
+  }) async {
       try {
         final response = await _apiClient.dio.post(
           ApiConstants.AirportEstimate,
           data: {
-            "type": type,
-            "pickup_time": pickupTime
-          }
+            'type': isPickup ? 'pickup' : 'drop',
+            'pickup_time': time, // Send full date-time ideally
+            'user_location': userLocation,
+            'airport_id': airportId,
+            'terminal': terminal
+          },
         );
         
         if (response.statusCode == 200 && response.data['success'] == true) {
-          return List<Map<String, dynamic>>.from(response.data['data']);
+          return List<dynamic>.from(response.data['data']);
         }
-        return [];
+        return null;
       } catch (e) {
         print("Fetch Estimate Error: $e");
         return [];

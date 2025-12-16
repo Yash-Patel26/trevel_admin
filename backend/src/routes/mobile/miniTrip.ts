@@ -75,8 +75,8 @@ miniTripRouter.post("/estimate-trip", validateBody(estimateTripSchema), async (r
     try {
         const { pickup_location, dropoff_location, pickup_time } = req.body;
 
-        // 1. Get Distance & Duration from Google Maps
-        const routeInfo = await googleMapsService.getDistanceWithTraffic(
+        // 1. Get Route Details (Distance, Duration, Polyline) from Google Maps Directions API
+        const routeInfo = await googleMapsService.getRouteDetails(
             pickup_location,
             dropoff_location,
             pickup_time
@@ -94,7 +94,10 @@ miniTripRouter.post("/estimate-trip", validateBody(estimateTripSchema), async (r
                 distance_km: routeInfo.distance_km,
                 duration_min: routeInfo.duration_minutes,
                 base_price: priceDetails.finalPrice, // Use final price as base for multiplier application
-                currency: "INR"
+                currency: "INR",
+                polyline: routeInfo.polyline,
+                start_address: routeInfo.start_address,
+                end_address: routeInfo.end_address
             }
         });
 
