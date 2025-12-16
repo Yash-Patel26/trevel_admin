@@ -5,6 +5,7 @@ import { mobileAuthMiddleware } from "../../middleware/mobileAuth";
 import { validateBody } from "../../validation/validate";
 import { pricingService } from "../../services/pricing";
 import { calculateEstimatedTimeMinutes, minutesToTimeObject } from "../../utils/timeUtils";
+import { googleMapsService } from "../../services/googleMaps";
 
 const airportRouter = Router();
 
@@ -71,7 +72,7 @@ airportRouter.post("/estimate", async (req, res) => {
 
             if (airport_id) {
                 const airport = await prisma.airport.findUnique({ where: { id: airport_id } });
-                if (airport) airportLoc = `${airport.lat},${airport.lng}`;
+                if (airport) airportLoc = `${airport.latitude},${airport.longitude}`;
             } else if (terminal) {
                 // Fallback: Use terminal as location (e.g. "Terminal 3, IGI Airport, New Delhi")
                 // Appending "Airport" to ensure better matching if just "Terminal 1"
