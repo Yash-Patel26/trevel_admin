@@ -20,6 +20,8 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          timeout: 60s
+          command_timeout: 30m
           script: |
             # 1. Memory Safety: Ensure Swap is enabled (Critical for t2.micro builds)
             if ! swapon --show | grep -q "/swapfile"; then
