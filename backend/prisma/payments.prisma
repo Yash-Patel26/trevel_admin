@@ -1,0 +1,61 @@
+
+model Payment {
+  id            String   @id @default(uuid())
+  tripId        String   @map("trip_id")
+  userId        String   @map("user_id")
+  user          Customer @relation(fields: [userId], references: [id])
+  amount        Decimal  @db.Decimal(10, 2)
+  currency      String   @default("INR")
+  status        String   @default("pending")
+  paymentMethod String   @map("payment_method") // 'zaakpay', 'cash', 'wallet'
+  transactionId String?  @map("transaction_id")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("payments")
+  @@index([userId])
+  @@index([tripId])
+  @@index([status])
+}
+
+model PaymentMethod {
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  user              Customer @relation(fields: [userId], references: [id])
+  type              String   // 'card', 'upi', 'netbanking'
+  provider          String?  // 'visa', 'mastercard', 'gpay'
+  cardNumberLast4   String?  @map("card_number_last4")
+  cardBrand         String?  @map("card_brand")
+  cardHolderName    String?  @map("card_holder_name")
+  expiryMonth       Int?     @map("expiry_month")
+  expiryYear        Int?     @map("expiry_year")
+  upiId             String?  @map("upi_id")
+  isDefault         Boolean  @default(false) @map("is_default")
+  isActive          Boolean  @default(true) @map("is_active")
+  paymentGatewayToken String? @map("payment_gateway_token")
+  metadata          Json?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("payment_methods")
+  @@index([userId])
+  @@index([isActive])
+}
+
+model PaymentGatewayEvent {
+  orderId       String   @id @map("order_id")
+  tripId        String?  @map("trip_id")
+  userId        String?  @map("user_id")
+  amount        Decimal? @db.Decimal(10, 2)
+  currency      String?
+  status        String?
+  paymentMethod String   @default("zaakpay") @map("payment_method")
+  rawPayload    Json?    @map("raw_payload")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("payment_gateway_events")
+  @@index([orderId])
+  @@index([tripId])
+}

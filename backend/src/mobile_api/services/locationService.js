@@ -28,6 +28,8 @@ const unsetDefaultLocations = async (db, userId, excludeId = null) => {
   }
 };
 
+const crypto = require('crypto');
+
 const createSavedLocation = async (db, locationData) => {
   const {
     userId,
@@ -46,12 +48,15 @@ const createSavedLocation = async (db, locationData) => {
     await unsetDefaultLocations(db, userId);
   }
 
+  const id = crypto.randomUUID();
+
   const { rows } = await db.query(
     `INSERT INTO saved_locations
-     (user_id, name, address, latitude, longitude, city, state, country, postal_code, is_default)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     (id, user_id, name, address, latitude, longitude, city, state, country, postal_code, is_default)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING *`,
     [
+      id,
       userId,
       name,
       address,

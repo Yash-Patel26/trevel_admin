@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { ensureTransferTablesExist } = require('../utils/ensureTransferTables');
 
 const TABLES = {
@@ -87,9 +88,12 @@ const createBooking = async (db, tableName, bookingData) => {
 
   const [hasMakeId, hasMakeSelected, hasMakeImageUrl, hasOriginalFinalPrice, hasRoutePreference, hasPickupLat, hasPickupLng] = columnChecks;
 
+  // Generate UUID
+  const bookingId = crypto.randomUUID();
+
   // Build insert query dynamically - start with required fields
-  const insertFields = ['user_id', 'passenger_name', 'passenger_email', 'passenger_phone', 'pickup_location', 'pickup_date', 'pickup_time', 'destination_airport'];
-  const insertValues = [bookingData.userId, bookingData.passengerName, bookingData.passengerEmail, bookingData.passengerPhone, bookingData.pickupLocation, bookingData.pickupDate, bookingData.pickupTime, bookingData.destinationAirport];
+  const insertFields = ['id', 'user_id', 'passenger_name', 'passenger_email', 'passenger_phone', 'pickup_location', 'pickup_date', 'pickup_time', 'destination_airport'];
+  const insertValues = [bookingId, bookingData.userId, bookingData.passengerName, bookingData.passengerEmail, bookingData.passengerPhone, bookingData.pickupLocation, bookingData.pickupDate, bookingData.pickupTime, bookingData.destinationAirport];
 
   // Add optional vehicle columns after destination_airport
   if (hasMakeId) {

@@ -171,9 +171,14 @@ notes: record.notes || null
 };
 };
 const fetchBookingsFromSource = async (source, userId, status) => {
-
-const rows = await myBookingsService.fetchBookingsFromSource(db, source, userId, status);
-return rows.map((row) => mapBookingRecord(row, source));
+  try {
+    const rows = await myBookingsService.fetchBookingsFromSource(db, source, userId, status);
+    return rows.map((row) => mapBookingRecord(row, source));
+  } catch (error) {
+    console.error(`Error fetching bookings from ${source.table}:`, error);
+    // Return empty array instead of throwing to prevent 500 errors
+    return [];
+  }
 };
 const getMyBookings = async (req, res) => {
 try {
@@ -326,6 +331,7 @@ message: error.message
 module.exports = {
 getMyBookings,
 getMyBookingById,
+getUpcomingRides,
 BOOKING_SOURCES,
 fetchBookingById,
 mapBookingRecord

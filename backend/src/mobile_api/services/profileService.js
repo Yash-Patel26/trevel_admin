@@ -3,13 +3,13 @@ const userStatisticsService = require('./userStatisticsService');
 
 const normalizeProfileResponse = (record, statistics = null) => {
   // Ensure full_name is never empty - use multiple fallbacks
-  const fullName = record.full_name || 
-                   record.name || 
-                   record.user_metadata?.full_name ||
-                   record.user_metadata?.name ||
-                   (record.phone ? record.phone.replace(/^\+91/, '') : '') ||
-                   'User';
-  
+  const fullName = record.full_name ||
+    record.name ||
+    record.user_metadata?.full_name ||
+    record.user_metadata?.name ||
+    (record.phone ? record.phone.replace(/^\+91/, '') : '') ||
+    'User';
+
   const baseResponse = {
     id: record.id,
     full_name: fullName,
@@ -40,24 +40,24 @@ const normalizeProfileResponse = (record, statistics = null) => {
 };
 
 const getUserById = async (db, userId) => {
-  const { rows } = await db.query('SELECT * FROM users WHERE id = $1 LIMIT 1', [userId]);
+  const { rows } = await db.query('SELECT * FROM "Customer" WHERE id = $1 LIMIT 1', [userId]);
   return rows.length > 0 ? rows[0] : null;
 };
 
 const getUserStatistics = async (db, userId) => {
   try {
     const results = await userStatisticsService.getBookingStatistics(db, userId);
-    
+
     let completedBookings = 0;
     let totalDistanceKm = 0;
-    
+
     results.forEach(result => {
       const completed = parseInt(result.completed) || 0;
       const distance = parseFloat(result.total_distance) || 0;
       completedBookings += completed;
       totalDistanceKm += distance;
     });
-    
+
     const CO2_GRAMS_PER_KM_SAVED = 100;
     const co2SavingsGrams = Math.round(totalDistanceKm * CO2_GRAMS_PER_KM_SAVED);
     let co2SavingsFormatted;
@@ -67,11 +67,11 @@ const getUserStatistics = async (db, userId) => {
     } else {
       co2SavingsFormatted = `${co2SavingsGrams}g`;
     }
-    
+
     const CO2_PER_TREE_PER_YEAR_GRAMS = 21000;
     const treesPlanted = parseFloat((co2SavingsGrams / CO2_PER_TREE_PER_YEAR_GRAMS).toFixed(2));
     const totalTrips = completedBookings;
-    
+
     return {
       total_trips: totalTrips,
       co2_savings: co2SavingsFormatted,
@@ -89,8 +89,9 @@ const getUserStatistics = async (db, userId) => {
 
 const createUserProfile = async (db, userData) => {
   const { userId, full_name, email, phone } = userData;
+  // Map fields to Customer table: full_name -> name, phone -> mobile
   const insertQuery = `
-    INSERT INTO users (id, full_name, email, phone)
+    INSERT INTO "Customer" (id, name, email, mobile)
     VALUES ($1, $2, $3, $4)
     RETURNING *
   `;
@@ -109,24 +110,45 @@ const ensureProfileExists = async (db, userData) => {
 };
 
 const updateUserFullName = async (db, userId, fullName) => {
-  const updateQuery = 'UPDATE users SET full_name = $1, updated_at = NOW() WHERE id = $2 RETURNING *';
+  // Map full_name -> name. Removed updated_at as it might not be in the table based on previous checks.
+  const updateQuery = 'UPDATE "Customer" SET name = $1 WHERE id = $2 RETURNING *';
   const result = await db.query(updateQuery, [fullName, userId]);
   return result.rows[0];
 };
 
 const updateUserProfile = async (db, userId, updateData) => {
-  const fields = Object.entries(updateData);
+  const fields = [];
+  const startValues = [];
+
+  // Map update fields to Customer schema
+  if (updateData.full_name !== undefined) {
+    fields.push(`name = $${fields.length + 1}`);
+    startValues.push(updateData.full_name);
+  }
+  if (updateData.phone !== undefined) {
+    fields.push(`mobile = $${fields.length + 1}`);
+    startValues.push(updateData.phone);
+  }
+  if (updateData.email !== undefined) {
+    fields.push(`email = $${fields.length + 1}`);
+    startValues.push(updateData.email);
+  }
+  if (updateData.profile_image_url !== undefined) {
+    fields.push(`profile_image_url = $${fields.length + 1}`);
+    startValues.push(updateData.profile_image_url);
+  }
+  // Ignore other fields like gender/dob/address if they don't exist in Customer table yet
+
   if (fields.length === 0) {
-    throw new Error('No fields to update');
+    // If only fields that don't map were passed, return current user
+    return await getUserById(db, userId);
   }
 
-  const setClauses = fields.map(([key], index) => `${key} = $${index + 1}`);
-  const values = fields.map(([, value]) => value === null || value === '' ? null : value);
-  values.push(userId);
+  const values = [...startValues, userId];
 
   const updateQuery = `
-    UPDATE users
-    SET ${setClauses.join(', ')}, updated_at = NOW()
+    UPDATE "Customer"
+    SET ${fields.join(', ')}
     WHERE id = $${values.length}
     RETURNING *
   `;

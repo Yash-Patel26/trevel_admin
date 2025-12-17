@@ -1,0 +1,74 @@
+
+model Hub {
+  id          String   @id @default(uuid())
+  name        String
+  address     String?
+  latitude    Float
+  longitude   Float
+  radiusKm    Float    @map("radius_km")
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("hubs")
+}
+
+model Complaint {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  user        Customer @relation(fields: [userId], references: [id])
+  bookingId   String?  @map("booking_id")
+  bookingType String?  @map("booking_type")
+  subject     String
+  description String
+  category    String   @default("other")
+  priority    String   @default("medium")
+  status      String   @default("open")
+  adminNotes  String?  @map("admin_notes")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("complaints")
+  @@index([userId])
+  @@index([status])
+}
+
+model Rating {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  user          Customer @relation(fields: [userId], references: [id])
+  bookingId     String   @map("booking_id")
+  bookingType   String   @map("booking_type")
+  rating        Int
+  title         String?
+  review        String?
+  driverRating  Int?     @map("driver_rating")
+  vehicleRating Int?     @map("vehicle_rating")
+  serviceRating Int?     @map("service_rating")
+  isFeatured    Boolean  @default(false) @map("is_featured")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([userId, bookingId, bookingType])
+  @@map("ratings")
+  @@index([userId])
+  @@index([bookingId])
+}
+
+model FAQ {
+  id              String   @id @default(uuid())
+  category        String
+  question        String
+  answer          String
+  isActive        Boolean  @default(true) @map("is_active")
+  orderIndex      Int      @default(0) @map("order_index")
+  viewsCount      Int      @default(0) @map("views_count")
+  helpfulCount    Int      @default(0) @map("helpful_count")
+  notHelpfulCount Int      @default(0) @map("not_helpful_count")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("faq")
+  @@index([category])
+}

@@ -36,6 +36,12 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:pass@postgres:5432/trevel_admin
       - REDIS_URL=redis://redis:6379
+      - PORT=4000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=pass
+      - DB_NAME=trevel_admin
     depends_on:
       - postgres
       - redis

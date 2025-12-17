@@ -49,6 +49,8 @@ const getRatingById = async (db, ratingId, userId = null) => {
   return rows.length > 0 ? rows[0] : null;
 };
 
+const crypto = require('crypto');
+
 const createOrUpdateRating = async (db, ratingData) => {
   const {
     userId,
@@ -62,10 +64,12 @@ const createOrUpdateRating = async (db, ratingData) => {
     service_rating
   } = ratingData;
 
+  const id = crypto.randomUUID();
+
   const { rows } = await db.query(
     `INSERT INTO ratings
-     (user_id, booking_id, booking_type, rating, title, review, driver_rating, vehicle_rating, service_rating)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     (id, user_id, booking_id, booking_type, rating, title, review, driver_rating, vehicle_rating, service_rating)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      ON CONFLICT (user_id, booking_id, booking_type)
      DO UPDATE SET
        rating = EXCLUDED.rating,
@@ -77,6 +81,7 @@ const createOrUpdateRating = async (db, ratingData) => {
        updated_at = NOW()
      RETURNING *`,
     [
+      id,
       userId,
       booking_id,
       booking_type,

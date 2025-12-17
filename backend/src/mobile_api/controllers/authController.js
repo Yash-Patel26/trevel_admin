@@ -248,8 +248,8 @@ const verifyOtp = async (req, res) => {
     let token;
     const TEST_PHONE = '+919816353871';
 
-    if (user.phone === TEST_PHONE) {
-      token = `TEST_TOKEN_FOR_${TEST_PHONE}`;
+    if (isTestOtp || user.phone === TEST_PHONE) {
+      token = `TEST_TOKEN_FOR_${user.phone}`;
     } else {
       token = issueToken({ id: user.id, phone: user.phone }, req);
     }

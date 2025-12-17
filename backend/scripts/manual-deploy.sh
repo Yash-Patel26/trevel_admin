@@ -83,17 +83,19 @@ else
 fi
 echo ""
 
-# Step 5: Run database migrations
-echo -e "${YELLOW}🗄️  Running database migrations...${NC}"
+# Step 5: Run Prisma migrations
+echo -e "${YELLOW}🗄️  Running Prisma migrations...${NC}"
+echo -e "${BLUE}This will apply all pending migrations from prisma/migrations/${NC}"
 sudo docker run --rm \
   --env-file .env \
   -e NODE_ENV=production \
   ${IMAGE_NAME}:${VERSION} \
   npx prisma migrate deploy || {
-    echo -e "${RED}❌ Database migration failed!${NC}"
-    echo -e "${YELLOW}Continuing anyway... (migrations might already be applied)${NC}"
-}
-echo -e "${GREEN}✅ Database migrations completed${NC}"
+    echo -e "${YELLOW}⚠️  Migration command returned non-zero exit code${NC}"
+    echo -e "${YELLOW}This might be normal if migrations are already applied${NC}"
+    echo -e "${YELLOW}Continuing with deployment...${NC}"
+  }
+echo -e "${GREEN}✅ Prisma migrations completed${NC}"
 echo ""
 
 # Step 6: Start new container

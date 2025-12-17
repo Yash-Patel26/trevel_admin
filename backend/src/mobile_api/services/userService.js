@@ -1,26 +1,74 @@
+const prisma = require('../../prisma/client').default;
+
+// Helper to map Prisma Customer to Legacy User format
+const mapCustomerToUser = (customer) => {
+  if (!customer) return null;
+  return {
+    id: customer.id,
+    full_name: customer.name,
+    email: customer.email,
+    phone: customer.mobile,
+    profile_image_url: customer.profileImageUrl,
+    created_at: customer.createdAt || new Date().toISOString(), // Fallback if missing
+    updated_at: customer.updatedAt || new Date().toISOString()
+  };
+};
+
 const getUserById = async (db, userId) => {
-  const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
-  return rows.length > 0 ? rows[0] : null;
+  // db ignored
+  try {
+    const customer = await prisma.customer.findUnique({
+      where: { id: userId }
+    });
+    return mapCustomerToUser(customer);
+  } catch (error) {
+    console.error('Error getting user by id:', error);
+    return null;
+  }
 };
 
 const createUser = async (db, userData) => {
+  // db ignored
   const { id, email, phone, full_name } = userData;
-  const { rows } = await db.query(
-    `INSERT INTO users (id, email, phone, full_name)
-     VALUES ($1, $2, $3, $4)
-     RETURNING *`,
-    [id, email, phone || null, full_name || null]
-  );
-  return rows.length > 0 ? rows[0] : null;
+  try {
+    const customer = await prisma.customer.create({
+      data: {
+        id: id, // Optional if we want to enforce specific ID
+        email: email,
+        mobile: phone,
+        name: full_name
+      }
+    });
+    return mapCustomerToUser(customer);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    return null;
+  }
 };
 
 const updateUser = async (db, userId, updateData) => {
-  const setClauses = Object.keys(updateData).map((key, index) => `${key} = $${index + 1}`).join(', ');
-  const values = Object.values(updateData);
-  values.push(userId);
-  const queryText = `UPDATE users SET ${setClauses}, updated_at = NOW() WHERE id = $${values.length} RETURNING *`;
-  const { rows } = await db.query(queryText, values);
-  return rows.length > 0 ? rows[0] : null;
+  // Map legacy update fields to Prisma fields
+  const prismaUpdateData = {};
+
+  if (updateData.full_name !== undefined) prismaUpdateData.name = updateData.full_name;
+  if (updateData.phone !== undefined) prismaUpdateData.mobile = updateData.phone;
+  if (updateData.email !== undefined) prismaUpdateData.email = updateData.email;
+  // Handle other potential fields if strictly needed, but these are the main ones
+  // legacy query: keys mapped to values.
+
+  // Handle profile_image_url
+  if (updateData.profile_image_url !== undefined) prismaUpdateData.profileImageUrl = updateData.profile_image_url;
+
+  try {
+    const customer = await prisma.customer.update({
+      where: { id: userId },
+      data: prismaUpdateData
+    });
+    return mapCustomerToUser(customer);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return null;
+  }
 };
 
 module.exports = {

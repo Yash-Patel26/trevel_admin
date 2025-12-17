@@ -1,0 +1,49 @@
+# Use Node.js LTS as base image
+FROM node:20-alpine AS base
+
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl libc6-compat
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nodejs
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
+
+# Generate Prisma Client (required for runtime)
+RUN npx prisma generate
+
+# Copy built artifacts
+COPY dist ./dist
+COPY scripts ./scripts
+
+# Copy and setup startup script
+COPY scripts/start.sh ./start.sh
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
+
+# Create uploads directory
+RUN mkdir -p /app/uploads && \
+    chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# Expose port
+EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:4000/healthz', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Start application (start.sh will run Prisma migrations on startup)
+CMD ["./start.sh", "node", "dist/server.js"]

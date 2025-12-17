@@ -1,11 +1,15 @@
+const crypto = require('crypto');
+
 const createEmergencySos = async (db, sosData) => {
   const { userId, booking_id, latitude, longitude, address } = sosData;
 
+  const id = crypto.randomUUID();
+
   const { rows: sosEvent } = await db.query(
-    `INSERT INTO emergency_sos_events (user_id, booking_id, latitude, longitude, address, status)
-     VALUES ($1, $2, $3, $4, $5, 'active')
+    `INSERT INTO emergency_sos_events (id, user_id, booking_id, latitude, longitude, address, status)
+     VALUES ($1, $2, $3, $4, $5, $6, 'active')
      RETURNING *`,
-    [userId, booking_id || null, latitude, longitude, address || null]
+    [id, userId, booking_id || null, latitude, longitude, address || null]
   );
 
   const { rows: contacts } = await db.query(
@@ -49,11 +53,13 @@ const addEmergencyContact = async (db, contactData) => {
     );
   }
 
+  const id = crypto.randomUUID();
+
   const { rows } = await db.query(
-    `INSERT INTO emergency_contacts (user_id, name, phone_number, relationship, is_primary, can_receive_alerts)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO emergency_contacts (id, user_id, name, phone_number, relationship, is_primary, can_receive_alerts)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
-    [userId, name, phone_number, relationship || null, is_primary || false, can_receive_alerts !== false]
+    [id, userId, name, phone_number, relationship || null, is_primary || false, can_receive_alerts !== false]
   );
 
   return rows[0];

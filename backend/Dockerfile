@@ -4,8 +4,8 @@ FROM node:20-alpine AS base
 # Install OpenSSL and required libraries for Prisma
 RUN apk add --no-cache openssl libc6-compat python3 make g++
 
-# Install dependencies only when needed
-FROM base AS deps
+# Build stage
+FROM base AS builder
 WORKDIR /app
 
 # Copy package files
@@ -18,15 +18,7 @@ RUN npm ci
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build the application
-FROM base AS builder
-WORKDIR /app
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
-
-# Copy source code and config files
+# Copy source code
 COPY . .
 
 # Build TypeScript
@@ -48,10 +40,11 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copy necessary files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
+
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
 
 # Create uploads directory for file storage
 RUN mkdir -p /app/uploads && \
@@ -78,5 +71,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 COPY scripts/start.sh ./start.sh
 RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
 
-# Start the application
-CMD ["./start.sh", "npm", "start"]
+# Start the application (start.sh will run migrations)
+CMD ["./start.sh", "node", "dist/server.js"]

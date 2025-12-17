@@ -54,6 +54,8 @@ const getComplaintById = async (db, complaintId, userId = null, requestedUserId 
   return rows[0];
 };
 
+const crypto = require('crypto');
+
 const createComplaint = async (db, complaintData) => {
   const {
     userId,
@@ -65,12 +67,15 @@ const createComplaint = async (db, complaintData) => {
     priority = 'medium'
   } = complaintData;
 
+  const id = crypto.randomUUID();
+
   const { rows } = await db.query(
     `INSERT INTO complaints
-     (user_id, booking_id, booking_type, subject, description, category, priority)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     (id, user_id, booking_id, booking_type, subject, description, category, priority)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
+      id,
       userId,
       booking_id || null,
       booking_type || null,

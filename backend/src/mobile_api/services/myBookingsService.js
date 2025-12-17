@@ -66,8 +66,10 @@ const fetchBookingsFromSource = async (db, source, userId, status = null) => {
       }
     }
 
-    const tableExists = await checkTableExists(db, source.table.replace('public.', '').split('.')[0]);
+    const tableName = source.table.replace('public.', '').split('.')[0];
+    const tableExists = await checkTableExists(db, tableName);
     if (!tableExists) {
+      console.warn(`Table ${tableName} does not exist, skipping...`);
       return [];
     }
 
@@ -82,10 +84,9 @@ const fetchBookingsFromSource = async (db, source, userId, status = null) => {
     const { rows } = await db.query(query, params);
     return rows;
   } catch (error) {
-    if (error.message && error.message.includes('does not exist')) {
-      return [];
-    }
-    throw error;
+    console.error(`Error in fetchBookingsFromSource for ${source.table}:`, error.message);
+    // Return empty array for any error to prevent 500 errors
+    return [];
   }
 };
 

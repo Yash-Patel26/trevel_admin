@@ -5,10 +5,10 @@ const ensureFcmTokenColumn = async (db) => {
       BEGIN
         IF NOT EXISTS (
           SELECT 1 FROM information_schema.columns
-          WHERE table_name = 'users' AND column_name = 'fcm_token'
+          WHERE table_name = 'Customer' AND column_name = 'fcm_token'
         ) THEN
-          ALTER TABLE users ADD COLUMN fcm_token TEXT;
-          CREATE INDEX IF NOT EXISTS idx_users_fcm_token ON users(fcm_token);
+          ALTER TABLE "Customer" ADD COLUMN fcm_token TEXT;
+          CREATE INDEX IF NOT EXISTS idx_customer_fcm_token ON "Customer"(fcm_token);
         END IF;
       END $$;
     `);
@@ -21,8 +21,8 @@ const saveFcmToken = async (db, userId, fcmToken) => {
   await ensureFcmTokenColumn(db);
 
   const { rows } = await db.query(
-    `UPDATE users
-     SET fcm_token = $1, updated_at = NOW()
+    `UPDATE "Customer"
+     SET fcm_token = $1
      WHERE id = $2
      RETURNING id, fcm_token`,
     [fcmToken, userId]
@@ -33,8 +33,8 @@ const saveFcmToken = async (db, userId, fcmToken) => {
 
 const removeFcmToken = async (db, userId) => {
   await db.query(
-    `UPDATE users
-     SET fcm_token = NULL, updated_at = NOW()
+    `UPDATE "Customer"
+     SET fcm_token = NULL
      WHERE id = $1`,
     [userId]
   );

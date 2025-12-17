@@ -4,7 +4,7 @@ npm-debug.log
 yarn-error.log
 
 # Build output
-dist
+# dist
 build
 
 # Uploads (should be in volume, not in image)
@@ -47,4 +47,7 @@ tests
 # Misc
 *.log
 .cache
+*.tar
+*.tar.gz
+*.zip
 

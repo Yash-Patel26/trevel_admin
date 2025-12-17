@@ -271,6 +271,29 @@ async function main() {
     }
   }
 
+  console.log('Seeding Customers...');
+  const testCustomer = {
+    mobile: "+919876543210",
+    email: "customer@trevel.in",
+    name: "Test Customer",
+  };
+
+  await prisma.customer.upsert({
+    where: { mobile: testCustomer.mobile },
+    update: {
+      email: testCustomer.email,
+      name: testCustomer.name,
+      status: "active",
+    },
+    create: {
+      mobile: testCustomer.mobile,
+      email: testCustomer.email,
+      name: testCustomer.name,
+      status: "active",
+    },
+  });
+  console.log(`✓ Created/Updated customer: ${testCustomer.email}`);
+
   console.log('Seeding Pricing Configs...');
 
   await prisma.pricingConfig.upsert({
@@ -325,6 +348,69 @@ async function main() {
     }
   });
 
+  console.log('Seeding Makes...');
+  const MAKES = [
+    {
+      name: "MG Windsor",
+      type: "Sedan",
+      capacity: 4,
+      luggage: 2,
+      basePrice: 15,
+      imageUrl: "https://trevel-assets.s3.ap-south-1.amazonaws.com/mg_windsor.png",
+      description: "Comfortable sedan for city and outstation trips",
+      isActive: true,
+      serviceTypes: ["mini-travel", "airport-drop", "airport-pickup", "hourly-rental"],
+      category: "Standard",
+      model: "Windsor"
+    },
+    {
+      name: "BYD E-max",
+      type: "MPV",
+      capacity: 6,
+      luggage: 4,
+      basePrice: 20,
+      imageUrl: "https://trevel-assets.s3.ap-south-1.amazonaws.com/byd_emax.png",
+      description: "Spacious MPV for family trips",
+      isActive: true,
+      serviceTypes: ["mini-travel", "airport-drop", "airport-pickup", "hourly-rental"],
+      category: "Premium",
+      model: "E-max"
+    },
+    {
+      name: "KIA Carrens",
+      type: "MPV",
+      capacity: 6,
+      luggage: 3,
+      basePrice: 18,
+      imageUrl: "https://trevel-assets.s3.ap-south-1.amazonaws.com/kia_carrens.png",
+      description: "Comfortable MPV for group travel",
+      isActive: true,
+      serviceTypes: ["mini-travel", "hourly-rental", "airport-drop", "airport-pickup"],
+      category: "Standard",
+      model: "Carrens"
+    },
+    {
+      name: "BMW i-1Max",
+      type: "Luxury",
+      capacity: 4,
+      luggage: 3,
+      basePrice: 50,
+      imageUrl: "https://trevel-assets.s3.ap-south-1.amazonaws.com/bmw_i1max.png",
+      description: "Luxury experience for premium travel",
+      isActive: true,
+      serviceTypes: ["airport-drop", "airport-pickup"],
+      category: "Luxury",
+      model: "i-1Max"
+    }
+  ];
+
+  for (const make of MAKES) {
+    // Check if make exists by name
+    const existing = await prisma.make.findFirst({ where: { name: make.name } });
+    if (!existing) {
+      await prisma.make.create({ data: make });
+    }
+  }
   console.log('Seeding completed.');
 }
 

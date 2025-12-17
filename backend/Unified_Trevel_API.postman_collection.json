@@ -19,7 +19,7 @@
                                 "header": [],
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n    \"email\": \"admin@trevel.com\",\n    \"password\": \"password\"\n}",
+                                    "raw": "{\n    \"email\": \"admin@trevel.in\",\n    \"password\": \"112233\"\n}",
                                     "options": {
                                         "raw": {
                                             "language": "json"
@@ -115,6 +115,456 @@
                             "response": []
                         }
                     ]
+                },
+                {
+                    "name": "Vehicles",
+                    "item": [
+                        {
+                            "name": "Get Makes & Models",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/vehicles/makes-models"
+                            }
+                        },
+                        {
+                            "name": "Create Vehicle",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/vehicles",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"numberPlate\": \"KA01AB1234\", \"make\": \"MG\", \"model\": \"Windsor\", \"liveLocationKey\": \"unique_key_1\", \"dashcamKey\": \"cam_key_1\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Vehicles",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/vehicles"
+                            }
+                        },
+                        {
+                            "name": "Get Available Vehicles",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/vehicles/available"
+                            }
+                        },
+                        {
+                            "name": "Review Vehicle",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/vehicles/:id/review",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"status\": \"approved\", \"comments\": \"Looks good\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Assign Driver",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/vehicles/:id/assign-driver",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"driverId\": 1}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Reassign Driver",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/vehicles/:id/reassign",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"driverId\": 2}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Vehicle Logs",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/vehicles/:id/logs"
+                            }
+                        },
+                        {
+                            "name": "Get Vehicle Metrics",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/vehicles/:id/metrics"
+                            }
+                        },
+                        {
+                            "name": "Get Assignment Logs",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/vehicles/:id/assignment-logs"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Drivers",
+                    "item": [
+                        {
+                            "name": "Create Driver",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/drivers",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"name\": \"John Doe\", \"mobile\": \"+919876543210\", \"email\": \"john@example.com\", \"onboardingData\": {\"licenseNumber\": \"DL123\"}, \"contactPreferences\": {\"whatsapp\": true}}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Drivers",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/drivers?page=1&limit=10"
+                            }
+                        },
+                        {
+                            "name": "Check Mobile",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/drivers/check-mobile?mobile=+919876543210"
+                            }
+                        },
+                        {
+                            "name": "Update Background Check",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/drivers/:id/background",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"status\": \"clear\", \"notes\": \"Verified successfully\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Update Training",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/drivers/:id/training",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"module\": \"safety\", \"status\": \"completed\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Approve Driver",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/drivers/:id/approve",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"decision\": \"approved\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Audit Trail",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/drivers/:id/audit-trail"
+                            }
+                        },
+                        {
+                            "name": "Assign Vehicle",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/drivers/:id/assign-vehicle",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"vehicleId\": 1}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Driver Logs",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/drivers/:id/logs"
+                            }
+                        },
+                        {
+                            "name": "Driver Documents",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/drivers/:id/documents"
+                            }
+                        },
+                        {
+                            "name": "Upload Document",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/drivers/:id/documents",
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "type",
+                                            "value": "license",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "file",
+                                            "type": "file"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Users & Roles",
+                    "item": [
+                        {
+                            "name": "Create User",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/users",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"email\": \"newuser@example.com\", \"fullName\": \"New User\", \"password\": \"password123\", \"roleId\": 1}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Users",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/users"
+                            }
+                        },
+                        {
+                            "name": "Get User By ID",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/users/:id"
+                            }
+                        },
+                        {
+                            "name": "Update User",
+                            "request": {
+                                "method": "PATCH",
+                                "url": "{{baseUrl}}/users/:id",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"isActive\": false}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Delete User",
+                            "request": {
+                                "method": "DELETE",
+                                "url": "{{baseUrl}}/users/:id"
+                            }
+                        },
+                        {
+                            "name": "Get Roles",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/roles"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Operations",
+                    "item": [
+                        {
+                            "name": "Tickets",
+                            "item": [
+                                {
+                                    "name": "Create Ticket",
+                                    "request": {
+                                        "method": "POST",
+                                        "url": "{{baseUrl}}/tickets",
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\"vehicleNumber\": \"KA01AB1234\", \"driverName\": \"Ram\", \"driverMobile\": \"+919999999999\", \"category\": \"accident\", \"priority\": \"high\", \"description\": \"Accident at highway\"}",
+                                            "options": {
+                                                "raw": {
+                                                    "language": "json"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "Get Tickets",
+                                    "request": {
+                                        "method": "GET",
+                                        "url": "{{baseUrl}}/tickets"
+                                    }
+                                },
+                                {
+                                    "name": "Update Ticket",
+                                    "request": {
+                                        "method": "PATCH",
+                                        "url": "{{baseUrl}}/tickets/:id",
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\"status\": \"resolved\", \"resolutionNotes\": \"Fixed\"}",
+                                            "options": {
+                                                "raw": {
+                                                    "language": "json"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Dashboard",
+                            "item": [
+                                {
+                                    "name": "Fleet Overview",
+                                    "request": {
+                                        "method": "GET",
+                                        "url": "{{baseUrl}}/dashboards/fleet"
+                                    }
+                                },
+                                {
+                                    "name": "Vehicle Details",
+                                    "request": {
+                                        "method": "GET",
+                                        "url": "{{baseUrl}}/dashboards/vehicle/:id"
+                                    }
+                                },
+                                {
+                                    "name": "Drivers Overview",
+                                    "request": {
+                                        "method": "GET",
+                                        "url": "{{baseUrl}}/dashboards/drivers"
+                                    }
+                                },
+                                {
+                                    "name": "Driver Details",
+                                    "request": {
+                                        "method": "GET",
+                                        "url": "{{baseUrl}}/dashboards/driver/:id"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Rides",
+                            "item": [
+                                {
+                                    "name": "Create Ride",
+                                    "request": {
+                                        "method": "POST",
+                                        "url": "{{baseUrl}}/rides",
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\"vehicleId\": 1, \"startedAt\": \"2023-10-27T10:00:00Z\", \"status\": \"completed\", \"distanceKm\": 50}",
+                                            "options": {
+                                                "raw": {
+                                                    "language": "json"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "Get Rides",
+                                    "request": {
+                                        "method": "GET",
+                                        "url": "{{baseUrl}}/rides"
+                                    }
+                                },
+                                {
+                                    "name": "Get Ride By ID",
+                                    "request": {
+                                        "method": "GET",
+                                        "url": "{{baseUrl}}/rides/:id"
+                                    }
+                                },
+                                {
+                                    "name": "Update Ride",
+                                    "request": {
+                                        "method": "PATCH",
+                                        "url": "{{baseUrl}}/rides/:id",
+                                        "body": {
+                                            "mode": "raw",
+                                            "raw": "{\"status\": \"completed\", \"distanceKm\": 55}",
+                                            "options": {
+                                                "raw": {
+                                                    "language": "json"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         },
@@ -128,59 +578,281 @@
                             "name": "Send OTP",
                             "request": {
                                 "method": "POST",
-                                "header": [],
+                                "url": "{{baseUrl}}/api/v1/auth/send-otp",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n    \"phone\": \"+1234567890\"\n}",
+                                    "raw": "{\"phone\": \"+919876543210\"}",
                                     "options": {
                                         "raw": {
                                             "language": "json"
                                         }
                                     }
-                                },
-                                "url": {
-                                    "raw": "{{baseUrl}}/api/v1/auth/send-otp",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "auth",
-                                        "send-otp"
-                                    ]
                                 }
-                            },
-                            "response": []
+                            }
                         },
                         {
                             "name": "Verify OTP",
                             "request": {
                                 "method": "POST",
-                                "header": [],
+                                "url": "{{baseUrl}}/api/v1/auth/verify-otp",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n    \"phone\": \"+1234567890\",\n    \"otp\": \"123456\"\n}",
+                                    "raw": "{\"phone\": \"+919876543210\", \"otp\": \"123456\"}",
                                     "options": {
                                         "raw": {
                                             "language": "json"
                                         }
                                     }
-                                },
-                                "url": {
-                                    "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "auth",
-                                        "verify-otp"
-                                    ]
                                 }
                             },
-                            "response": []
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "var jsonData = pm.response.json();",
+                                            "if (jsonData.success && jsonData.data && jsonData.data.token) {",
+                                            "    pm.collectionVariables.set(\"mobileAuthToken\", jsonData.data.token);",
+                                            "    console.log(\"Mobile Auth token set from Verify OTP\");",
+                                            "}"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Resend OTP",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/auth/resend-otp",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"phone\": \"+919876543210\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Logout",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/auth/logout"
+                            }
+                        },
+                        {
+                            "name": "Get Current User",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/auth/me"
+                            }
+                        },
+                        {
+                            "name": "Change Password",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/auth/change-password",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"current_password\": \"oldpass\", \"new_password\": \"newpass\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Send OTP (Alt)",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/otp/send",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"phone\": \"+919876543210\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Verify OTP (Alt)",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/otp/verify",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"phone\": \"+919876543210\", \"otp\": \"123456\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Check OTP Status",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/otp/status?phone=+919876543210"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Profile & User",
+                    "item": [
+                        {
+                            "name": "Get Profile",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{mobileAuthToken}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/api/v1/profile/profile"
+                            }
+                        },
+                        {
+                            "name": "Update Profile",
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{mobileAuthToken}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/api/v1/profile/profile",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"full_name\": \"New Name\", \"email\": \"new@example.com\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Settings",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/profile/settings"
+                            }
+                        },
+                        {
+                            "name": "Update Settings",
+                            "request": {
+                                "method": "PUT",
+                                "url": "{{baseUrl}}/api/v1/profile/settings",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"notificationsEnabled\": true}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Statistics",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/profile/statistics"
+                            }
+                        },
+                        {
+                            "name": "Update Profile Picture",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/profile/profile-picture",
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "image",
+                                            "type": "file"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "name": "Save FCM Token",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/profile/fcm-token",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"token\": \"fcm_token_here\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Promo Codes",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/profile/promo-codes"
+                            }
+                        },
+                        {
+                            "name": "Referral Info",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/referral/info"
+                            }
+                        },
+                        {
+                            "name": "Apply Referral",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/referral/apply",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"code\": \"REF123\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Notifications",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/notifications"
+                            }
+                        },
+                        {
+                            "name": "Mark Notification Read",
+                            "request": {
+                                "method": "PUT",
+                                "url": "{{baseUrl}}/api/v1/notifications/:id/read"
+                            }
                         }
                     ]
                 },
@@ -188,51 +860,454 @@
                     "name": "Bookings",
                     "item": [
                         {
-                            "name": "Create Mini Trip",
+                            "name": "My Bookings",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/my-bookings"
+                            }
+                        },
+                        {
+                            "name": "Booking Detail",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/bookings/:id"
+                            }
+                        },
+                        {
+                            "name": "Calculate Fare",
                             "request": {
                                 "method": "POST",
-                                "header": [],
+                                "url": "{{baseUrl}}/api/v1/bookings/calculate-fare",
                                 "body": {
                                     "mode": "raw",
-                                    "raw": "{\n    \"pickupLocation\": \"Location A\",\n    \"dropoffLocation\": \"Location B\",\n    \"vehicleSelected\": \"Sedan\"\n}",
+                                    "raw": "{\"pickup\": \"Loc A\", \"drop\": \"Loc B\"}",
                                     "options": {
                                         "raw": {
                                             "language": "json"
                                         }
                                     }
-                                },
-                                "url": {
-                                    "raw": "{{baseUrl}}/api/v1/mini-trips",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "mini-trips"
-                                    ]
                                 }
-                            },
-                            "response": []
+                            }
                         },
                         {
-                            "name": "Get My Bookings",
+                            "name": "Create Mini Trip",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{mobileAuthToken}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/api/v1/mini-trips/bookings",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"pickupLocation\": \"Location A\", \"dropoffLocation\": \"Location B\", \"makeSelected\": \"MG Windsor\", \"pickupDate\": \"2025-12-25\", \"pickupTime\": \"10:00 AM\", \"estimatedDistanceKm\": 15, \"estimatedTimeMin\": 45, \"passengerName\": \"Test Passenger\", \"passengerPhone\": \"+919876543210\", \"basePrice\": 100, \"finalPrice\": 105}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Create Hourly Rental",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{mobileAuthToken}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/api/v1/hourly-rentals/bookings",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"pickupLocation\": \"Location A\", \"pickupDate\": \"2025-12-25\", \"pickupTime\": \"10:00 AM\", \"makeSelected\": \"Sedan\", \"passengerName\": \"Test User\", \"passengerPhone\": \"+919876543210\", \"rentalHours\": 4, \"coveredDistanceKm\": 40, \"basePrice\": 500, \"finalPrice\": 525}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Create To-Airport",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{mobileAuthToken}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/api/v1/airports/to-airport/transfer-bookings",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"pickupLocation\": \"Home\", \"pickupDate\": \"2025-12-25\", \"pickupTime\": \"10:00 AM\", \"destinationAirport\": \"BLR\", \"makeSelected\": \"Sedan\", \"passengerName\": \"Test User\", \"passengerPhone\": \"+919876543210\", \"estimatedDistanceKm\": 30, \"estimatedTimeMin\": 60, \"basePrice\": 800, \"gstAmount\": 40, \"finalPrice\": 840}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Create From-Airport",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{mobileAuthToken}}",
+                                        "type": "text"
+                                    }
+                                ],
+                                "url": "{{baseUrl}}/api/v1/airports/from-airport/transfer-bookings",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"pickupLocation\": \"BLR Airport\", \"pickupDate\": \"2025-12-25\", \"pickupTime\": \"10:00 AM\", \"destinationAirport\": \"Home\", \"makeSelected\": \"Sedan\", \"passengerName\": \"Test User\", \"passengerPhone\": \"+919876543210\", \"estimatedDistanceKm\": 30, \"estimatedTimeMin\": 60, \"basePrice\": 800, \"gstAmount\": 40, \"finalPrice\": 840}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Cancel Booking",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/bookings/:id/cancel",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"reason\": \"Changed plans\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Track Driver",
                             "request": {
                                 "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{baseUrl}}/api/v1/my-bookings",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "my-bookings"
-                                    ]
+                                "url": "{{baseUrl}}/api/v1/bookings/:id/live-location"
+                            }
+                        },
+                        {
+                            "name": "Get Receipt",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/bookings/:id/receipt"
+                            }
+                        },
+                        {
+                            "name": "Call Driver",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/bookings/:id/call-driver"
+                            }
+                        },
+                        {
+                            "name": "Share Ride",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/bookings/:id/share"
+                            }
+                        },
+                        {
+                            "name": "Rate Ride",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/bookings/:id/feedback",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"rating\": 5, \"comment\": \"Great ride\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
                                 }
-                            },
-                            "response": []
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Pricing & Payments",
+                    "item": [
+                        {
+                            "name": "Estimate Price (Generic)",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/pricing/estimate",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"serviceType\": \"mini-trip\", \"distance\": 10, \"pickupTime\": \"10:00\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Route Options",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/pricing/routes",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"pickup_location\": \"Loc A\", \"dropoff_location\": \"Loc B\", \"pickup_time\": \"10:00\", \"pickup_date\": \"2025-12-25\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Payments",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/payments"
+                            }
+                        },
+                        {
+                            "name": "Create Payment",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/payments",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"trip_id\": \"TRIP-123\", \"amount\": 100, \"currency\": \"INR\", \"payment_method\": \"zaakpay\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Zaakpay Order",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/payments/zaakpay/order",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"trip_id\": \"TRIP-123\", \"amount\": 100, \"currency\": \"INR\", \"customer\": {\"email\": \"test@test.com\", \"phone\": \"9999999999\"}}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Payment Methods",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/payments/methods"
+                            }
+                        },
+                        {
+                            "name": "Add Payment Method",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/payments/methods",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"type\": \"card\", \"card_number_last4\": \"1234\", \"card_brand\": \"Visa\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Validate Promo",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/promo-codes/validate",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"code\": \"SAVE50\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Locations",
+                    "item": [
+                        {
+                            "name": "Get Saved Locations",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/locations/saved"
+                            }
+                        },
+                        {
+                            "name": "Create Saved Location",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/locations/saved",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"name\": \"Home\", \"address\": \"123 Street\", \"latitude\": 12.97, \"longitude\": 77.59}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Autocomplete Place",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/locations/autocomplete?input=Bangalore"
+                            }
+                        },
+                        {
+                            "name": "Place Details",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/locations/place-details?placeId=xxx"
+                            }
+                        },
+                        {
+                            "name": "Geocode",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/locations/geocode"
+                            }
+                        },
+                        {
+                            "name": "Reverse Geocode",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/locations/reverse-geocode"
+                            }
+                        },
+                        {
+                            "name": "Nearby Hubs",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/hubs?latitude=12.9716&longitude=77.5946"
+                            }
+                        },
+                        {
+                            "name": "Check Service Zone",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/service-zones/check",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"latitude\": 12.97, \"longitude\": 77.59, \"zone_type\": \"pickup\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Support",
+                    "item": [
+                        {
+                            "name": "Get FAQs",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/support/faq"
+                            }
+                        },
+                        {
+                            "name": "Mark FAQ Helpful",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/support/faq/:id/helpful"
+                            }
+                        },
+                        {
+                            "name": "Report Issue",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/support/report-issue",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"subject\": \"App Bug\", \"description\": \"Something wrong\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Contact Support",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/support/contact",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"subject\": \"Contact Request\", \"description\": \"Need help with my account\"}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "Get Complaints",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/complaints"
+                            }
+                        },
+                        {
+                            "name": "Emergency SOS",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/emergency/sos",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"latitude\": 12.97, \"longitude\": 77.59}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            }
                         }
                     ]
                 },
@@ -243,20 +1318,31 @@
                             "name": "Get Vehicle Makes",
                             "request": {
                                 "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{baseUrl}}/api/v1/make",
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "path": [
-                                        "api",
-                                        "v1",
-                                        "make"
-                                    ]
+                                "url": "{{baseUrl}}/api/v1/make"
+                            }
+                        },
+                        {
+                            "name": "Get Ratings",
+                            "request": {
+                                "method": "GET",
+                                "url": "{{baseUrl}}/api/v1/ratings"
+                            }
+                        },
+                        {
+                            "name": "Create Rating",
+                            "request": {
+                                "method": "POST",
+                                "url": "{{baseUrl}}/api/v1/ratings",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\"rating\": 5}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
                                 }
-                            },
-                            "response": []
+                            }
                         }
                     ]
                 }
@@ -266,7 +1352,7 @@
     "variable": [
         {
             "key": "baseUrl",
-            "value": "http://localhost:4000",
+            "value": "http://13.233.48.227:4000",
             "type": "string"
         }
     ]

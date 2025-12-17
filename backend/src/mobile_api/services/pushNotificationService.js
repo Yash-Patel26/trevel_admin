@@ -60,7 +60,7 @@ async function sendPushNotification(fcmToken, title, body, data = {}) {
 async function sendPushNotificationToUser(db, userId, title, body, data = {}) {
   try {
     const { rows } = await db.query(
-      'SELECT fcm_token FROM users WHERE id = $1 AND fcm_token IS NOT NULL',
+      'SELECT fcm_token FROM "Customer" WHERE id = $1 AND fcm_token IS NOT NULL',
       [userId]
     );
     if (rows.length === 0 || !rows[0].fcm_token) {

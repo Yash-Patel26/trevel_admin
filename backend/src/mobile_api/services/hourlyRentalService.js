@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { ensureHourlyRentalTableExists } = require('../utils/ensureHourlyRentalTable');
 
 // Helper function to check if column exists
@@ -91,14 +92,17 @@ const createBooking = async (db, bookingData) => {
 
   const [hasMakeId, hasMakeSelected, hasVehicleSelected, hasMakeImageUrl, hasOriginalFinalPrice, hasRoutePreference, hasPickupLat, hasPickupLng] = columnChecks;
 
+  // Generate UUID
+  const bookingId = crypto.randomUUID();
+
   // Build insert query dynamically - start with required fields
-  const insertFields = ['user_id', 'passenger_name', 'passenger_email', 'passenger_phone', 'pickup_location', 'pickup_city', 'pickup_state', 'pickup_date', 'pickup_time'];
-  const insertValues = [bookingData.userId, bookingData.passengerName, bookingData.passengerEmail, bookingData.passengerPhone, bookingData.pickupLocation, bookingData.pickupCity, bookingData.pickupState, bookingData.pickupDate, bookingData.pickupTime];
+  const insertFields = ['id', 'user_id', 'passenger_name', 'passenger_email', 'passenger_phone', 'pickup_location', 'pickup_city', 'pickup_state', 'pickup_date', 'pickup_time'];
+  const insertValues = [bookingId, bookingData.userId, bookingData.passengerName, bookingData.passengerEmail, bookingData.passengerPhone, bookingData.pickupLocation, bookingData.pickupCity, bookingData.pickupState, bookingData.pickupDate, bookingData.pickupTime];
 
   // Add optional vehicle columns after pickup_time
   // Ensure we always have a value for make_selected/vehicle_selected (never NULL)
   const makeSelectedValue = bookingData.makeSelected || 'Not Specified';
-  
+
   if (hasMakeId) {
     insertFields.push('make_id');
     insertValues.push(bookingData.makeId);
